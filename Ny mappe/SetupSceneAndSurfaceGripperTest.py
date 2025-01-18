@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.core.objects.ground_plane import GroundPlane
 from omni.isaac.core.simulation_context import SimulationContext
@@ -8,6 +9,9 @@ import omni.graph.core as og
 from pxr import UsdGeom, Gf
 import omni.usd
 
+sim = SimulationContext()
+#sim.initialize_physics()
+
 def create_groundPlane(path):
     PhysicsContext()
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
@@ -15,6 +19,7 @@ def create_groundPlane(path):
 
 def setup_start_cubes(prim_path1, prim_path2, position1=(0, 0, 0), scale1=(1, 1, 1), color1=(0, 0, 0),
                         position2=(0, 0, 0), scale2=(1, 1, 1), color2=(0, 0, 0)):
+    global cube1
     cube1 = DynamicCuboid(
         prim_path=prim_path1,
         position=np.array(position1),
@@ -65,6 +70,9 @@ def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
     
     print("Created Xform")
 
+def move_cube_up_and_down(cube, pos):
+    cube.set_world_pose(pos)
+
 def setup_scene():
     print("Setting up scene...")
 
@@ -77,4 +85,7 @@ def setup_scene():
     create_surfaceGripper_actionGraph("/World/cube1/SurfaceGripperActionGraph", "/World/cube1/SurfaceGripperActionGraph/SurfaceGripperOffset", "/World/cube1")
     create_xform("/World/cube1/SurfaceGripperActionGraph/SurfaceGripperOffset", translate=(0, 0, -0.500997), rotation=(0, 0, 0), scale=(1, 1, 1))
 
+
 setup_scene()
+
+#move_cube_up_and_down(cube1, [1.0, 1.0, 1.0])
