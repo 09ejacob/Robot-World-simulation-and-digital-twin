@@ -44,15 +44,26 @@ def setup_start_cubes(prim_path1, prim_path2, prim_path3,
         color=np.array(color3)
     )
 
+def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
+    stage = omni.usd.get_context().get_stage()
+    xform = UsdGeom.Xform.Define(stage, path)
+
+    xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
+    xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
+    xform.AddScaleOp().Set(Gf.Vec3f(*scale))
+    
+    print("Created Xform")
+
 def setup_scene():
     print("Setting up scene...")
 
     # Objects
     create_groundPlane("/World/groundPlane")
-    setup_start_cubes("/World/gripper", "/World/axis2", "/World/snake", 
-                        position1=(0.0, 0.0, 1.9), scale1=(0.6, 0.3, 0.1), color1=(0.2, 0.5, 0.7), # gripper
+
+    create_xform("/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+    setup_start_cubes("/World/Robot/gripper", "/World/Robot/axis2", "/World/Robot/snake", 
+                        position1=(0.0, 0.0, 1.87), scale1=(0.6, 0.3, 0.1), color1=(0.2, 0.5, 0.7), # gripper
                         position2=(0.0, 2.25, 1.5), scale2=(0.8, 0.5, 3), color2=(0.7, 0.3, 0.5), # axis2
                         position3=(0.0, 1, 2), scale3=(0.15, 2, 0.15), color3=(0.2, 0.5, 0.3)) # snake
-
 
 setup_scene()
