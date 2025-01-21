@@ -29,13 +29,13 @@ def setup_start_cubes(prim_path1, prim_path2, prim_path3,
     )
     print("Created gripper")
 
-    axis2 = DynamicCuboid(
+    tower = DynamicCuboid(
         prim_path=prim_path2,
         position=np.array(position2),
         scale=np.array(scale2),
         color=np.array(color2)
     )
-    print("Created axis2")
+    print("Created tower")
 
     snake = DynamicCuboid(
         prim_path=prim_path3,
@@ -61,9 +61,12 @@ def setup_scene():
     create_groundPlane("/World/groundPlane")
 
     create_xform("/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-    setup_start_cubes("/World/Robot/gripper", "/World/Robot/axis2", "/World/Robot/snake", 
-                        position1=(0.0, 0.0, 1.87), scale1=(0.6, 0.3, 0.1), color1=(0.2, 0.5, 0.7), # gripper
-                        position2=(0.0, 2.25, 1.5), scale2=(0.8, 0.5, 3), color2=(0.7, 0.3, 0.5), # axis2
-                        position3=(0.0, 1, 2), scale3=(0.15, 2, 0.15), color3=(0.2, 0.5, 0.3)) # snake
+    create_xform("/World/Robot/Tower", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+    create_xform("/World/Robot/Tower/Axis2", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+    
+    setup_start_cubes("/World/Robot/Tower/Axis2/gripper", "/World/Robot/Tower/tower", "/World/Robot/Tower/Axis2/snake", 
+                        position1=(0.0, 2.25, 1.87), scale1=(0.6, 0.3, 0.1), color1=(0.2, 0.5, 0.7), # gripper
+                        position2=(0.0, 0, 1.5), scale2=(0.8, 0.5, 3), color2=(0.7, 0.3, 0.5), # tower
+                        position3=(0.0, 1.25, 2), scale3=(0.15, 2, 0.15), color3=(0.2, 0.5, 0.3)) # snake
 
 setup_scene()
