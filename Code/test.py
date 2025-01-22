@@ -1,41 +1,51 @@
-from omni.isaac.core import World
-from omni.isaac.core.objects import DynamicCuboid
+import time
 import numpy as np
-import json
-import os
 
-def read_and_print_names(filename):
-    if not os.path.isfile(filename):
-        print(f"Error: '{filename}' does not exist.")
-        return
+# Core Isaac Sim / Omniverse imports
+from omni.isaac.core.objects import DynamicCuboid
+from omni.isaac.core.utils.prims import create_prim
+from omni.isaac.core.utils.stage import get_current_stage
 
-    with open(filename, "r") as f:
-        data = json.load(f)
+# USD and PhysX imports
+from pxr import UsdGeom, UsdPhysics, Gf, Sdf
 
-    # print("Names: ", filename, ":")
-    # print("Gripper name:", data.get("gripper_name", "N/A"))
-    # print("Tower name :", data.get("tower_name", "N/A"))
-    # print("Snake name:", data.get("snake_name", "N/A"))
-    # print("PickBox name:", data.get("pickBox_name", "N/A"))
-
-#read_and_print_names("C:\Skole\Dataingenior\Bachelor\Code\Robot-World-simulation-and-digital-twin---Bachelor-group-9-2025\Code\object_names.json")
-
-
-world = World()
-
-for i in range(500):
-    filename = "C:\Skole\Dataingenior\Bachelor\Code\Robot-World-simulation-and-digital-twin---Bachelor-group-9-2025\Code\object_names.json"
-    with open(filename, "r") as f:
-        data = json.load(f)
-
-
-    position, orientation = data.get("gripper_name", "N/A").get_world_pose()
-    linear_velocity = gripper.get_linear_velocity()
+def create_revolute_joint_example():
+    # 1. Create a World (manages scene & simulation stepping)
     
-    print("Cube position is : " + str(position))
-    print("Cube's orientation is : " + str(orientation))
-    print("Cube's linear velocity is : " + str(linear_velocity))
-    
-    #world.step(render=True) # execute one physics step and one rendering step
+    # 2. Create a parent Xform, mark it as the articulation root
+    robot_xform_path = "/World/Robot"
+    stage = get_current_stage()
+    robot_xform = UsdGeom.Xform.Define(stage, robot_xform_path)
+    # Apply an ArticulationRootAPI to the Xform's prim
+    UsdPhysics.ArticulationRootAPI.Apply(robot_xform.GetPrim())
 
-# simulation_app.close() # close Isaac Sim
+    # 3. Add two dynamic cubes under "/World/Robot"
+    cube_a = DynamicCuboid(
+        prim_path=f"{robot_xform_path}/CubeA",
+        name="cubeA",
+        position=np.array([0.0, 0.0, 0.0]),
+        size=0.1  # or scale=(0.1, 0.1, 0.1)
+    )
+    cube_b = DynamicCuboid(
+        prim_path=f"{robot_xform_path}/CubeB",
+        name="cubeB",
+        position=np.array([0.3, 0.0, 0.0]),
+        size=0.1
+    )
+
+    # 4. Create a revolute joint (hinge) connecting CubeA and CubeB
+    joint_prim_path = f"{robot_xform_path}/RevoluteJoint"
+    create_prim(
+        prim_path=joint_prim_path,
+        prim_type="PhysicsRevoluteJoint",
+        attributes={
+            "physics:axis": "Z"  # e.g., hinge around the Z axis
+        }
+    )
+    joint_prim = stage.GetPrimAtPath(joint_prim_path)
+
+    # 5. Connect the joint's body0 and body1 relationships to the two cubes
+    joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(f"{robot_xform_path}/CubeA")])
+    joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(f"{robot_xform_path}/CubeB")])
+
+create_revolute_joint_example()
