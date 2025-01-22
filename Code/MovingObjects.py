@@ -17,6 +17,7 @@ def move_axis2_up_and_down():
     
     if not axis2_prim:
         print("Axis2 not found!")
+        print("test")
         return
 
     translate_op = UsdGeom.Xformable(axis2_prim).GetOrderedXformOps()[0]
