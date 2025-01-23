@@ -55,12 +55,12 @@ def setup_robot(prim_path1, prim_path2, prim_path3,
     create_joint(joint_prim_path1, "/World/Robot/Tower/Axis2/snake", "/World/Robot/Tower/Axis2/gripper",
                 "PhysicsRevoluteJoint", "Z") # Axis4 joint
     create_joint(joint_prim_path2, "/World/Robot/Tower/tower", "/World/Robot/Tower/Axis2/snake",
-                "PhysicsPrismaticJoint", "Z") # Axis2 joint
+                "PhysicsPrismaticJoint", "Z", -1.5, 0.8) # Axis2 joint
     create_joint(joint_prim_path3, "/World/Robot/Tower/tower", "/World/groundPlane",
                 "PhysicsRevoluteJoint", "Z") # Axis1 joint
 
 
-def create_joint(joint_prim_path, object1_path, object2_path, joint_type, hinge_axis):
+def create_joint(joint_prim_path, object1_path, object2_path, joint_type, hinge_axis, lower_limit=None, upper_limit=None):
     stage = get_current_stage()
     
     create_prim(
@@ -75,6 +75,13 @@ def create_joint(joint_prim_path, object1_path, object2_path, joint_type, hinge_
 
     joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(object1_path)])
     joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
+
+    if joint_type == "PhysicsPrismaticJoint":
+        if lower_limit is not None:
+            joint_prim.GetAttribute("physics:lowerLimit").Set(lower_limit)
+        if upper_limit is not None:
+            joint_prim.GetAttribute("physics:upperLimit").Set(upper_limit)
+
 
 def create_pickBox(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
     global pickBox
