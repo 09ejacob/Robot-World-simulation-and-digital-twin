@@ -105,6 +105,7 @@ def create_joint(
     joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(object1_path)])
     joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
 
+
 def setup_robot(
     prim_path1,
     prim_path2,
@@ -162,8 +163,8 @@ def setup_robot(
         "PhysicsPrismaticJoint",
         "Z",
     )  # Axis2 joint
-    set_prismatic_joint_limits(joint_prim_path2, -1.5, 2)
-    
+    set_prismatic_joint_limits(joint_prim_path2, -1.5, 0.8)
+
     create_joint(
         joint_prim_path3,
         "/World/Robot/Tower/tower",
