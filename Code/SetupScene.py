@@ -148,7 +148,6 @@ def setup_robot(
     color3=(0, 0, 0),
 ):  # snake
     # Shapes
-    global surface_gripper
     gripper = DynamicCuboid(
         prim_path=prim_path1,
         position=np.array(position1),
@@ -216,6 +215,8 @@ def setup_robot(
     surface_gripper.initialize(root_prim_path=prim_path1)
     print("Surface Gripper initialized and attached to the gripper.")
 
+    return surface_gripper
+
 
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
     pickBox = DynamicCuboid(
@@ -245,7 +246,7 @@ def setup_scene():
         scale=(1, 1, 1),
     )
 
-    setup_robot(
+    surface_gripper = setup_robot(
         "/World/Robot/Tower/Axis2/gripper",
         "/World/Robot/Tower/tower",
         "/World/Robot/Tower/Axis2/snake",
@@ -271,6 +272,7 @@ def setup_scene():
     )  # pick-box
 
     print("Scene setup complete.")
+    return surface_gripper
 
 
 setup_scene()

@@ -1,23 +1,28 @@
 from pxr import UsdPhysics
 from omni.isaac.core.utils.stage import get_current_stage
-from SetupScene import surface_gripper
-from omni.isaac.core.simulation_context import SimulationContext
+
+_surface_gripper = None
+
+
+def init_gripper(surface_gripper):
+    global _surface_gripper
+    _surface_gripper = surface_gripper
 
 
 def open_gripper():
-    if surface_gripper is not None:
-        surface_gripper.open()
-        print("Gripper opened (deactivated).")
+    if _surface_gripper is not None:
+        _surface_gripper.open()
+        print("Gripper opened.")
     else:
-        print("No surface gripper found.")
+        print("No surface gripper found (did you call init_gripper?).")
 
 
 def close_gripper():
-    if surface_gripper is not None:
-        surface_gripper.close()
-        print("Gripper closed (activated).")
+    if _surface_gripper is not None:
+        _surface_gripper.close()
+        print("Gripper closed.")
     else:
-        print("No surface gripper found.")
+        print("No surface gripper found (did you call init_gripper?).")
 
 
 def set_angular_drive_target(joint_prim_path, target_position):
@@ -73,9 +78,3 @@ def set_prismatic_joint_position(joint_prim_path, position):
     print(
         f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
     )
-
-
-set_angular_drive_target("/World/Robot/Joints/RevoluteJointAxis1", target_position=180)
-set_prismatic_joint_position(
-    "/World/Robot/Joints/PrismaticJointAxis2", position=-1.5
-)  # From -1.5 to 0.8
