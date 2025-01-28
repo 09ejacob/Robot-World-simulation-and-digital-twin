@@ -8,6 +8,7 @@ from omni.isaac.core.physics_context import PhysicsContext
 import omni.graph.core as og
 from pxr import UsdGeom, Gf
 import omni.usd
+from omni.isaac.sensor import ContactSensor
 
 sim = SimulationContext()
 #sim.initialize_physics()
@@ -73,6 +74,16 @@ def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 def move_cube_up_and_down(cube, pos):
     cube.set_world_pose(pos)
 
+def create_contact_sensor():
+    sensor = ContactSensor(
+        prim_path="/World/cube1/Contact_Sensor",
+        frequency=60,
+        translation=np.array([0, 0, 0]),
+        min_threshold=0,
+        max_threshold=10000000,
+        radius=-1
+    )
+
 def setup_scene():
     print("Setting up scene...")
 
@@ -85,7 +96,7 @@ def setup_scene():
     create_surfaceGripper_actionGraph("/World/cube1/SurfaceGripperActionGraph", "/World/cube1/SurfaceGripperActionGraph/SurfaceGripperOffset", "/World/cube1")
     create_xform("/World/cube1/SurfaceGripperActionGraph/SurfaceGripperOffset", translate=(0, 0, -0.500997), rotation=(0, 0, 0), scale=(1, 1, 1))
 
+    # Sensors
+    create_contact_sensor()
 
 setup_scene()
-
-#move_cube_up_and_down(cube1, [1.0, 1.0, 1.0])
