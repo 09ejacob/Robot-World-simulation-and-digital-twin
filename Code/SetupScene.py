@@ -31,6 +31,35 @@ def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
     print("Created Xform")
 
 
+def enable_linear_drive(
+    joint_prim_path, stiffness=10.0, damping=5.0, max_force=30.0, target_position=0.0
+):
+    stage = get_current_stage()
+    joint_prim = stage.GetPrimAtPath(joint_prim_path)
+
+    if not joint_prim.IsValid():
+        print(f"Joint prim at path {joint_prim_path} is not valid.")
+        return
+
+    # Ensure the joint is of type PhysicsPrismaticJoint
+    if joint_prim.GetTypeName() != "PhysicsPrismaticJoint":
+        print(f"Joint at path {joint_prim_path} is not a PhysicsPrismaticJoint.")
+        return
+
+    # Add the PhysicsDrive API with tag "linear"
+    UsdPhysics.DriveAPI.Apply(joint_prim, "linear")
+
+    drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "linear")
+    # Set drive parameters
+    drive_api.GetStiffnessAttr().Set(stiffness)
+    drive_api.GetDampingAttr().Set(damping)
+    drive_api.GetMaxForceAttr().Set(max_force)
+    # Set initial target
+    drive_api.GetTargetPositionAttr().Set(target_position)
+
+    print(f"Linear drive enabled for joint at {joint_prim_path}.")
+
+
 def enable_angular_drive(
     joint_prim_path,
     stiffness=10.0,
@@ -164,6 +193,9 @@ def setup_robot(
         "Z",
     )  # Axis2 joint
     set_prismatic_joint_limits(joint_prim_path2, -1.5, 0.8)
+    enable_linear_drive(
+        joint_prim_path2, stiffness=100, damping=10, max_force=100, target_position=0.0
+    )
 
     create_joint(
         joint_prim_path3,
