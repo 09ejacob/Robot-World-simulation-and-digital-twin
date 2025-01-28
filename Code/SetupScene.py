@@ -38,7 +38,6 @@ def setup_robot(
     color3=(0, 0, 0),
 ):  # snake
     # Shapes
-    # global gripper
     gripper = DynamicCuboid(
         prim_path=prim_path1,
         position=np.array(position1),
@@ -47,7 +46,6 @@ def setup_robot(
     )
     print("Created gripper")
 
-    # global tower
     tower = DynamicCuboid(
         prim_path=prim_path2,
         position=np.array(position2),
@@ -56,7 +54,6 @@ def setup_robot(
     )
     print("Created tower")
 
-    global snake
     snake = DynamicCuboid(
         prim_path=prim_path3,
         position=np.array(position3),
@@ -121,7 +118,6 @@ def create_joint(
 
 
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
-    global pickBox
     pickBox = DynamicCuboid(
         prim_path=prim_path,
         position=np.array(position),
