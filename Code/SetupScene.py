@@ -14,7 +14,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from pxr import Sdf, Usd
 
 
-def create_groundPlane(path):
+def create_ground_plane(path):
     PhysicsContext()
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
     print("Created ground plane")
@@ -38,6 +38,7 @@ def setup_robot(
     color3=(0, 0, 0),
 ):  # snake
     # Shapes
+    # global gripper
     gripper = DynamicCuboid(
         prim_path=prim_path1,
         position=np.array(position1),
@@ -46,6 +47,7 @@ def setup_robot(
     )
     print("Created gripper")
 
+    # global tower
     tower = DynamicCuboid(
         prim_path=prim_path2,
         position=np.array(position2),
@@ -54,6 +56,7 @@ def setup_robot(
     )
     print("Created tower")
 
+    global snake
     snake = DynamicCuboid(
         prim_path=prim_path3,
         position=np.array(position3),
@@ -117,7 +120,8 @@ def create_joint(
             joint_prim.GetAttribute("physics:upperLimit").Set(upper_limit)
 
 
-def create_pickBox(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
+def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
+    global pickBox
     pickBox = DynamicCuboid(
         prim_path=prim_path,
         position=np.array(position),
@@ -141,7 +145,7 @@ def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 def setup_scene():
     print("Setting up scene...")
 
-    create_groundPlane("/World/groundPlane")
+    create_ground_plane("/World/groundPlane")
 
     create_xform(
         "/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
@@ -174,7 +178,7 @@ def setup_scene():
         color3=(0.2, 0.5, 0.3),  # snake
     )
 
-    create_pickBox(
+    create_pick_box(
         "/World/Environment/pickBox",
         position=(0, 2.3, 0.3),
         scale=(1, 1, 0.5),
