@@ -11,13 +11,104 @@ from pxr import UsdGeom, Gf
 import omni.usd
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
-from pxr import Sdf, Usd
+from pxr import Usd, UsdGeom, UsdPhysics, Sdf
 
 
-def create_groundPlane(path):
+def create_ground_plane(path):
     PhysicsContext()
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
     print("Created ground plane")
+
+
+def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
+    stage = omni.usd.get_context().get_stage()
+    xform = UsdGeom.Xform.Define(stage, path)
+
+    xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
+    xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
+    xform.AddScaleOp().Set(Gf.Vec3f(*scale))
+
+    print("Created Xform")
+
+
+def enable_angular_drive(
+    joint_prim_path,
+    stiffness=10.0,
+    damping=5.0,
+    max_force=30.0,
+    target_position=0.0,
+):
+    stage = get_current_stage()
+    joint_prim = stage.GetPrimAtPath(joint_prim_path)
+
+    if not joint_prim.IsValid():
+        print(f"Joint prim at path {joint_prim_path} is not valid.")
+        return
+
+    # Ensure the joint is of type PhysicsRevoluteJoint
+    if joint_prim.GetTypeName() != "PhysicsRevoluteJoint":
+        print(f"Joint at path {joint_prim_path} is not a PhysicsRevoluteJoint.")
+        return
+
+    # Add the PhysicsAngularDrive API to the joint
+    UsdPhysics.DriveAPI.Apply(joint_prim, "angular")
+
+    # Set drive parameters: stiffness, damping, max force
+    drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "angular")
+    drive_api.GetStiffnessAttr().Set(stiffness)
+    drive_api.GetDampingAttr().Set(damping)
+    drive_api.GetMaxForceAttr().Set(max_force)
+
+    # Set initial drive target position
+    drive_api.GetTargetPositionAttr().Set(target_position)
+
+    print(f"Angular drive enabled for joint at {joint_prim_path}.")
+
+
+def set_prismatic_joint_limits(joint_prim_path, lower_limit=None, upper_limit=None):
+    stage = get_current_stage()
+    joint_prim = stage.GetPrimAtPath(joint_prim_path)
+
+    if not joint_prim.IsValid():
+        print(f"Joint prim at path {joint_prim_path} is not valid.")
+        return
+
+    if joint_prim.GetTypeName() != "PhysicsPrismaticJoint":
+        print(f"Joint at path {joint_prim_path} is not a PhysicsPrismaticJoint.")
+        return
+
+    if lower_limit is not None:
+        joint_prim.GetAttribute("physics:lowerLimit").Set(lower_limit)
+    if upper_limit is not None:
+        joint_prim.GetAttribute("physics:upperLimit").Set(upper_limit)
+
+    print(f"Linear limits set for prismatic joint at {joint_prim_path}.")
+
+
+def create_joint(
+    joint_prim_path,
+    object1_path,
+    object2_path,
+    joint_type,
+    hinge_axis,
+    lower_limit=None,
+    upper_limit=None,
+):
+    stage = get_current_stage()
+
+    create_prim(
+        prim_path=joint_prim_path,
+        prim_type=joint_type,
+        attributes={"physics:axis": hinge_axis},
+    )
+
+    joint_prim = stage.GetPrimAtPath(joint_prim_path)
+
+    joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(object1_path)])
+    joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
+
+    if joint_type == "PhysicsPrismaticJoint":
+        set_prismatic_joint_limits(joint_prim_path, lower_limit, upper_limit)
 
 
 def setup_robot(
@@ -86,38 +177,10 @@ def setup_robot(
         "PhysicsRevoluteJoint",
         "Z",
     )  # Axis1 joint
+    enable_angular_drive(joint_prim_path3)
 
 
-def create_joint(
-    joint_prim_path,
-    object1_path,
-    object2_path,
-    joint_type,
-    hinge_axis,
-    lower_limit=None,
-    upper_limit=None,
-):
-    stage = get_current_stage()
-
-    create_prim(
-        prim_path=joint_prim_path,
-        prim_type=joint_type,
-        attributes={"physics:axis": hinge_axis},
-    )
-
-    joint_prim = stage.GetPrimAtPath(joint_prim_path)
-
-    joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(object1_path)])
-    joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
-
-    if joint_type == "PhysicsPrismaticJoint":
-        if lower_limit is not None:
-            joint_prim.GetAttribute("physics:lowerLimit").Set(lower_limit)
-        if upper_limit is not None:
-            joint_prim.GetAttribute("physics:upperLimit").Set(upper_limit)
-
-
-def create_pickBox(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
+def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
     pickBox = DynamicCuboid(
         prim_path=prim_path,
         position=np.array(position),
@@ -127,21 +190,10 @@ def create_pickBox(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 
     print("Created pick-box")
 
 
-def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
-    stage = omni.usd.get_context().get_stage()
-    xform = UsdGeom.Xform.Define(stage, path)
-
-    xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
-    xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
-    xform.AddScaleOp().Set(Gf.Vec3f(*scale))
-
-    print("Created Xform")
-
-
 def setup_scene():
     print("Setting up scene...")
 
-    create_groundPlane("/World/groundPlane")
+    create_ground_plane("/World/groundPlane")
 
     create_xform(
         "/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
@@ -174,7 +226,7 @@ def setup_scene():
         color3=(0.2, 0.5, 0.3),  # snake
     )
 
-    create_pickBox(
+    create_pick_box(
         "/World/Environment/pickBox",
         position=(0, 2.3, 0.3),
         scale=(1, 1, 0.5),

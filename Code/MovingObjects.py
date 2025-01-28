@@ -11,21 +11,23 @@ import omni.usd
 
 sim = SimulationContext()
 
+
 def move_axis2_up_and_down():
     stage = omni.usd.get_context().get_stage()
     axis2_prim = stage.GetPrimAtPath("/World/Robot/Tower/Axis2")
-    
+
     if not axis2_prim:
         print("Axis2 not found!")
         return
 
     translate_op = UsdGeom.Xformable(axis2_prim).GetOrderedXformOps()[0]
-    
+
     for step in range(200):
         new_z = 2.0 + 0.5 * np.sin(step * 0.1)
         translate_op.Set(Gf.Vec3d(0, 0, new_z))
-        
+
         sim.step()
         time.sleep(0.01)
+
 
 move_axis2_up_and_down()
