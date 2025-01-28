@@ -13,62 +13,96 @@ from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
 from pxr import Sdf, Usd
 
+
 def create_groundPlane(path):
     PhysicsContext()
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
     print("Created ground plane")
 
-def setup_robot(prim_path1, prim_path2, prim_path3, 
-                joint_prim_path1, joint_prim_path2, joint_prim_path3,
-                position1=(0, 0, 0), scale1=(1, 1, 1), color1=(0, 0, 0), # gripper
-                position2=(0, 0, 0), scale2=(1, 1, 1), color2=(0, 0, 0), # tower
-                position3=(0, 0, 0), scale3=(1, 1, 1), color3=(0, 0, 0)): # snake
+
+def setup_robot(
+    prim_path1,
+    prim_path2,
+    prim_path3,
+    joint_prim_path1,
+    joint_prim_path2,
+    joint_prim_path3,
+    position1=(0, 0, 0),
+    scale1=(1, 1, 1),
+    color1=(0, 0, 0),  # gripper
+    position2=(0, 0, 0),
+    scale2=(1, 1, 1),
+    color2=(0, 0, 0),  # tower
+    position3=(0, 0, 0),
+    scale3=(1, 1, 1),
+    color3=(0, 0, 0),
+):  # snake
     # Shapes
-    #global gripper
     gripper = DynamicCuboid(
         prim_path=prim_path1,
         position=np.array(position1),
         scale=np.array(scale1),
-        color=np.array(color1)
+        color=np.array(color1),
     )
     print("Created gripper")
 
-    #global tower
     tower = DynamicCuboid(
         prim_path=prim_path2,
         position=np.array(position2),
         scale=np.array(scale2),
-        color=np.array(color2)
+        color=np.array(color2),
     )
     print("Created tower")
 
-    global snake
     snake = DynamicCuboid(
         prim_path=prim_path3,
         position=np.array(position3),
         scale=np.array(scale3),
-        color=np.array(color3)
+        color=np.array(color3),
     )
     print("Created snake")
 
     # Joints
-    create_joint(joint_prim_path1, "/World/Robot/Tower/Axis2/snake", "/World/Robot/Tower/Axis2/gripper",
-                "PhysicsRevoluteJoint", "Z") # Axis4 joint
-    create_joint(joint_prim_path2, "/World/Robot/Tower/tower", "/World/Robot/Tower/Axis2/snake",
-                "PhysicsPrismaticJoint", "Z", -1.5, 0.8) # Axis2 joint
-    create_joint(joint_prim_path3, "/World/Robot/Tower/tower", "/World/groundPlane",
-                "PhysicsRevoluteJoint", "Z") # Axis1 joint
+    create_joint(
+        joint_prim_path1,
+        "/World/Robot/Tower/Axis2/snake",
+        "/World/Robot/Tower/Axis2/gripper",
+        "PhysicsRevoluteJoint",
+        "Z",
+    )  # Axis4 joint
+    create_joint(
+        joint_prim_path2,
+        "/World/Robot/Tower/tower",
+        "/World/Robot/Tower/Axis2/snake",
+        "PhysicsPrismaticJoint",
+        "Z",
+        -1.5,
+        0.8,
+    )  # Axis2 joint
+    create_joint(
+        joint_prim_path3,
+        "/World/Robot/Tower/tower",
+        "/World/groundPlane",
+        "PhysicsRevoluteJoint",
+        "Z",
+    )  # Axis1 joint
 
 
-def create_joint(joint_prim_path, object1_path, object2_path, joint_type, hinge_axis, lower_limit=None, upper_limit=None):
+def create_joint(
+    joint_prim_path,
+    object1_path,
+    object2_path,
+    joint_type,
+    hinge_axis,
+    lower_limit=None,
+    upper_limit=None,
+):
     stage = get_current_stage()
-    
+
     create_prim(
         prim_path=joint_prim_path,
         prim_type=joint_type,
-        attributes = {
-            "physics:axis": hinge_axis
-        }
+        attributes={"physics:axis": hinge_axis},
     )
 
     joint_prim = stage.GetPrimAtPath(joint_prim_path)
@@ -84,14 +118,14 @@ def create_joint(joint_prim_path, object1_path, object2_path, joint_type, hinge_
 
 
 def create_pickBox(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
-    global pickBox
     pickBox = DynamicCuboid(
         prim_path=prim_path,
         position=np.array(position),
         scale=np.array(scale),
-        color=np.array(color)
+        color=np.array(color),
     )
     print("Created pick-box")
+
 
 def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
     stage = omni.usd.get_context().get_stage()
@@ -100,27 +134,54 @@ def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
     xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
     xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
     xform.AddScaleOp().Set(Gf.Vec3f(*scale))
-    
+
     print("Created Xform")
+
 
 def setup_scene():
     print("Setting up scene...")
 
     create_groundPlane("/World/groundPlane")
 
-    create_xform("/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-    create_xform("/World/Robot/Tower", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-    create_xform("/World/Robot/Tower/Axis2", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-    
-    setup_robot("/World/Robot/Tower/Axis2/gripper", "/World/Robot/Tower/tower", "/World/Robot/Tower/Axis2/snake",
-        "/World/Robot/Joints/RevoluteJointAxis4", "/World/Robot/Joints/PrismaticJointAxis2", "/World/Robot/Joints/RevoluteJointAxis1",
-        position1=(0.0, 2.25, 1.87), scale1=(0.6, 0.3, 0.1), color1=(0.2, 0.5, 0.7),  # gripper
-        position2=(0.0, 0, 1.5),    scale2=(0.8, 0.5, 3),    color2=(0.7, 0.3, 0.5),  # tower
-        position3=(0.0, 1.25, 2),   scale3=(0.15, 2, 0.15),  color3=(0.2, 0.5, 0.3)   # snake
+    create_xform(
+        "/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
+    )
+    create_xform(
+        "/World/Robot/Tower", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
+    )
+    create_xform(
+        "/World/Robot/Tower/Axis2",
+        translate=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(1, 1, 1),
     )
 
-    create_pickBox("/World/Environment/pickBox", position=(0, 2.3, 0.3), scale=(1, 1, 0.5), color=(2, 2, 2))  # pick-box
+    setup_robot(
+        "/World/Robot/Tower/Axis2/gripper",
+        "/World/Robot/Tower/tower",
+        "/World/Robot/Tower/Axis2/snake",
+        "/World/Robot/Joints/RevoluteJointAxis4",
+        "/World/Robot/Joints/PrismaticJointAxis2",
+        "/World/Robot/Joints/RevoluteJointAxis1",
+        position1=(0.0, 2.25, 1.87),
+        scale1=(0.6, 0.3, 0.1),
+        color1=(0.2, 0.5, 0.7),  # gripper
+        position2=(0.0, 0, 1.5),
+        scale2=(0.8, 0.5, 3),
+        color2=(0.7, 0.3, 0.5),  # tower
+        position3=(0.0, 1.25, 2),
+        scale3=(0.15, 2, 0.15),
+        color3=(0.2, 0.5, 0.3),  # snake
+    )
+
+    create_pickBox(
+        "/World/Environment/pickBox",
+        position=(0, 2.3, 0.3),
+        scale=(1, 1, 0.5),
+        color=(2, 2, 2),
+    )  # pick-box
 
     print("Scene setup complete.")
+
 
 setup_scene()
