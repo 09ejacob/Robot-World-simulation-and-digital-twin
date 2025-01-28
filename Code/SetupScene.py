@@ -11,7 +11,7 @@ from pxr import UsdGeom, Gf
 import omni.usd
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
-from pxr import Sdf, Usd
+from pxr import Usd, UsdGeom, UsdPhysics, Sdf
 
 
 def create_ground_plane(path):
@@ -110,11 +110,26 @@ def create_joint(
     joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(object1_path)])
     joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
 
+    # If it's prismatic, optionally set linear limits
     if joint_type == "PhysicsPrismaticJoint":
         if lower_limit is not None:
             joint_prim.GetAttribute("physics:lowerLimit").Set(lower_limit)
         if upper_limit is not None:
             joint_prim.GetAttribute("physics:upperLimit").Set(upper_limit)
+
+    # If it's a revolute joint, enable angular drive
+    if joint_type == "PhysicsRevoluteJoint":
+        # Add the PhysicsAngularDrive API to the joint
+        UsdPhysics.DriveAPI.Apply(joint_prim, "angular")
+
+        # Set drive parameters: stiffness, damping, max force
+        drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "angular")
+        drive_api.GetStiffnessAttr().Set(100.0)  # stiffness
+        drive_api.GetDampingAttr().Set(10.0)  # damping
+        drive_api.GetMaxForceAttr().Set(1000.0)  # max force
+
+        # Set initial drive target position (in radians)
+        drive_api.GetTargetPositionAttr().Set(0.0)
 
 
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
