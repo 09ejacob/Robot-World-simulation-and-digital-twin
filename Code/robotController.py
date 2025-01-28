@@ -58,4 +58,6 @@ def set_prismatic_joint_position(joint_prim_path, position):
 
 
 set_angular_drive_target("/World/Robot/Joints/RevoluteJointAxis1", target_position=180)
-set_prismatic_joint_position("/World/Robot/Joints/PrismaticJointAxis2", position=-1.5)
+set_prismatic_joint_position(
+    "/World/Robot/Joints/PrismaticJointAxis2", position=-1.5
+)  # From -1.5 to 0.8
