@@ -2,7 +2,6 @@ import numpy as np
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.core.objects.ground_plane import GroundPlane
 from omni.isaac.surface_gripper import SurfaceGripper
-from omni.isaac.core.physics_context import PhysicsContext
 import omni.usd
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
@@ -10,7 +9,6 @@ from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 
 
 def create_ground_plane(path):
-    PhysicsContext()
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
     print("Created ground plane")
 
@@ -273,6 +271,3 @@ def setup_scene():
 
     print("Scene setup complete.")
     return surface_gripper
-
-
-setup_scene()

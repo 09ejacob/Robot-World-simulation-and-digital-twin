@@ -3,16 +3,17 @@ from omni.isaac.core.simulation_context import SimulationContext
 from SetupScene import setup_scene
 import robotController
 
-# 1. Set up the scene once
-surface_gripper = setup_scene()
-
-# 2. Pass the gripper to robotController
-robotController.init_gripper(surface_gripper)
-
-# 3. Start or retrieve a SimulationContext
+# 1. Initialize SimulationContext before setting up the scene
 sim_context = SimulationContext()
 
+# 2. Set up the scene once
+surface_gripper = setup_scene()
+
+# 3. Pass the gripper to robotController
+robotController.init_gripper(surface_gripper)
+
 # 4. Execute the sequence of actions
+sim_context.play()
 # Lower the prismatic joint to -1.4
 print("Lowering prismatic joint to -1.4...")
 robotController.set_prismatic_joint_position(
@@ -24,7 +25,7 @@ for _ in range(100):
 # Close the gripper
 print("Closing gripper to grip the box...")
 robotController.close_gripper()
-for _ in range(50):  #
+for _ in range(50):
     sim_context.step()
 
 # Raise the prismatic joint to 0.8
