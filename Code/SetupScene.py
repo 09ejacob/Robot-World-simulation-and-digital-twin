@@ -91,8 +91,6 @@ def create_joint(
     object2_path,
     joint_type,
     hinge_axis,
-    lower_limit=None,
-    upper_limit=None,
 ):
     stage = get_current_stage()
 
@@ -106,10 +104,6 @@ def create_joint(
 
     joint_prim.GetRelationship("physics:body0").SetTargets([Sdf.Path(object1_path)])
     joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
-
-    if joint_type == "PhysicsPrismaticJoint":
-        set_prismatic_joint_limits(joint_prim_path, lower_limit, upper_limit)
-
 
 def setup_robot(
     prim_path1,
@@ -167,9 +161,9 @@ def setup_robot(
         "/World/Robot/Tower/Axis2/snake",
         "PhysicsPrismaticJoint",
         "Z",
-        -1.5,
-        0.8,
     )  # Axis2 joint
+    set_prismatic_joint_limits(joint_prim_path2, -1.5, 2)
+    
     create_joint(
         joint_prim_path3,
         "/World/Robot/Tower/tower",
