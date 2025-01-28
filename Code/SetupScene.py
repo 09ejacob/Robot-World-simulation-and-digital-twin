@@ -1,17 +1,12 @@
 import numpy as np
-import time
-import json
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.core.objects.ground_plane import GroundPlane
-from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.surface_gripper import SurfaceGripper
 from omni.isaac.core.physics_context import PhysicsContext
-import omni.graph.core as og
-from pxr import UsdGeom, Gf
 import omni.usd
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
-from pxr import Usd, UsdGeom, UsdPhysics, Sdf
+from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 
 
 def create_ground_plane(path):
@@ -153,6 +148,7 @@ def setup_robot(
     color3=(0, 0, 0),
 ):  # snake
     # Shapes
+    global surface_gripper
     gripper = DynamicCuboid(
         prim_path=prim_path1,
         position=np.array(position1),
@@ -205,6 +201,20 @@ def setup_robot(
         "Z",
     )  # Axis1 joint
     enable_angular_drive(joint_prim_path3)
+
+    surface_gripper = SurfaceGripper(
+        usd_path=None,  # No external USD provided
+        translate=-0.1,  # Offset in the gripper's local Z direction
+        direction="z",  # Gripper's direction
+        grip_threshold=0.02,  # Distance threshold for grasping
+        force_limit=100.0,  # Maximum gripping force
+        torque_limit=1000.0,  # Maximum gripping torque
+        kp=1.0e4,  # Stiffness of the joint
+        kd=1.0e3,  # Damping of the joint
+        disable_gravity=True,  # Disable gravity for the gripper
+    )
+    surface_gripper.initialize(root_prim_path=prim_path1)
+    print("Surface Gripper initialized and attached to the gripper.")
 
 
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
