@@ -1,25 +1,25 @@
 from pxr import UsdPhysics
 from omni.isaac.core.utils.stage import get_current_stage
-from SetupScene import get_gripper
+import omni.graph as og
+from pxr import Usd, UsdGeom
+import omni.usd
+import omni.graph as og2
 
+stage = omni.usd.get_context().get_stage()
 
 def open_gripper():
-    try:
-        surface_gripper = get_gripper()  # Fetch the gripper instance
-        surface_gripper.open()
-        print("Gripper opened.")
-    except RuntimeError as e:
-        print(f"Error: {e}")
+    ogn1 = og2.core.get_node_by_path("/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/open")
 
+    attr = ogn1.get_attribute("state:enableImpulse")
+    attr.set(1)
+    ogn1.request_compute()
 
 def close_gripper():
-    try:
-        surface_gripper = get_gripper()  # Fetch the gripper instance
-        surface_gripper.close()
-        print("Gripper closed.")
-    except RuntimeError as e:
-        print(f"Error: {e}")
+    ogn2 = og2.core.get_node_by_path("/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/close")
 
+    attr = ogn2.get_attribute("state:enableImpulse")
+    attr.set(1)
+    ogn2.request_compute()
 
 def set_angular_drive_target(joint_prim_path, target_position):
     stage = get_current_stage()
@@ -74,3 +74,5 @@ def set_prismatic_joint_position(joint_prim_path, position):
     print(
         f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
     )
+
+open_gripper()

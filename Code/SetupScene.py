@@ -7,6 +7,7 @@ from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 import omni.graph.core as og
+from pxr import Usd, UsdGeom
 
 _surface_gripper = None
 
