@@ -1,28 +1,24 @@
 from pxr import UsdPhysics
 from omni.isaac.core.utils.stage import get_current_stage
-
-_surface_gripper = None
-
-
-def init_gripper(surface_gripper):
-    global _surface_gripper
-    _surface_gripper = surface_gripper
+from SetupScene import get_gripper
 
 
 def open_gripper():
-    if _surface_gripper is not None:
-        _surface_gripper.open()
+    try:
+        surface_gripper = get_gripper()  # Fetch the gripper instance
+        surface_gripper.open()
         print("Gripper opened.")
-    else:
-        print("No surface gripper found (did you call init_gripper?).")
+    except RuntimeError as e:
+        print(f"Error: {e}")
 
 
 def close_gripper():
-    if _surface_gripper is not None:
-        _surface_gripper.close()
+    try:
+        surface_gripper = get_gripper()  # Fetch the gripper instance
+        surface_gripper.close()
         print("Gripper closed.")
-    else:
-        print("No surface gripper found (did you call init_gripper?).")
+    except RuntimeError as e:
+        print(f"Error: {e}")
 
 
 def set_angular_drive_target(joint_prim_path, target_position):

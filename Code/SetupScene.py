@@ -7,6 +7,14 @@ from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 
+_surface_gripper = None
+
+
+def get_gripper():
+    if _surface_gripper is None:
+        raise RuntimeError("SurfaceGripper is not initialized. Run setup_scene first.")
+    return _surface_gripper
+
 
 def create_ground_plane(path):
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
@@ -199,7 +207,7 @@ def setup_robot(
     )  # Axis1 joint
     enable_angular_drive(joint_prim_path3)
 
-    surface_gripper = SurfaceGripper(
+    _surface_gripper = SurfaceGripper(
         usd_path=None,  # No external USD provided
         translate=-0.1,  # Offset in the gripper's local Z direction
         direction="z",  # Gripper's direction
@@ -210,10 +218,8 @@ def setup_robot(
         kd=1.0e3,  # Damping of the joint
         disable_gravity=True,  # Disable gravity for the gripper
     )
-    surface_gripper.initialize(root_prim_path=prim_path1)
+    _surface_gripper.initialize(root_prim_path=prim_path1)
     print("Surface Gripper initialized and attached to the gripper.")
-
-    return surface_gripper
 
 
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
@@ -244,7 +250,7 @@ def setup_scene():
         scale=(1, 1, 1),
     )
 
-    surface_gripper = setup_robot(
+    setup_robot(
         "/World/Robot/Tower/Axis2/gripper",
         "/World/Robot/Tower/tower",
         "/World/Robot/Tower/Axis2/snake",
@@ -270,4 +276,3 @@ def setup_scene():
     )  # pick-box
 
     print("Scene setup complete.")
-    return surface_gripper
