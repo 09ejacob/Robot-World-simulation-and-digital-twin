@@ -6,8 +6,6 @@ def setup_camera(
     prim_path="/World/Camera",
     position=[0, 0, 1],
     orientation=[0, 0, 0, 1],
-    focal_length=35.0,
-    sensor_width=36.0,
     resolution=(1920, 1080),
 ):
     """
@@ -17,8 +15,6 @@ def setup_camera(
         prim_path (str): Path in the USD hierarchy to place the camera.
         position (list): Position of the camera [x, y, z].
         orientation (list): Quaternion representing camera orientation [x, y, z, w].
-        focal_length (float): Focal length of the camera lens.
-        sensor_width (float): Width of the camera sensor.
         resolution (tuple): Resolution of the camera in (width, height).
 
     Returns:
@@ -28,8 +24,6 @@ def setup_camera(
         prim_path=prim_path,
         position=position,
         orientation=orientation,
-        focal_length=focal_length,
-        sensor_width=sensor_width,
         resolution=resolution,
     )
 
