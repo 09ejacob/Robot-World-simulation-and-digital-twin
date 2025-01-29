@@ -209,15 +209,14 @@ def setup_robot(
     )  # Axis1 joint
     enable_angular_drive(joint_prim_path3)
 
-    create_surface_gripper("/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph",
-                           "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/SurfaceGripperOffset",
-                           "/World/Robot/Tower/Axis2/gripper"
-                           )
+    create_surface_gripper(
+        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph",
+        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/SurfaceGripperOffset",
+        "/World/Robot/Tower/Axis2/gripper",
+    )
 
-def create_surface_gripper(
-        graph_path, 
-        grip_position_path, 
-        parent_rigidBody_path):
+
+def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path):
     keys = og.Controller.Keys
     (graph_handle, list_of_nodes, _, _) = og.Controller.edit(
         {"graph_path": graph_path, "evaluator_name": "execution"},
@@ -241,6 +240,7 @@ def create_surface_gripper(
     )
     print("Created surface gripper action graph")
 
+
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
     pickBox = DynamicCuboid(
         prim_path=prim_path,
@@ -252,6 +252,9 @@ def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4,
 
 
 def setup_scene():
+    stage = get_current_stage()
+    UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
+
     print("Setting up scene...")
 
     create_ground_plane("/World/groundPlane")
@@ -302,5 +305,6 @@ def setup_scene():
     )  # pick-box
 
     print("Scene setup complete.")
+
 
 setup_scene()
