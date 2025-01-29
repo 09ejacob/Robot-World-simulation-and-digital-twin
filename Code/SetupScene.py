@@ -6,6 +6,7 @@ import omni.usd
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
+import omni.graph.core as og
 
 _surface_gripper = None
 
@@ -207,20 +208,37 @@ def setup_robot(
     )  # Axis1 joint
     enable_angular_drive(joint_prim_path3)
 
-    _surface_gripper = SurfaceGripper(
-        usd_path=None,  # No external USD provided
-        translate=-0.1,  # Offset in the gripper's local Z direction
-        direction="z",  # Gripper's direction
-        grip_threshold=0.02,  # Distance threshold for grasping
-        force_limit=100.0,  # Maximum gripping force
-        torque_limit=1000.0,  # Maximum gripping torque
-        kp=1.0e4,  # Stiffness of the joint
-        kd=1.0e3,  # Damping of the joint
-        disable_gravity=True,  # Disable gravity for the gripper
-    )
-    _surface_gripper.initialize(root_prim_path=prim_path1)
-    print("Surface Gripper initialized and attached to the gripper.")
+    create_surface_gripper("/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph",
+                           "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/SurfaceGripperOffset",
+                           "/World/Robot/Tower/Axis2/gripper"
+                           )
 
+def create_surface_gripper(
+        graph_path, 
+        grip_position_path, 
+        parent_rigidBody_path):
+    keys = og.Controller.Keys
+    (graph_handle, list_of_nodes, _, _) = og.Controller.edit(
+        {"graph_path": graph_path, "evaluator_name": "execution"},
+        {
+            keys.CREATE_NODES: [
+                ("surface_gripper", "omni.isaac.surface_gripper.SurfaceGripper"),
+                ("close", "omni.graph.action.OnImpulseEvent"),
+                ("impulse_monitor", "omni.graph.action.OnImpulseEvent"),
+                ("open", "omni.graph.action.OnImpulseEvent"),
+            ],
+            keys.SET_VALUES: [
+                ("surface_gripper.inputs:GripPosition", grip_position_path),
+                ("surface_gripper.inputs:ParentRigidBody", parent_rigidBody_path),
+            ],
+            keys.CONNECT: [
+                ("impulse_monitor.outputs:execOut", "surface_gripper.inputs:onStep"),
+                ("open.outputs:execOut", "surface_gripper.inputs:Open"),  # open
+                ("close.outputs:execOut", "surface_gripper.inputs:Close"),  # close
+            ],
+        },
+    )
+    print("Created surface gripper action graph")
 
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
     pickBox = DynamicCuboid(
@@ -268,6 +286,13 @@ def setup_scene():
         color3=(0.2, 0.5, 0.3),  # snake
     )
 
+    create_xform(
+        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/SurfaceGripperOffset",
+        translate=(0, 0, -0.500997),
+        rotation=(0, 0, 0),
+        scale=(1, 1, 1),
+    )
+
     create_pick_box(
         "/World/Environment/pickBox",
         position=(0, 2.3, 0.3),
@@ -276,3 +301,5 @@ def setup_scene():
     )  # pick-box
 
     print("Scene setup complete.")
+
+setup_scene()
