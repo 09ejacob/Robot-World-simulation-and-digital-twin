@@ -262,7 +262,6 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
     )
     print("Created surface gripper action graph")
 
-
 def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
     pickBox = DynamicCuboid(
         prim_path=prim_path,
