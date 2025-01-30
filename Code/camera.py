@@ -1,5 +1,4 @@
 from omni.isaac.sensor import Camera
-from omni.isaac.core.simulation_context import SimulationContext
 
 
 def setup_camera(
@@ -24,10 +23,9 @@ def setup_camera(
         prim_path=prim_path,
         position=position,
         orientation=orientation,
-        resolution=resolution,
+        resolution=resolution
     )
 
-    # Add the camera to the simulation scene
-    SimulationContext().scene.add(camera)
+
     print(f"Camera added at {prim_path} with resolution {resolution}.")
     return camera
