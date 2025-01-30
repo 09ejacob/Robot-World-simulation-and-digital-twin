@@ -8,18 +8,14 @@ from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 import omni.graph.core as og
 from pxr import Usd, UsdGeom
-
-_surface_gripper = None
-
-
-def get_gripper():
-    if _surface_gripper is None:
-        raise RuntimeError("SurfaceGripper is not initialized. Run setup_scene first.")
-    return _surface_gripper
-
+import asyncio
 
 def create_ground_plane(path):
-    GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
+    GroundPlane(
+        prim_path=path, 
+        size=10, 
+        color=np.array([0.5, 0.5, 0.5]))
+    #world.scene.add_default_ground_plane()
     print("Created ground plane")
 
 
@@ -126,11 +122,17 @@ def create_joint(
 ):
     stage = get_current_stage()
 
-    create_prim(
-        prim_path=joint_prim_path,
-        prim_type=joint_type,
-        attributes={"physics:axis": hinge_axis},
-    )
+    if hinge_axis != None:
+        create_prim(
+            prim_path=joint_prim_path,
+            prim_type=joint_type,
+            attributes={"physics:axis": hinge_axis},
+        )
+    else:
+        create_prim(
+            prim_path=joint_prim_path,
+            prim_type=joint_type,
+        )
 
     joint_prim = stage.GetPrimAtPath(joint_prim_path)
 
@@ -142,9 +144,11 @@ def setup_robot(
     prim_path1,
     prim_path2,
     prim_path3,
+    prim_path4,
     joint_prim_path1,
     joint_prim_path2,
     joint_prim_path3,
+    joint_prim_path4,
     position1=(0, 0, 0),
     scale1=(1, 1, 1),
     color1=(0, 0, 0),  # gripper
@@ -154,6 +158,9 @@ def setup_robot(
     position3=(0, 0, 0),
     scale3=(1, 1, 1),
     color3=(0, 0, 0),
+    position4=(0, 0, 0),
+    scale4=(1, 1, 1),
+    color4=(0, 0, 0)
 ):  # snake
     # Shapes
     gripper = DynamicCuboid(
@@ -180,6 +187,13 @@ def setup_robot(
     )
     print("Created snake")
 
+    base = DynamicCuboid(
+        prim_path=prim_path4,
+        position=np.array(position4),
+        scale=np.array(scale4),
+        color=np.array(color4),
+    )
+
     # Joints
     create_joint(
         joint_prim_path1,
@@ -203,11 +217,19 @@ def setup_robot(
     create_joint(
         joint_prim_path3,
         "/World/Robot/Tower/tower",
-        "/World/groundPlane",
+        "/World/Robot/Base/base",
         "PhysicsRevoluteJoint",
         "Z",
     )  # Axis1 joint
     enable_angular_drive(joint_prim_path3)
+
+    create_joint(
+        joint_prim_path4,
+        "/World/groundPlane",
+        "/World/Robot/Base/base",
+        "PhysicsFixedJoint",
+        None,
+    )  # Base and ground plane joint
 
     create_surface_gripper(
         "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph",
@@ -272,22 +294,34 @@ def setup_scene():
         scale=(1, 1, 1),
     )
 
+    create_xform(
+        "/World/Robot/Base",
+        translate=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(1, 1, 1),
+    )
+
     setup_robot(
         "/World/Robot/Tower/Axis2/gripper",
         "/World/Robot/Tower/tower",
         "/World/Robot/Tower/Axis2/snake",
+        "/World/Robot/Base/base",
         "/World/Robot/Joints/RevoluteJointAxis4",
         "/World/Robot/Joints/PrismaticJointAxis2",
         "/World/Robot/Joints/RevoluteJointAxis1",
-        position1=(0.0, 2.25, 1.87),
+        "/World/Robot/Joints/FixedJointBaseGround",
+        position1=(0.0, 2.25, 2.37),
         scale1=(0.6, 0.3, 0.1),
         color1=(0.2, 0.5, 0.7),  # gripper
-        position2=(0.0, 0, 1.5),
+        position2=(0.0, 0, 2),
         scale2=(0.8, 0.5, 3),
         color2=(0.7, 0.3, 0.5),  # tower
-        position3=(0.0, 1.25, 2),
+        position3=(0.0, 1.25, 2.5),
         scale3=(0.15, 2, 0.15),
         color3=(0.2, 0.5, 0.3),  # snake
+        position4=(0, 0, 0.25),
+        scale4=(2, 6, 0.5),
+        color4=(0.6, 0.2, 0.2),  # base
     )
 
     create_xform(
@@ -299,7 +333,7 @@ def setup_scene():
 
     create_pick_box(
         "/World/Environment/pickBox",
-        position=(0, 2.3, 0.3),
+        position=(0, 2.3, 0.9),
         scale=(1, 1, 0.5),
         color=(2, 2, 2),
     )  # pick-box
