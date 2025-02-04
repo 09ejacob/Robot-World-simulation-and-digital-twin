@@ -25,7 +25,5 @@ def setup_camera(
         orientation=orientation,
         resolution=resolution
     )
-
-
     print(f"Camera added at {prim_path} with resolution {resolution}.")
     return camera
