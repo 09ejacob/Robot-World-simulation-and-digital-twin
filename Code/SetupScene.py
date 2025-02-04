@@ -1,7 +1,7 @@
 import numpy as np
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.core.objects.ground_plane import GroundPlane
-from omni.isaac.surface_gripper import SurfaceGripper
+from isaacsim.robot.surface_gripper import SurfaceGripper
 import omni.usd
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
@@ -9,6 +9,9 @@ from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 import omni.graph.core as og
 from pxr import Usd, UsdGeom
 import asyncio
+import omni.kit.app
+
+
 
 def create_ground_plane(path):
     GroundPlane(
@@ -194,10 +197,12 @@ def setup_robot(
         color=np.array(color4),
     )
 
+    create_force_sensor("/World/Robot/Tower/Axis2/forceSensor", sensor_offset=(0.0, 2.25, 2.39))
+
     # Joints
     create_joint(
         joint_prim_path1,
-        "/World/Robot/Tower/Axis2/snake",
+        "/World/Robot/Tower/Axis2/forceSensor",
         "/World/Robot/Tower/Axis2/gripper",
         "PhysicsRevoluteJoint",
         "Z",
@@ -237,6 +242,21 @@ def setup_robot(
         "/World/Robot/Tower/Axis2/gripper",
     )
 
+def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
+    force_sensor = DynamicCuboid(
+        prim_path=sensor_prim_path,
+        position=np.array(sensor_offset),
+        scale=np.array([0.2, 0.2, 0.05]),
+        color=np.array([1.0, 0.0, 0.0])
+    )
+
+    create_joint(
+        "/World/Robot/Joints/FixedJointForceSensor",
+        "/World/Robot/Tower/Axis2/forceSensor",
+        "/World/Robot/Tower/Axis2/snake",
+        "PhysicsFixedJoint",
+        None,
+    )
 
 def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path):
     keys = og.Controller.Keys
@@ -309,14 +329,14 @@ def setup_scene():
         "/World/Robot/Joints/PrismaticJointAxis2",
         "/World/Robot/Joints/RevoluteJointAxis1",
         "/World/Robot/Joints/FixedJointBaseGround",
-        position1=(0.0, 2.25, 2.37),
+        position1=(0.0, 2.25, 2.3),
         scale1=(0.6, 0.3, 0.1),
         color1=(0.2, 0.5, 0.7),  # gripper
         position2=(0.0, 0, 2),
         scale2=(0.8, 0.5, 3),
         color2=(0.7, 0.3, 0.5),  # tower
-        position3=(0.0, 1.25, 2.5),
-        scale3=(0.15, 2, 0.15),
+        position3=(0.0, 2.2, 2.5),
+        scale3=(0.15, 0.4, 0.15),
         color3=(0.2, 0.5, 0.3),  # snake
         position4=(0, 0, 0.25),
         scale4=(2, 6, 0.5),
