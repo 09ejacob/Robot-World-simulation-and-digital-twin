@@ -262,7 +262,7 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
         {"graph_path": graph_path, "evaluator_name": "execution"},
         {
             keys.CREATE_NODES: [
-                ("surface_gripper", "omni.isaac.surface_gripper.SurfaceGripper"),
+                ("surface_gripper", "isaacsim.robot.surface_gripper.SurfaceGripper"),
                 ("close", "omni.graph.action.OnImpulseEvent"),
                 ("impulse_monitor", "omni.graph.action.OnImpulseEvent"),
                 ("open", "omni.graph.action.OnImpulseEvent"),
