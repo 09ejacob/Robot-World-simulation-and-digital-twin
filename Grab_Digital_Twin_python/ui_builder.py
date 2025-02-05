@@ -148,6 +148,7 @@ class UIBuilder:
         The user should now load their assets onto the stage and add them to the World Scene.
         """
         create_new_stage()
+        self._add_light_to_stage()
         setup_scene()
 
         print("Scene setup complete.")
@@ -159,7 +160,7 @@ class UIBuilder:
         their objects are properly initialized, and that the timeline is paused on timestep 0.
         """
         self._scenario.setup()
-
+    
         # UI management
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = True
@@ -174,7 +175,7 @@ class UIBuilder:
         I.e. the cube prim will move back to the position it was in when it was created in self._setup_scene().
         """
         self._scenario.reset()
-
+        
         # UI management
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = True
