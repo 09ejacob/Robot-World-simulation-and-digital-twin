@@ -17,6 +17,7 @@ from isaacsim.gui.components.element_wrappers import CollapsableFrame, StateButt
 from isaacsim.gui.components.ui_utils import get_style
 from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
+from .SetupScene import setup_scene
 
 from .scenario import FrankaRmpFlowExampleScript
 
@@ -147,14 +148,9 @@ class UIBuilder:
         The user should now load their assets onto the stage and add them to the World Scene.
         """
         create_new_stage()
-        self._add_light_to_stage()
+        setup_scene()
 
-        loaded_objects = self._scenario.load_example_assets()
-
-        # Add user-loaded objects to the World
-        world = World.instance()
-        for loaded_object in loaded_objects:
-            world.scene.add(loaded_object)
+        print("Scene setup complete.")
 
     def _setup_scenario(self):
         """

@@ -11,8 +11,6 @@ from pxr import Usd, UsdGeom
 import asyncio
 import omni.kit.app
 
-
-
 def create_ground_plane(path):
     GroundPlane(
         prim_path=path, 
@@ -356,8 +354,3 @@ def setup_scene():
         scale=(1, 1, 0.5),
         color=(2, 2, 2),
     )  # pick-box
-
-    print("Scene setup complete.")
-
-
-setup_scene()
