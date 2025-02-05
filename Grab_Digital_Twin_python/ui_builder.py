@@ -18,6 +18,7 @@ from isaacsim.gui.components.ui_utils import get_style
 from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
 from .SetupScene import setup_scene
+from .robotController import open_gripper, close_gripper, set_angular_drive_target, set_prismatic_joint_position
 
 from .scenario import FrankaRmpFlowExampleScript
 
@@ -122,6 +123,30 @@ class UIBuilder:
                 )
                 self._scenario_state_btn.enabled = False
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
+
+        robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
+
+        with robot_controls_frame:
+            with ui.VStack(style=get_style(), spacing=5, height=0):
+                ui.Button("Open Gripper", clicked_fn=open_gripper)
+                ui.Button("Close Gripper", clicked_fn=close_gripper)
+
+                ui.Label("Set Angular Drive Target:")
+                self._angular_drive_input = ui.FloatField()
+                ui.Button(
+                    "Set Angular Drive",
+                    clicked_fn=lambda: set_angular_drive_target("/World/Robot/Joints/RevoluteJointAxis1", self._angular_drive_input.model.get_value_as_float()),
+                )
+
+                ui.Label("Set Prismatic Joint Position:")
+                self._prismatic_drive_input = ui.FloatField()
+                ui.Button(
+                    "Set Prismatic Position",
+                    clicked_fn=lambda: set_prismatic_joint_position("/World/Robot/Joints/PrismaticJointAxis2", self._prismatic_drive_input.model.get_value_as_float()),
+                )
+
+        self.frames.append(world_controls_frame)
+        self.frames.append(robot_controls_frame)
 
     ######################################################################################
     # Functions Below This Point Support The Provided Example And Can Be Deleted/Replaced
@@ -233,3 +258,5 @@ class UIBuilder:
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = False
         self._reset_btn.enabled = False
+
+

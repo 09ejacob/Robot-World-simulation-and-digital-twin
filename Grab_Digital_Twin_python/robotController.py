@@ -74,5 +74,3 @@ def set_prismatic_joint_position(joint_prim_path, position):
     print(
         f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
     )
-
-open_gripper()
