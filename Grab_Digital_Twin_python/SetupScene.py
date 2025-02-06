@@ -1,5 +1,6 @@
 import numpy as np
 from omni.isaac.core.objects import DynamicCuboid
+from omni.isaac.core.objects import DynamicCylinder
 from omni.isaac.core.objects.ground_plane import GroundPlane
 from isaacsim.robot.surface_gripper import SurfaceGripper
 import omni.usd
@@ -146,10 +147,12 @@ def setup_robot(
     prim_path2,
     prim_path3,
     prim_path4,
+    prim_path5,
     joint_prim_path1,
     joint_prim_path2,
     joint_prim_path3,
     joint_prim_path4,
+    joint_prim_path5,
     position1=(0, 0, 0),
     scale1=(1, 1, 1),
     color1=(0, 0, 0),  # gripper
@@ -161,7 +164,10 @@ def setup_robot(
     color3=(0, 0, 0),
     position4=(0, 0, 0),
     scale4=(1, 1, 1),
-    color4=(0, 0, 0)
+    color4=(0, 0, 0),
+    position5=(0, 0, 0),
+    scale5=(1, 1, 1),
+    color5=(0, 0, 0),
 ):  # snake
     # Shapes
     gripper = DynamicCuboid(
@@ -195,6 +201,23 @@ def setup_robot(
         color=np.array(color4),
     )
 
+    snake_base = DynamicCuboid(
+        prim_path=prim_path5,
+        position=np.array(position5),
+        scale=np.array(scale5),
+        color=np.array(color5),
+    )
+    print("Created snake base")
+
+    stage = get_current_stage()
+    collisionAPI = UsdPhysics.CollisionAPI.Get(stage, prim_path5)
+    collisionAPI.GetCollisionEnabledAttr().Set(False)
+
+    stage = get_current_stage()
+    snake_base_prim = stage.GetPrimAtPath(prim_path5)
+    # Create the primvar if it doesn't exist, then set it to True.
+    snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(True)
+
     create_force_sensor("/World/Robot/Tower/Axis2/forceSensor", sensor_offset=(0.0, 2.25, 2.39))
 
     # Joints
@@ -207,14 +230,14 @@ def setup_robot(
     )  # Axis4 joint
     create_joint(
         joint_prim_path2,
-        "/World/Robot/Tower/tower",
         "/World/Robot/Tower/Axis2/snake",
+        "/World/Robot/Tower/Axis2/snakeBase",
         "PhysicsPrismaticJoint",
-        "Z",
-    )  # Axis2 joint
-    set_prismatic_joint_limits(joint_prim_path2, -1.5, 0.8)
+        "Y",
+    )  # In out joint
+    set_prismatic_joint_limits(joint_prim_path2, -1.0, 1.5)
     enable_linear_drive(
-        joint_prim_path2, stiffness=100, damping=10, max_force=100, target_position=0.0
+        joint_prim_path2, stiffness=100, damping=100, max_force=100, target_position=0.0
     )
 
     create_joint(
@@ -232,7 +255,19 @@ def setup_robot(
         "/World/Robot/Base/base",
         "PhysicsFixedJoint",
         None,
-    )  # Base and ground plane joint
+    )  # Base and groundplane joint
+
+    create_joint(
+        joint_prim_path5,
+        "/World/Robot/Tower/tower",
+        "/World/Robot/Tower/Axis2/snakeBase",
+        "PhysicsPrismaticJoint",
+        "Z",
+    )  # Axis2 joint
+    set_prismatic_joint_limits(joint_prim_path5, -1.5, 0.8)
+    enable_linear_drive(
+        joint_prim_path5, stiffness=1000, damping=100, max_force=100, target_position=0.0
+    )
 
     create_surface_gripper(
         "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph",
@@ -323,22 +358,27 @@ def setup_scene():
         "/World/Robot/Tower/tower",
         "/World/Robot/Tower/Axis2/snake",
         "/World/Robot/Base/base",
+        "/World/Robot/Tower/Axis2/snakeBase",
         "/World/Robot/Joints/RevoluteJointAxis4",
-        "/World/Robot/Joints/PrismaticJointAxis2",
+        "/World/Robot/Joints/PrismaticJointAxis3",
         "/World/Robot/Joints/RevoluteJointAxis1",
         "/World/Robot/Joints/FixedJointBaseGround",
+        "/World/Robot/Joints/PrismaticJointAxis2",
         position1=(0.0, 2.25, 2.3),
         scale1=(0.6, 0.3, 0.1),
-        color1=(0.2, 0.5, 0.7),  # gripper
+        color1=(0.2, 0.5, 0.7),
         position2=(0.0, 0, 2),
         scale2=(0.8, 0.5, 3),
-        color2=(0.7, 0.3, 0.5),  # tower
+        color2=(0.7, 0.3, 0.5),
         position3=(0.0, 2.2, 2.5),
         scale3=(0.15, 0.4, 0.15),
-        color3=(0.2, 0.5, 0.3),  # snake
+        color3=(0.2, 0.5, 0.3),
         position4=(0, 0, 0.25),
         scale4=(2, 6, 0.5),
-        color4=(0.6, 0.2, 0.2),  # base
+        color4=(0.6, 0.2, 0.2),
+        position5=(0, 0, 2.5),
+        scale5=(0.5, 7, 0.3),
+        color5=(0.1, 0.2, 0.2),
     )
 
     create_xform(
@@ -354,3 +394,5 @@ def setup_scene():
         scale=(1, 1, 0.5),
         color=(2, 2, 2),
     )  # pick-box
+
+    print("Scene setup complete.")
