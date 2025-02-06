@@ -14,6 +14,8 @@ EXTENSION_DESCRIPTION = "solwr.grab.digital.twin"
 # Robot
 ROBOT_PATH = "/World/Robot"
 GRIPPER_PATH = f"{ROBOT_PATH}/Tower/Axis2/gripper"
+
+# Sensors and cameras
 FORCE_SENSOR_PATH = f"{ROBOT_PATH}/Tower/Axis2/forceSensor"
 
 # Joints
