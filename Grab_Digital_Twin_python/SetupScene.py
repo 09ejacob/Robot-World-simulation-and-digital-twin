@@ -228,6 +228,8 @@ def setup_robot(
         "PhysicsRevoluteJoint",
         "Z",
     )  # Axis4 joint
+    enable_angular_drive(joint_prim_path1)
+
     create_joint(
         joint_prim_path2,
         "/World/Robot/Tower/Axis2/snake",
