@@ -9,6 +9,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 import omni.graph.core as og
 from pxr import Usd, UsdGeom
+from .camera import setup_camera
 import asyncio
 import omni.kit.app
 
@@ -396,5 +397,14 @@ def setup_scene():
         scale=(1, 1, 0.5),
         color=(2, 2, 2),
     )  # pick-box
+
+
+    camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
+    camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
+    resolution = (1920, 1080)  # Resolution for the camera
+    
+    # Add camera to the simulation
+    setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)
+    
 
     print("Scene setup complete.")
