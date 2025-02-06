@@ -211,6 +211,15 @@ def setup_robot(
     )
     print("Created snake base")
 
+    stage = get_current_stage()
+    collisionAPI = UsdPhysics.CollisionAPI.Get(stage, prim_path5)
+    collisionAPI.GetCollisionEnabledAttr().Set(False)
+
+    stage = get_current_stage()
+    snake_base_prim = stage.GetPrimAtPath(prim_path5)
+    # Create the primvar if it doesn't exist, then set it to True.
+    snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(True)
+
     create_force_sensor("/World/Robot/Tower/Axis2/forceSensor", sensor_offset=(0.0, 2.25, 2.39))
 
     # Joints
@@ -228,7 +237,7 @@ def setup_robot(
         "PhysicsPrismaticJoint",
         "Y",
     )  # In out joint
-    set_prismatic_joint_limits(joint_prim_path2, -1.5, 0.8)
+    set_prismatic_joint_limits(joint_prim_path2, -1.0, 1.5)
     enable_linear_drive(
         joint_prim_path2, stiffness=100, damping=100, max_force=100, target_position=0.0
     )
@@ -359,18 +368,18 @@ def setup_scene():
         "/World/Robot/Joints/PrismaticJointAxis2",
         position1=(0.0, 2.25, 2.3),
         scale1=(0.6, 0.3, 0.1),
-        color1=(0.2, 0.5, 0.7),  # gripper
+        color1=(0.2, 0.5, 0.7),
         position2=(0.0, 0, 2),
         scale2=(0.8, 0.5, 3),
-        color2=(0.7, 0.3, 0.5),  # tower
+        color2=(0.7, 0.3, 0.5),
         position3=(0.0, 2.2, 2.5),
         scale3=(0.15, 0.4, 0.15),
-        color3=(0.2, 0.5, 0.3),  # snake
+        color3=(0.2, 0.5, 0.3),
         position4=(0, 0, 0.25),
         scale4=(2, 6, 0.5),
-        color4=(0.6, 0.2, 0.2),  # base
-        position5=(0, 0.3, 2.5),
-        scale5=(0.5, 0.1, 0.3),
+        color4=(0.6, 0.2, 0.2),
+        position5=(0, 0, 2.5),
+        scale5=(0.5, 7, 0.3),
         color5=(0.1, 0.2, 0.2),
     )
 
