@@ -4,8 +4,8 @@ from pxr import Usd, UsdGeom, Gf
 
 def setup_camera(
     prim_path="/World/Robot/Tower/Axis2/gripper/cameraSensor",
-    position=[0, 0, 1],
-    orientation=[0, 0, 0, 1],
+    position=[1,2, 1],
+    orientation=[2, 1, 1, 1],
     resolution=(1920, 1080),
 ):
     """
@@ -21,11 +21,7 @@ def setup_camera(
         Camera: The Camera object added to the simulation.
     """
     # Create the Camera sensor at the given prim path with the specified resolution.
-    camera = Camera(prim_path=prim_path, resolution=resolution)
-    
-    # Set the camera's position and orientation using the Camera API.
-    camera.set_position(position)
-    camera.set_orientation(orientation)
+    camera = Camera(prim_path=prim_path, resolution=resolution, position=position, orientation=orientation)
     
     print(f"Camera added at {prim_path} with resolution {resolution}.")
     return camera
