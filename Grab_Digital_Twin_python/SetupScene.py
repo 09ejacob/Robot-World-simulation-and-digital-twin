@@ -399,12 +399,9 @@ def setup_scene():
     )  # pick-box
 
 
-    camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
-    camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
-    resolution = (1920, 1080)  # Resolution for the camera
+    #camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
+    #camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
+    #resolution = (1920, 1080)  # Resolution for the camera
     
     # Add camera to the simulation
-    setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)
-    
-
-    print("Scene setup complete.")
+    #setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)

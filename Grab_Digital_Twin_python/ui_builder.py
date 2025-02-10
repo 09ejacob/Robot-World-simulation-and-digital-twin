@@ -20,7 +20,7 @@ from pxr import Sdf, UsdLux
 from .SetupScene import setup_scene
 from .robotController import open_gripper, close_gripper, set_angular_drive_target, set_prismatic_joint_position
 
-from .scenario import FrankaRmpFlowExampleScript
+from .scenario import PickBoxScenario
 
 
 class UIBuilder:
@@ -34,6 +34,7 @@ class UIBuilder:
         self._timeline = omni.timeline.get_timeline_interface()
 
         # Run initialization for the provided example
+        self._scenario = None
         self._on_init()
 
     ###################################################################################
@@ -47,18 +48,14 @@ class UIBuilder:
         pass
 
     def on_timeline_event(self, event):
-        """Callback for Timeline events (Play, Pause, Stop)
-
-        Args:
-            event (omni.timeline.TimelineEventType): Event Type
-        """
+        """Callback for Timeline events (Play, Pause, Stop)"""
         if event.type == int(omni.timeline.TimelineEventType.STOP):
-            # When the user hits the stop button through the UI, they will inevitably discover edge cases where things break
-            # For complete robustness, the user should resolve those edge cases here
-            # In general, for extensions based off this template, there is no value to having the user click the play/stop
-            # button instead of using the Load/Reset/Run buttons provided.
             self._scenario_state_btn.reset()
-            self._scenario_state_btn.enabled = False
+            
+            # Only disable if the scenario is actually finished
+            if self._scenario._did_run:
+                self._scenario_state_btn.enabled = False
+
 
     def on_physics_step(self, step: float):
         """Callback for Physics Step.
@@ -75,9 +72,6 @@ class UIBuilder:
         Args:
             event (omni.usd.StageEventType): Event Type
         """
-        if event.type == int(StageEventType.OPENED):
-            # If the user opens a new stage, the extension should completely reset
-            self._reset_extension()
 
     def cleanup(self):
         """
@@ -98,7 +92,7 @@ class UIBuilder:
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 self._load_btn = LoadButton(
-                    "Load Button", "LOAD", setup_scene_fn=self._setup_scene #setup_post_load_fn=self._setup_scenario
+                    "Load Button", "LOAD", setup_scene_fn=self._setup_scene, setup_post_load_fn=self._setup_scenario
                 )
                 self._load_btn.set_world_settings(physics_dt=1 / 60.0, rendering_dt=1 / 60.0)
                 self.wrapped_ui_elements.append(self._load_btn)
@@ -117,15 +111,15 @@ class UIBuilder:
                     "Run Scenario",
                     "RUN",
                     "STOP",
-                    on_a_click_fn=self._on_run_scenario_a_text,
-                    on_b_click_fn=self._on_run_scenario_b_text,
+                    on_a_click_fn=self.start_scenario,
+                    on_b_click_fn=self.stop_scenario,
                     physics_callback_fn=self._update_scenario,
                 )
                 self._scenario_state_btn.enabled = False
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
 
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
-
+    
         with robot_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 ui.Button("Open Gripper", clicked_fn=open_gripper)
@@ -167,9 +161,8 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._articulation = None
-        self._cuboid = None
-        self._scenario = FrankaRmpFlowExampleScript()
+        self._scenario = PickBoxScenario()
+
 
     def _add_light_to_stage(self):
         """
@@ -234,7 +227,7 @@ class UIBuilder:
         if done:
             self._scenario_state_btn.enabled = False
 
-    def _on_run_scenario_a_text(self):
+    def start_scenario(self):
         """
         This function is attached to the Run Scenario StateButton.
         This function was passed in as the on_a_click_fn argument.
@@ -246,7 +239,7 @@ class UIBuilder:
         """
         self._timeline.play()
 
-    def _on_run_scenario_b_text(self):
+    def stop_scenario(self):
         """
         This function is attached to the Run Scenario StateButton.
         This function was passed in as the on_b_click_fn argument.
