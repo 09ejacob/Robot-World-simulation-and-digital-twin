@@ -13,6 +13,8 @@ from .camera import setup_camera
 import asyncio
 import omni.kit.app
 
+from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, AXIS2_PATH, AXIS3_JOINT_PATH, AXIS4_JOINT_PATH, FIXED_JOINT_BASE_GROUND, FIXED_JOINT_FORCE_SENSOR, FORCE_SENSOR_PATH, GRIPPER_ACTION_GRAPH_PATH, GRIPPER_OFFSET_PATH, GRIPPER_PATH, GROUND_PLANE_PATH, PHYSICS_SCENE_PATH, ROBOT_BASE_CUBE_PATH, ROBOT_BASE_GROUP_PATH, ROBOT_PATH, SNAKE_BASE_PATH, SNAKE_PATH, TOWER_CUBOID_PATH, TOWER_PATH
+
 def create_ground_plane(path):
     GroundPlane(
         prim_path=path, 
@@ -219,13 +221,13 @@ def setup_robot(
     # Create the primvar if it doesn't exist, then set it to True.
     snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(True)
 
-    create_force_sensor("/World/Robot/Tower/Axis2/forceSensor", sensor_offset=(0.0, 2.25, 2.39))
+    create_force_sensor(FORCE_SENSOR_PATH, sensor_offset=(0.0, 2.25, 2.39))
 
     # Joints
     create_joint(
         joint_prim_path1,
-        "/World/Robot/Tower/Axis2/forceSensor",
-        "/World/Robot/Tower/Axis2/gripper",
+        FORCE_SENSOR_PATH,
+        GRIPPER_PATH,
         "PhysicsRevoluteJoint",
         "Z",
     )  # Axis4 joint
@@ -233,8 +235,8 @@ def setup_robot(
 
     create_joint(
         joint_prim_path2,
-        "/World/Robot/Tower/Axis2/snake",
-        "/World/Robot/Tower/Axis2/snakeBase",
+        SNAKE_PATH,
+        SNAKE_BASE_PATH,
         "PhysicsPrismaticJoint",
         "Y",
     )  # In out joint
@@ -245,8 +247,8 @@ def setup_robot(
 
     create_joint(
         joint_prim_path3,
-        "/World/Robot/Tower/tower",
-        "/World/Robot/Base/base",
+        TOWER_CUBOID_PATH,
+        ROBOT_BASE_CUBE_PATH,
         "PhysicsRevoluteJoint",
         "Z",
     )  # Axis1 joint
@@ -254,16 +256,16 @@ def setup_robot(
 
     create_joint(
         joint_prim_path4,
-        "/World/groundPlane",
-        "/World/Robot/Base/base",
+        GROUND_PLANE_PATH,
+        ROBOT_BASE_CUBE_PATH,
         "PhysicsFixedJoint",
         None,
     )  # Base and groundplane joint
 
     create_joint(
         joint_prim_path5,
-        "/World/Robot/Tower/tower",
-        "/World/Robot/Tower/Axis2/snakeBase",
+        TOWER_CUBOID_PATH,
+        SNAKE_BASE_PATH,
         "PhysicsPrismaticJoint",
         "Z",
     )  # Axis2 joint
@@ -273,9 +275,9 @@ def setup_robot(
     )
 
     create_surface_gripper(
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph",
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/SurfaceGripperOffset",
-        "/World/Robot/Tower/Axis2/gripper",
+        GRIPPER_ACTION_GRAPH_PATH,
+        GRIPPER_OFFSET_PATH,
+        GRIPPER_PATH,
     )
 
 def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
@@ -287,9 +289,9 @@ def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
     )
 
     create_joint(
-        "/World/Robot/Joints/FixedJointForceSensor",
-        "/World/Robot/Tower/Axis2/forceSensor",
-        "/World/Robot/Tower/Axis2/snake",
+        FIXED_JOINT_FORCE_SENSOR,
+        FORCE_SENSOR_PATH,
+        SNAKE_PATH,
         "PhysicsFixedJoint",
         None,
     )
@@ -320,43 +322,43 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
 
 def setup_scene():
     stage = get_current_stage()
-    UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
+    UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
     print("Setting up scene...")
 
-    create_ground_plane("/World/groundPlane")
+    create_ground_plane(GROUND_PLANE_PATH)
 
     create_xform(
-        "/World/Robot", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
+        ROBOT_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
     )
     create_xform(
-        "/World/Robot/Tower", translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
+        TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
     )
     create_xform(
-        "/World/Robot/Tower/Axis2",
+        AXIS2_PATH,
         translate=(0, 0, 0),
         rotation=(0, 0, 0),
         scale=(1, 1, 1),
     )
 
     create_xform(
-        "/World/Robot/Base",
+        ROBOT_BASE_GROUP_PATH,
         translate=(0, 0, 0),
         rotation=(0, 0, 0),
         scale=(1, 1, 1),
     )
 
     setup_robot(
-        "/World/Robot/Tower/Axis2/gripper",
-        "/World/Robot/Tower/tower",
-        "/World/Robot/Tower/Axis2/snake",
-        "/World/Robot/Base/base",
-        "/World/Robot/Tower/Axis2/snakeBase",
-        "/World/Robot/Joints/RevoluteJointAxis4",
-        "/World/Robot/Joints/PrismaticJointAxis3",
-        "/World/Robot/Joints/RevoluteJointAxis1",
-        "/World/Robot/Joints/FixedJointBaseGround",
-        "/World/Robot/Joints/PrismaticJointAxis2",
+        GRIPPER_PATH,
+        TOWER_CUBOID_PATH,
+        SNAKE_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        SNAKE_BASE_PATH,
+        AXIS4_JOINT_PATH,
+        AXIS3_JOINT_PATH,
+        AXIS1_JOINT_PATH,
+        FIXED_JOINT_BASE_GROUND,
+        AXIS2_JOINT_PATH,
         position1=(0.0, 2.25, 2.3),
         scale1=(0.6, 0.3, 0.1),
         color1=(0.2, 0.5, 0.7),
@@ -375,7 +377,7 @@ def setup_scene():
     )
 
     create_xform(
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/SurfaceGripperOffset",
+        GRIPPER_OFFSET_PATH,
         translate=(0, 0, -0.500997),
         rotation=(0, 0, 0),
         scale=(1, 1, 1),
