@@ -2,6 +2,7 @@
 
 import numpy as np
 from omni.isaac.core import World
+from omni.isaac.core.objects import DynamicCuboid
 from .robotController import (
     open_gripper,
     close_gripper,
@@ -24,9 +25,16 @@ class PickBoxScenario:
         scenario-specific initialization.
         """
         self._world = World()
-
         self._world.reset()
         self._did_run = False
+
+        pickBox = DynamicCuboid(
+            prim_path="/World/Environment/pickBox",
+            position=np.array((0, 2.3, 0.9)),
+            scale=np.array((1, 1, 0.5)),
+            color=np.array((2, 2, 2))
+        )
+        
         self._scenario_generator = self._run_simulation_snippet()
 
     def reset(self):

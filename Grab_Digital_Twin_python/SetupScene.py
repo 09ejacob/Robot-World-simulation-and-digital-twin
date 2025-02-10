@@ -318,16 +318,6 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
     )
     print("Created surface gripper action graph")
 
-def create_pick_box(prim_path, position=(0, 0, 0), scale=(1, 1, 1), color=(4, 4, 4)):
-    pickBox = DynamicCuboid(
-        prim_path=prim_path,
-        position=np.array(position),
-        scale=np.array(scale),
-        color=np.array(color),
-    )
-    print("Created pick-box")
-
-
 def setup_scene():
     stage = get_current_stage()
     UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
@@ -390,14 +380,6 @@ def setup_scene():
         rotation=(0, 0, 0),
         scale=(1, 1, 1),
     )
-
-    create_pick_box(
-        "/World/Environment/pickBox",
-        position=(0, 2.3, 0.9),
-        scale=(1, 1, 0.5),
-        color=(2, 2, 2),
-    )  # pick-box
-
 
     #camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
     #camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
