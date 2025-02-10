@@ -21,6 +21,7 @@ FORCE_SENSOR_PATH = f"{ROBOT_PATH}/Tower/Axis2/forceSensor"
 # Joints
 AXIS1_JOINT_PATH = f"{ROBOT_PATH}/Joints/RevoluteJointAxis1"
 AXIS2_JOINT_PATH = f"{ROBOT_PATH}/Joints/PrismaticJointAxis2"
+AXIS3_JOINT_PATH = f"{ROBOT_PATH}/Joints/PrismaticJointAxis3"
 AXIS4_JOINT_PATH = f"{ROBOT_PATH}/Joints/RevoluteJointAxis4"
 
 # Gripper Action Graph Paths
