@@ -17,7 +17,7 @@ from isaacsim.gui.components.element_wrappers import CollapsableFrame, StateButt
 from isaacsim.gui.components.ui_utils import get_style
 from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
-from .SetupScene import setup_scene
+from .setup_scene import setup_scene
 from .robotController import open_gripper, close_gripper, set_angular_drive_target, set_prismatic_joint_position
 from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, AXIS3_JOINT_PATH, AXIS4_JOINT_PATH
 from .scenario import PickBoxScenario
