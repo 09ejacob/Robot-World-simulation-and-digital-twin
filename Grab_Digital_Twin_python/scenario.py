@@ -11,6 +11,7 @@ from .robotController import (
 )
 from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, PICK_BOX_PATH
 
+
 class PickBoxScenario:
     """
     A minimal scenario class that runs a single sequence of robot actions.
@@ -18,7 +19,7 @@ class PickBoxScenario:
 
     def __init__(self):
         self._world = None
-        self._did_run = False  
+        self._did_run = False
 
     def setup(self):
         """
@@ -33,9 +34,9 @@ class PickBoxScenario:
             prim_path=PICK_BOX_PATH,
             position=np.array((0, 2.3, 0.9)),
             scale=np.array((1, 1, 0.5)),
-            color=np.array((2, 2, 2))
+            color=np.array((2, 2, 2)),
         )
-        
+
         self._scenario_generator = self._run_simulation_snippet()
 
     def reset(self):
@@ -61,12 +62,12 @@ class PickBoxScenario:
 
         for _ in range(60):
             self._world.step(render=True)
-            yield  
+            yield
         print("Lowering prismatic joint...")
         set_prismatic_joint_position(AXIS2_JOINT_PATH, -1.4)
-        for _ in range(60):  
+        for _ in range(60):
             self._world.step(render=True)
-            yield 
+            yield
 
         print("Closing gripper...")
         close_gripper()
@@ -94,4 +95,3 @@ class PickBoxScenario:
 
         print("Snippet complete. Stopping simulation.")
         self._world.stop()
-

@@ -24,11 +24,11 @@ AXIS2_PATH = f"{TOWER_PATH}/Axis2"
 GRIPPER_PATH = f"{AXIS2_PATH}/gripper"
 
 # Additional robot parts
-TOWER_CUBOID_PATH = f"{TOWER_PATH}/tower"        
-SNAKE_PATH = f"{AXIS2_PATH}/snake"               
-SNAKE_BASE_PATH = f"{AXIS2_PATH}/snakeBase"    
-ROBOT_BASE_GROUP_PATH = f"{ROBOT_PATH}/Base" 
-ROBOT_BASE_CUBE_PATH = f"{ROBOT_PATH}/Base/base" 
+TOWER_CUBOID_PATH = f"{TOWER_PATH}/tower"
+SNAKE_PATH = f"{AXIS2_PATH}/snake"
+SNAKE_BASE_PATH = f"{AXIS2_PATH}/snakeBase"
+ROBOT_BASE_GROUP_PATH = f"{ROBOT_PATH}/Base"
+ROBOT_BASE_CUBE_PATH = f"{ROBOT_PATH}/Base/base"
 
 
 # Sensors and cameras

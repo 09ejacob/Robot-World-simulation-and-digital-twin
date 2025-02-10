@@ -13,14 +13,33 @@ from .camera import setup_camera
 import asyncio
 import omni.kit.app
 
-from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, AXIS2_PATH, AXIS3_JOINT_PATH, AXIS4_JOINT_PATH, FIXED_JOINT_BASE_GROUND, FIXED_JOINT_FORCE_SENSOR, FORCE_SENSOR_PATH, GRIPPER_ACTION_GRAPH_PATH, GRIPPER_OFFSET_PATH, GRIPPER_PATH, GROUND_PLANE_PATH, PHYSICS_SCENE_PATH, ROBOT_BASE_CUBE_PATH, ROBOT_BASE_GROUP_PATH, ROBOT_PATH, SNAKE_BASE_PATH, SNAKE_PATH, TOWER_CUBOID_PATH, TOWER_PATH
+from .global_variables import (
+    AXIS1_JOINT_PATH,
+    AXIS2_JOINT_PATH,
+    AXIS2_PATH,
+    AXIS3_JOINT_PATH,
+    AXIS4_JOINT_PATH,
+    FIXED_JOINT_BASE_GROUND,
+    FIXED_JOINT_FORCE_SENSOR,
+    FORCE_SENSOR_PATH,
+    GRIPPER_ACTION_GRAPH_PATH,
+    GRIPPER_OFFSET_PATH,
+    GRIPPER_PATH,
+    GROUND_PLANE_PATH,
+    PHYSICS_SCENE_PATH,
+    ROBOT_BASE_CUBE_PATH,
+    ROBOT_BASE_GROUP_PATH,
+    ROBOT_PATH,
+    SNAKE_BASE_PATH,
+    SNAKE_PATH,
+    TOWER_CUBOID_PATH,
+    TOWER_PATH,
+)
+
 
 def create_ground_plane(path):
-    GroundPlane(
-        prim_path=path, 
-        size=10, 
-        color=np.array([0.5, 0.5, 0.5]))
-    #world.scene.add_default_ground_plane()
+    GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
+    # world.scene.add_default_ground_plane()
     print("Created ground plane")
 
 
@@ -219,7 +238,9 @@ def setup_robot(
     stage = get_current_stage()
     snake_base_prim = stage.GetPrimAtPath(prim_path5)
     # Create the primvar if it doesn't exist, then set it to True.
-    snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(True)
+    snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
+        True
+    )
 
     create_force_sensor(FORCE_SENSOR_PATH, sensor_offset=(0.0, 2.25, 2.39))
 
@@ -271,7 +292,11 @@ def setup_robot(
     )  # Axis2 joint
     set_prismatic_joint_limits(joint_prim_path5, -1.5, 0.8)
     enable_linear_drive(
-        joint_prim_path5, stiffness=1000, damping=100, max_force=100, target_position=0.0
+        joint_prim_path5,
+        stiffness=1000,
+        damping=100,
+        max_force=100,
+        target_position=0.0,
     )
 
     create_surface_gripper(
@@ -280,12 +305,13 @@ def setup_robot(
         GRIPPER_PATH,
     )
 
+
 def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
     force_sensor = DynamicCuboid(
         prim_path=sensor_prim_path,
         position=np.array(sensor_offset),
         scale=np.array([0.2, 0.2, 0.05]),
-        color=np.array([1.0, 0.0, 0.0])
+        color=np.array([1.0, 0.0, 0.0]),
     )
 
     create_joint(
@@ -295,6 +321,7 @@ def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
         "PhysicsFixedJoint",
         None,
     )
+
 
 def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path):
     keys = og.Controller.Keys
@@ -320,6 +347,7 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
     )
     print("Created surface gripper action graph")
 
+
 def setup_scene():
     stage = get_current_stage()
     UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
@@ -328,12 +356,8 @@ def setup_scene():
 
     create_ground_plane(GROUND_PLANE_PATH)
 
-    create_xform(
-        ROBOT_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
-    )
-    create_xform(
-        TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
-    )
+    create_xform(ROBOT_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+    create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
     create_xform(
         AXIS2_PATH,
         translate=(0, 0, 0),
@@ -383,9 +407,9 @@ def setup_scene():
         scale=(1, 1, 1),
     )
 
-    #camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
-    #camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
-    #resolution = (1920, 1080)  # Resolution for the camera
-    
+    # camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
+    # camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
+    # resolution = (1920, 1080)  # Resolution for the camera
+
     # Add camera to the simulation
-    #setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)
+    # setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)

@@ -18,8 +18,18 @@ from isaacsim.gui.components.ui_utils import get_style
 from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
 from .setup_scene import setup_scene
-from .robotController import open_gripper, close_gripper, set_angular_drive_target, set_prismatic_joint_position
-from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, AXIS3_JOINT_PATH, AXIS4_JOINT_PATH
+from .robotController import (
+    open_gripper,
+    close_gripper,
+    set_angular_drive_target,
+    set_prismatic_joint_position,
+)
+from .global_variables import (
+    AXIS1_JOINT_PATH,
+    AXIS2_JOINT_PATH,
+    AXIS3_JOINT_PATH,
+    AXIS4_JOINT_PATH,
+)
 from .scenario import PickBoxScenario
 
 
@@ -51,11 +61,10 @@ class UIBuilder:
         """Callback for Timeline events (Play, Pause, Stop)"""
         if event.type == int(omni.timeline.TimelineEventType.STOP):
             self._scenario_state_btn.reset()
-            
+
             # Only disable if the scenario is actually finished
             if self._scenario._did_run:
                 self._scenario_state_btn.enabled = False
-
 
     def on_physics_step(self, step: float):
         """Callback for Physics Step.
@@ -92,13 +101,21 @@ class UIBuilder:
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 self._load_btn = LoadButton(
-                    "Load Button", "LOAD", setup_scene_fn=self._setup_scene, setup_post_load_fn=self._setup_scenario
+                    "Load Button",
+                    "LOAD",
+                    setup_scene_fn=self._setup_scene,
+                    setup_post_load_fn=self._setup_scenario,
                 )
-                self._load_btn.set_world_settings(physics_dt=1 / 60.0, rendering_dt=1 / 60.0)
+                self._load_btn.set_world_settings(
+                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
+                )
                 self.wrapped_ui_elements.append(self._load_btn)
 
                 self._reset_btn = ResetButton(
-                    "Reset Button", "RESET", pre_reset_fn=None, post_reset_fn=self._on_post_reset_btn
+                    "Reset Button",
+                    "RESET",
+                    pre_reset_fn=None,
+                    post_reset_fn=self._on_post_reset_btn,
                 )
                 self._reset_btn.enabled = False
                 self.wrapped_ui_elements.append(self._reset_btn)
@@ -119,7 +136,7 @@ class UIBuilder:
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
 
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
-    
+
         with robot_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 ui.Button("Open Gripper", clicked_fn=open_gripper)
@@ -129,28 +146,40 @@ class UIBuilder:
                 self._angular_drive_input_axis1 = ui.FloatField()
                 ui.Button(
                     "Set position (0, 360)",
-                    clicked_fn=lambda: set_angular_drive_target(AXIS1_JOINT_PATH, self._angular_drive_input_axis1.model.get_value_as_float()),
+                    clicked_fn=lambda: set_angular_drive_target(
+                        AXIS1_JOINT_PATH,
+                        self._angular_drive_input_axis1.model.get_value_as_float(),
+                    ),
                 )
 
                 ui.Label("Set Axis2 position:")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
                     "Set position (-1.5, 0.8)",
-                    clicked_fn=lambda: set_prismatic_joint_position(AXIS2_JOINT_PATH, self._prismatic_drive_input_axis2.model.get_value_as_float()),
+                    clicked_fn=lambda: set_prismatic_joint_position(
+                        AXIS2_JOINT_PATH,
+                        self._prismatic_drive_input_axis2.model.get_value_as_float(),
+                    ),
                 )
 
                 ui.Label("Set Axis3 position:")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
                     "Set position (-1, 1.5)",
-                    clicked_fn=lambda: set_prismatic_joint_position(AXIS3_JOINT_PATH, self._prismatic_drive_input_axis3.model.get_value_as_float()),
+                    clicked_fn=lambda: set_prismatic_joint_position(
+                        AXIS3_JOINT_PATH,
+                        self._prismatic_drive_input_axis3.model.get_value_as_float(),
+                    ),
                 )
 
                 ui.Label("Set Axis4 position:")
                 self._angular_drive_input_axis4 = ui.FloatField()
                 ui.Button(
                     "Set position (0, 360)",
-                    clicked_fn=lambda: set_angular_drive_target(AXIS4_JOINT_PATH, self._angular_drive_input_axis4.model.get_value_as_float()),
+                    clicked_fn=lambda: set_angular_drive_target(
+                        AXIS4_JOINT_PATH,
+                        self._angular_drive_input_axis4.model.get_value_as_float(),
+                    ),
                 )
 
         self.frames.append(world_controls_frame)
@@ -163,12 +192,13 @@ class UIBuilder:
     def _on_init(self):
         self._scenario = PickBoxScenario()
 
-
     def _add_light_to_stage(self):
         """
         A new stage does not have a light by default.  This function creates a spherical light
         """
-        sphereLight = UsdLux.SphereLight.Define(get_current_stage(), Sdf.Path("/World/SphereLight"))
+        sphereLight = UsdLux.SphereLight.Define(
+            get_current_stage(), Sdf.Path("/World/SphereLight")
+        )
         sphereLight.CreateRadiusAttr(2)
         sphereLight.CreateIntensityAttr(100000)
         SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
@@ -192,7 +222,7 @@ class UIBuilder:
         their objects are properly initialized, and that the timeline is paused on timestep 0.
         """
         self._scenario.setup()
-    
+
         # UI management
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = True
@@ -207,7 +237,7 @@ class UIBuilder:
         I.e. the cube prim will move back to the position it was in when it was created in self._setup_scene().
         """
         self._scenario.reset()
-        
+
         # UI management
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = True
@@ -265,5 +295,3 @@ class UIBuilder:
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = False
         self._reset_btn.enabled = False
-
-
