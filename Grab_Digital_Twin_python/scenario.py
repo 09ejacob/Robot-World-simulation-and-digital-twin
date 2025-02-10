@@ -9,7 +9,7 @@ from .robotController import (
     set_angular_drive_target,
     set_prismatic_joint_position,
 )
-from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH
+from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, PICK_BOX_PATH
 
 class PickBoxScenario:
     """
@@ -30,7 +30,7 @@ class PickBoxScenario:
         self._did_run = False
 
         pickBox = DynamicCuboid(
-            prim_path="/World/Environment/pickBox",
+            prim_path=PICK_BOX_PATH,
             position=np.array((0, 2.3, 0.9)),
             scale=np.array((1, 1, 0.5)),
             color=np.array((2, 2, 2))
