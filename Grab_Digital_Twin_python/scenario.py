@@ -63,7 +63,7 @@ class PickBoxScenario:
             yield  
         print("Lowering prismatic joint...")
         set_prismatic_joint_position("/World/Robot/Joints/PrismaticJointAxis2", -1.4)
-        for _ in range(240):  # ~4 seconds
+        for _ in range(60):  
             self._world.step(render=True)
             yield 
 
@@ -75,19 +75,19 @@ class PickBoxScenario:
 
         print("Raising prismatic joint...")
         set_prismatic_joint_position("/World/Robot/Joints/PrismaticJointAxis2", 0.8)
-        for _ in range(240):
+        for _ in range(60):
             self._world.step(render=True)
             yield
 
         print("Rotating angular joint...")
         set_angular_drive_target("/World/Robot/Joints/RevoluteJointAxis1", 180)
-        for _ in range(240):
+        for _ in range(160):
             self._world.step(render=True)
             yield
 
         print("Opening gripper...")
         open_gripper()
-        for _ in range(240):
+        for _ in range(60):
             self._world.step(render=True)
             yield
 
