@@ -5,13 +5,13 @@ from pxr import Usd, UsdGeom
 import omni.usd
 import omni.graph as og2
 
+from .global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
+
 stage = omni.usd.get_context().get_stage()
 
 
 def open_gripper():
-    ogn1 = og2.core.get_node_by_path(
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/open"
-    )
+    ogn1 = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
 
     attr = ogn1.get_attribute("state:enableImpulse")
     attr.set(1)
@@ -19,9 +19,7 @@ def open_gripper():
 
 
 def close_gripper():
-    ogn2 = og2.core.get_node_by_path(
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/close"
-    )
+    ogn2 = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
 
     attr = ogn2.get_attribute("state:enableImpulse")
     attr.set(1)
