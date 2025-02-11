@@ -3,7 +3,7 @@
 import numpy as np
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
-from .robotController import (
+from .robot_controller import (
     open_gripper,
     close_gripper,
     set_angular_drive_target,
@@ -37,12 +37,12 @@ class PickBoxScenario:
             color=np.array((2, 2, 2)),
         )
 
-        self._scenario_generator = self._run_simulation_snippet()
+        self._scenario_generator = self._run_simulation()
 
     def reset(self):
         """
         Called whenever the user presses the RESET button.
-        Put everything back into its default state so the snippet can be run again.
+        Put everything back into its default state so the simulation can be run again.
         """
         self._did_run = False
         if self._world is not None:
@@ -56,8 +56,8 @@ class PickBoxScenario:
             # Generator is exhausted; the simulation is complete.
             return True
 
-    def _run_simulation_snippet(self):
-        print("Starting robot action snippet...")
+    def _run_simulation(self):
+        print("Starting robot action simulation...")
         self._world.play()
 
         for _ in range(60):
@@ -93,5 +93,5 @@ class PickBoxScenario:
             self._world.step(render=True)
             yield
 
-        print("Snippet complete. Stopping simulation.")
+        print("Simulation complete. Stopping simulation.")
         self._world.stop()

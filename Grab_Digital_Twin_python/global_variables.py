@@ -30,7 +30,6 @@ SNAKE_BASE_PATH = f"{AXIS2_PATH}/snakeBase"
 ROBOT_BASE_GROUP_PATH = f"{ROBOT_PATH}/Base"
 ROBOT_BASE_CUBE_PATH = f"{ROBOT_PATH}/Base/base"
 
-
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
 
