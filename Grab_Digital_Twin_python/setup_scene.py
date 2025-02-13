@@ -12,6 +12,7 @@ from pxr import Usd, UsdGeom
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
+import numpy as np
 
 from .global_variables import (
     AXIS1_JOINT_PATH,
@@ -244,6 +245,13 @@ def setup_robot(
 
     create_force_sensor(FORCE_SENSOR_PATH, sensor_offset=(0.0, 2.25, 2.39))
 
+    setup_camera(
+        prim_path="/World/Robot/Tower/Axis2/gripper/cameraSensor",
+        position=[1, 2, 1],
+        orientation=[100, 0, 1],
+        resolution=(1920, 1080),
+    )
+
     # Joints
     create_joint(
         joint_prim_path1,
@@ -404,12 +412,7 @@ def setup_scene():
         GRIPPER_OFFSET_PATH,
         translate=(0, 0, -0.500997),
         rotation=(0, 0, 0),
-        scale=(1, 1, 1),
-    )
+    scale=(1, 1, 1) 
+)
 
-    # camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
-    # camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
-    # resolution = (1920, 1080)  # Resolution for the camera
 
-    # Add camera to the simulation
-    # setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)

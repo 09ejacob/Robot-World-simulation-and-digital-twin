@@ -23,5 +23,5 @@ def setup_camera(
     # Create the Camera sensor at the given prim path with the specified resolution.
     camera = Camera(prim_path=prim_path, resolution=resolution, position=position, orientation=orientation)
     
-    print(f"Camera added at {prim_path} with resolution {resolution}.")
+    print(f"Camera added at {prim_path} with resolution {resolution}, position {position}, and orientation {orientation}.")
     return camera
