@@ -13,7 +13,12 @@ from .robot_controller import (
     read_force_sensor_value,
     wait_for_joint_position,
 )
-from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, PICK_BOX_PATH
+from .global_variables import (
+    AXIS1_JOINT_PATH,
+    AXIS2_JOINT_PATH,
+    AXIS3_JOINT_PATH,
+    PICK_BOX_PATH,
+)
 
 
 class PickBoxScenario:
@@ -71,6 +76,9 @@ class PickBoxScenario:
         axis1_dof_index = get_dof_index_for_joint_prim_path(
             dc_interface, articulation, AXIS1_JOINT_PATH
         )
+        axis3_dof_index = get_dof_index_for_joint_prim_path(
+            dc_interface, articulation, AXIS3_JOINT_PATH
+        )
 
         print(f"axis2_dof_index: {axis2_dof_index}, axis1_dof_index: {axis1_dof_index}")
 
@@ -108,7 +116,18 @@ class PickBoxScenario:
             pos_threshold=0.01,
         )
 
-        # 4) Rotate angular joint – typically in radians
+        # 4) Move snake inwards
+        print("Moving snake inwards...")
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, 0.75)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=-0.75,  # TODO: Works, but should not be negative, should be the same as the actual target position.
+            pos_threshold=0.01,
+        )
+
+        # 5 Rotate angular joint
         set_angular_drive_target(AXIS1_JOINT_PATH, 180)
         yield from wait_for_joint_position(
             dc_interface,

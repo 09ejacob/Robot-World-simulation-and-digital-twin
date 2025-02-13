@@ -128,7 +128,7 @@ def wait_for_joint_position(
     dof_index,
     target_position,
     pos_threshold=0.01,
-    max_frames=500,
+    max_frames=1000,
     is_angular=False,
 ):
     """
@@ -163,10 +163,17 @@ def wait_for_joint_position(
         )
         current_pos = dof_states["pos"][dof_index]
 
+        # For debugging
+        if frames % 10 == 0:
+            unit = "rad" if is_angular else "m"
+            print(
+                f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
+            )
+
         # If angular, normalize the angles to be within [-π, π] range
-        if is_angular:
-            target_position = (target_position + np.pi) % (2 * np.pi) - np.pi
-            current_pos = (current_pos + np.pi) % (2 * np.pi) - np.pi
+        # if is_angular:
+        #    target_position = (target_position + np.pi) % (2 * np.pi) - np.pi
+        #    current_pos = (current_pos + np.pi) % (2 * np.pi) - np.pi
 
         # Check if position is close enough
         if abs(current_pos - target_position) < pos_threshold:
