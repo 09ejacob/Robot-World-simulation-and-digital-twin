@@ -8,6 +8,7 @@ from .robot_controller import (
     close_gripper,
     set_angular_drive_target,
     set_prismatic_joint_position,
+    read_force_sensor_value,
 )
 from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, PICK_BOX_PATH
 
@@ -83,15 +84,19 @@ class PickBoxScenario:
 
         print("Rotating angular joint...")
         set_angular_drive_target(AXIS1_JOINT_PATH, 180)
-        for _ in range(160):
+        for _ in range(300):
             self._world.step(render=True)
             yield
+ 
+        read_force_sensor_value()
 
         print("Opening gripper...")
         open_gripper()
-        for _ in range(60):
+        for _ in range(100):
             self._world.step(render=True)
             yield
+
+        read_force_sensor_value()
 
         print("Simulation complete. Stopping simulation.")
         self._world.stop()

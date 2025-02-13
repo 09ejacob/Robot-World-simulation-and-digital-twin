@@ -40,7 +40,7 @@ AXIS2_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis2"
 AXIS3_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis3"
 AXIS4_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis4"
 FIXED_JOINT_BASE_GROUND = f"{JOINTS_PATH}/FixedJointBaseGround"
-PRISMATIC_JOINT_FORCE_SENSOR = f"{SNAKE_PATH}/PrismaticJointForceSensor"
+PRISMATIC_JOINT_FORCE_SENSOR = f"{JOINTS_PATH}/PrismaticJointForceSensor"
 
 # Gripper Action Graph Paths
 GRIPPER_ACTION_GRAPH_PATH = f"{GRIPPER_PATH}/SurfaceGripperActionGraph"
