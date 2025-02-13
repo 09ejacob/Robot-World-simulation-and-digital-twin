@@ -131,6 +131,24 @@ def wait_for_joint_position(
     max_frames=500,
     is_angular=False,
 ):
+    """
+    Waits until a joint reaches the target position or times out.
+
+    Parameters:
+    dc_interface : DynamicControl - Interface for articulation states.
+    articulation : int - Handle for the robot.
+    dof_index : int - Joint DOF index.
+    target_position : float - Target (degrees for revolute, meters for prismatic).
+    pos_threshold : float - Allowed error (default: 0.01).
+    max_frames : int - Max simulation steps before timeout (default: 500).
+    is_angular : bool - Convert degrees to radians if True (default: False).
+
+    Example:
+    ```python
+    yield from wait_for_joint_position(dc_interface, articulation, axis1_dof_index, 180, 1.0, 1000, True)
+    ```
+    """
+
     frames = 0
 
     # If angular, convert degrees to radians
