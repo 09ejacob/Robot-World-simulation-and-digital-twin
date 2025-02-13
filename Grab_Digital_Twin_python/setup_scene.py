@@ -12,7 +12,6 @@ from pxr import Usd, UsdGeom
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
-from omni.isaac.sensor.effort_sensor import EffortSensor
 
 from .global_variables import (
     JOINTS_PATH,
@@ -309,9 +308,6 @@ def setup_robot(
 
     apply_articulation_root(ROBOT_PATH)
 
-    create_effort_sensor(PRISMATIC_JOINT_FORCE_SENSOR)
-
-
 def apply_articulation_root(path):
     stage = get_current_stage()
     robot_prim = stage.GetPrimAtPath(path)
@@ -321,15 +317,6 @@ def apply_articulation_root(path):
         print(f"Applied articulation root at {path}")
     else:
         print(f"Could not find prim at {path}")
-
-
-def create_effort_sensor(path):
-    sensor = EffortSensor(
-        prim_path=path,
-        sensor_period=0.1,
-        use_latest_data=False,
-        enabled=True
-    )
 
 def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
     force_sensor = DynamicCuboid(
@@ -435,10 +422,3 @@ def setup_scene():
         rotation=(0, 0, 0),
         scale=(1, 1, 1),
     )
-
-    # camera_position = [0.0, 2.25, 2.5]  # Example position of the camera relative to the gripper
-    # camera_orientation = [0.0, 0.0, 0.0, 1.0]  # Example quaternion (no rotation)
-    # resolution = (1920, 1080)  # Resolution for the camera
-
-    # Add camera to the simulation
-    # setup_camera("/World/Robot/Tower/Axis2/cameraSensor", camera_position, camera_orientation, resolution)

@@ -79,11 +79,3 @@ def set_prismatic_joint_position(joint_prim_path, position):
     print(
         f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
     )
-
-
-def read_effor_sensor_value():
-    stage = get_current_stage()
-    sensor_prim = stage.GetPrimAtPath("/World/Robot/Axis2/snake/PrismaticJointForceSensor")
-    
-    reading = sensor_prim.get_sensor_reading(use_latest_data = True)
-    print(f"time: {reading.time} value:{reading.value} \n")

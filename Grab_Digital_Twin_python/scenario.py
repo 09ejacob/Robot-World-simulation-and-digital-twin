@@ -8,7 +8,6 @@ from .robot_controller import (
     close_gripper,
     set_angular_drive_target,
     set_prismatic_joint_position,
-    read_effor_sensor_value,
 )
 from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, PICK_BOX_PATH
 
@@ -66,7 +65,6 @@ class PickBoxScenario:
             yield
         print("Lowering prismatic joint...")
         set_prismatic_joint_position(AXIS2_JOINT_PATH, -1.4)
-        read_effor_sensor_value()
         for _ in range(60):
             self._world.step(render=True)
             yield
@@ -79,14 +77,12 @@ class PickBoxScenario:
 
         print("Raising prismatic joint...")
         set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
-        read_effor_sensor_value()
         for _ in range(60):
             self._world.step(render=True)
             yield
 
         print("Rotating angular joint...")
         set_angular_drive_target(AXIS1_JOINT_PATH, 180)
-        read_effor_sensor_value()
         for _ in range(160):
             self._world.step(render=True)
             yield
