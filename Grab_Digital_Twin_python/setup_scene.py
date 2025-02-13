@@ -20,7 +20,7 @@ from .global_variables import (
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
     FIXED_JOINT_BASE_GROUND,
-    FIXED_JOINT_FORCE_SENSOR,
+    PRISMATIC_JOINT_FORCE_SENSOR,
     FORCE_SENSOR_PATH,
     GRIPPER_ACTION_GRAPH_PATH,
     GRIPPER_OFFSET_PATH,
@@ -315,11 +315,15 @@ def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
     )
 
     create_joint(
-        FIXED_JOINT_FORCE_SENSOR,
+        PRISMATIC_JOINT_FORCE_SENSOR,
         FORCE_SENSOR_PATH,
         SNAKE_PATH,
-        "PhysicsFixedJoint",
-        None,
+        "PhysicsPrismaticJoint",
+        "Z",
+    )
+    #set_prismatic_joint_limits(PRISMATIC_JOINT_FORCE_SENSOR, -1.0, 1.5)
+    enable_linear_drive(
+        PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
     )
 
 
