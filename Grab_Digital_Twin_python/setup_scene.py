@@ -12,6 +12,7 @@ from pxr import Usd, UsdGeom
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
+import numpy as np
 
 from .global_variables import (
     JOINTS_PATH,
