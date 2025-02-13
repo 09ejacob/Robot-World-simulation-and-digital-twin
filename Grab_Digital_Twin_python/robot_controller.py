@@ -4,14 +4,15 @@ import omni.graph as og
 from pxr import Usd, UsdGeom
 import omni.usd
 import omni.graph as og2
+from omni.isaac.dynamic_control import _dynamic_control
+
+from .global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
 stage = omni.usd.get_context().get_stage()
 
 
 def open_gripper():
-    ogn1 = og2.core.get_node_by_path(
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/open"
-    )
+    ogn1 = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
 
     attr = ogn1.get_attribute("state:enableImpulse")
     attr.set(1)
@@ -19,9 +20,7 @@ def open_gripper():
 
 
 def close_gripper():
-    ogn2 = og2.core.get_node_by_path(
-        "/World/Robot/Tower/Axis2/gripper/SurfaceGripperActionGraph/close"
-    )
+    ogn2 = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
 
     attr = ogn2.get_attribute("state:enableImpulse")
     attr.set(1)
@@ -81,3 +80,15 @@ def set_prismatic_joint_position(joint_prim_path, position):
     print(
         f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
     )
+
+def read_force_sensor_value():
+    dc_interface = _dynamic_control.acquire_dynamic_control_interface()
+
+    articulation = dc_interface.get_articulation("/World/Robot")
+    dof_states = dc_interface.get_articulation_dof_states(articulation, _dynamic_control.STATE_ALL)
+
+    sensor_dof_index = 2
+    force_value = dof_states['effort'][sensor_dof_index]
+    print("Effort sensor reading:", force_value)
+
+    

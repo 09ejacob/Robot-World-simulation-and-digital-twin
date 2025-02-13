@@ -18,7 +18,7 @@ from isaacsim.gui.components.ui_utils import get_style
 from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
 from .setup_scene import setup_scene
-from .robotController import (
+from .robot_controller import (
     open_gripper,
     close_gripper,
     set_angular_drive_target,

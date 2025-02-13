@@ -30,17 +30,17 @@ SNAKE_BASE_PATH = f"{AXIS2_PATH}/snakeBase"
 ROBOT_BASE_GROUP_PATH = f"{ROBOT_PATH}/Base"
 ROBOT_BASE_CUBE_PATH = f"{ROBOT_PATH}/Base/base"
 
-
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
 
 # Joints
-AXIS1_JOINT_PATH = f"{ROBOT_PATH}/Joints/RevoluteJointAxis1"
-AXIS2_JOINT_PATH = f"{ROBOT_PATH}/Joints/PrismaticJointAxis2"
-AXIS3_JOINT_PATH = f"{ROBOT_PATH}/Joints/PrismaticJointAxis3"
-AXIS4_JOINT_PATH = f"{ROBOT_PATH}/Joints/RevoluteJointAxis4"
-FIXED_JOINT_BASE_GROUND = f"{ROBOT_PATH}/Joints/FixedJointBaseGround"
-FIXED_JOINT_FORCE_SENSOR = f"{ROBOT_PATH}/Joints/FixedJointForceSensor"
+JOINTS_PATH = f"{ROBOT_PATH}/Joints"
+AXIS1_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis1"
+AXIS2_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis2"
+AXIS3_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis3"
+AXIS4_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis4"
+FIXED_JOINT_BASE_GROUND = f"{JOINTS_PATH}/FixedJointBaseGround"
+PRISMATIC_JOINT_FORCE_SENSOR = f"{JOINTS_PATH}/PrismaticJointForceSensor"
 
 # Gripper Action Graph Paths
 GRIPPER_ACTION_GRAPH_PATH = f"{GRIPPER_PATH}/SurfaceGripperActionGraph"
