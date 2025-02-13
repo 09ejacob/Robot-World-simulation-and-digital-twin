@@ -1,5 +1,5 @@
 import numpy as np
-from omni.isaac.core.objects import DynamicCuboid
+from omni.isaac.core.objects import DynamicCuboid   
 from omni.isaac.core.objects import DynamicCylinder
 from omni.isaac.core.objects.ground_plane import GroundPlane
 from isaacsim.robot.surface_gripper import SurfaceGripper
@@ -40,8 +40,6 @@ from .global_variables import (
 
 def create_ground_plane(path):
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
-    # world.scene.add_default_ground_plane()
-    print("Created ground plane")
 
 
 def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
@@ -51,8 +49,6 @@ def create_xform(path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
     xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
     xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
     xform.AddScaleOp().Set(Gf.Vec3f(*scale))
-
-    print("Created Xform")
 
 
 def enable_linear_drive(
@@ -65,23 +61,17 @@ def enable_linear_drive(
         print(f"Joint prim at path {joint_prim_path} is not valid.")
         return
 
-    # Ensure the joint is of type PhysicsPrismaticJoint
     if joint_prim.GetTypeName() != "PhysicsPrismaticJoint":
         print(f"Joint at path {joint_prim_path} is not a PhysicsPrismaticJoint.")
         return
 
-    # Add the PhysicsDrive API with tag "linear"
     UsdPhysics.DriveAPI.Apply(joint_prim, "linear")
 
     drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "linear")
-    # Set drive parameters
     drive_api.GetStiffnessAttr().Set(stiffness)
     drive_api.GetDampingAttr().Set(damping)
     drive_api.GetMaxForceAttr().Set(max_force)
-    # Set initial target
     drive_api.GetTargetPositionAttr().Set(target_position)
-
-    print(f"Linear drive enabled for joint at {joint_prim_path}.")
 
 
 def enable_angular_drive(
@@ -98,24 +88,18 @@ def enable_angular_drive(
         print(f"Joint prim at path {joint_prim_path} is not valid.")
         return
 
-    # Ensure the joint is of type PhysicsRevoluteJoint
     if joint_prim.GetTypeName() != "PhysicsRevoluteJoint":
         print(f"Joint at path {joint_prim_path} is not a PhysicsRevoluteJoint.")
         return
 
-    # Add the PhysicsAngularDrive API to the joint
     UsdPhysics.DriveAPI.Apply(joint_prim, "angular")
 
-    # Set drive parameters: stiffness, damping, max force
     drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "angular")
     drive_api.GetStiffnessAttr().Set(stiffness)
     drive_api.GetDampingAttr().Set(damping)
     drive_api.GetMaxForceAttr().Set(max_force)
 
-    # Set initial drive target position
     drive_api.GetTargetPositionAttr().Set(target_position)
-
-    print(f"Angular drive enabled for joint at {joint_prim_path}.")
 
 
 def set_prismatic_joint_limits(joint_prim_path, lower_limit=None, upper_limit=None):
@@ -134,8 +118,6 @@ def set_prismatic_joint_limits(joint_prim_path, lower_limit=None, upper_limit=No
         joint_prim.GetAttribute("physics:lowerLimit").Set(lower_limit)
     if upper_limit is not None:
         joint_prim.GetAttribute("physics:upperLimit").Set(upper_limit)
-
-    print(f"Linear limits set for prismatic joint at {joint_prim_path}.")
 
 
 def create_joint(
@@ -165,23 +147,13 @@ def create_joint(
     joint_prim.GetRelationship("physics:body1").SetTargets([Sdf.Path(object2_path)])
 
 
-def setup_robot(
-    prim_path1,
-    prim_path2,
-    prim_path3,
-    prim_path4,
-    prim_path5,
-    joint_prim_path1,
-    joint_prim_path2,
-    joint_prim_path3,
-    joint_prim_path4,
-    joint_prim_path5,
+def create_base_robot_model(
     position1=(0, 0, 0),
     scale1=(1, 1, 1),
-    color1=(0, 0, 0),  # gripper
+    color1=(0, 0, 0),
     position2=(0, 0, 0),
     scale2=(1, 1, 1),
-    color2=(0, 0, 0),  # tower
+    color2=(0, 0, 0),
     position3=(0, 0, 0),
     scale3=(1, 1, 1),
     color3=(0, 0, 0),
@@ -191,122 +163,140 @@ def setup_robot(
     position5=(0, 0, 0),
     scale5=(1, 1, 1),
     color5=(0, 0, 0),
-):  # snake
-    # Shapes
+    position6=(0, 0, 0),
+    scale6=(1, 1, 1),
+    color6=(0, 0, 0),
+):
     gripper = DynamicCuboid(
-        prim_path=prim_path1,
+        prim_path=GRIPPER_PATH,
         position=np.array(position1),
         scale=np.array(scale1),
         color=np.array(color1),
     )
-    print("Created gripper")
 
     tower = DynamicCuboid(
-        prim_path=prim_path2,
+        prim_path=TOWER_CUBOID_PATH,
         position=np.array(position2),
         scale=np.array(scale2),
         color=np.array(color2),
     )
-    print("Created tower")
 
     snake = DynamicCuboid(
-        prim_path=prim_path3,
+        prim_path=SNAKE_PATH,
         position=np.array(position3),
         scale=np.array(scale3),
         color=np.array(color3),
     )
-    print("Created snake")
 
     base = DynamicCuboid(
-        prim_path=prim_path4,
+        prim_path=ROBOT_BASE_CUBE_PATH,
         position=np.array(position4),
         scale=np.array(scale4),
         color=np.array(color4),
     )
 
     snake_base = DynamicCuboid(
-        prim_path=prim_path5,
+        prim_path=SNAKE_BASE_PATH,
         position=np.array(position5),
         scale=np.array(scale5),
         color=np.array(color5),
     )
-    print("Created snake base")
 
+    force_sensor = DynamicCuboid(
+        prim_path=FORCE_SENSOR_PATH,
+        position=np.array(position6),
+        scale=np.array(scale6),
+        color=np.array(color6),
+    )
+
+    # Make snake_base have no collision and no volume
     stage = get_current_stage()
-    collisionAPI = UsdPhysics.CollisionAPI.Get(stage, prim_path5)
+    collisionAPI = UsdPhysics.CollisionAPI.Get(stage, SNAKE_BASE_PATH)
     collisionAPI.GetCollisionEnabledAttr().Set(False)
 
     stage = get_current_stage()
-    snake_base_prim = stage.GetPrimAtPath(prim_path5)
+    snake_base_prim = stage.GetPrimAtPath(SNAKE_BASE_PATH)
 
     snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
         True
     )
 
-    create_force_sensor(FORCE_SENSOR_PATH, sensor_offset=(0.0, 2.25, 2.39))
-
-    # Joints
+def create_joints():
+    # Axis 4 joint
     create_joint(
-        joint_prim_path1,
+        AXIS4_JOINT_PATH,
         FORCE_SENSOR_PATH,
         GRIPPER_PATH,
         "PhysicsRevoluteJoint",
         "Z",
-    )  # Axis4 joint
-    enable_angular_drive(joint_prim_path1)
+    )
+    enable_angular_drive(AXIS4_JOINT_PATH)
 
+    # Axis 3 joint
     create_joint(
-        joint_prim_path2,
+        AXIS3_JOINT_PATH,
         SNAKE_PATH,
         SNAKE_BASE_PATH,
         "PhysicsPrismaticJoint",
         "Y",
-    )  # In out joint
-    set_prismatic_joint_limits(joint_prim_path2, -1.0, 1.5)
+    )
+    set_prismatic_joint_limits(AXIS3_JOINT_PATH, -1.0, 1.5)
     enable_linear_drive(
-        joint_prim_path2, stiffness=100, damping=100, max_force=100, target_position=0.0
+        AXIS3_JOINT_PATH,
+        stiffness=100,
+        damping=100,
+        max_force=100,
+        target_position=0.0
     )
 
+    # Axis 1 joint
     create_joint(
-        joint_prim_path3,
+        AXIS1_JOINT_PATH,
         TOWER_CUBOID_PATH,
         ROBOT_BASE_CUBE_PATH,
         "PhysicsRevoluteJoint",
         "Z",
-    )  # Axis1 joint
-    enable_angular_drive(joint_prim_path3)
+    )
+    enable_angular_drive(AXIS1_JOINT_PATH)
 
+    # Base and groundplane joint
     create_joint(
-        joint_prim_path4,
+        FIXED_JOINT_BASE_GROUND,
         GROUND_PLANE_PATH,
         ROBOT_BASE_CUBE_PATH,
         "PhysicsFixedJoint",
         None,
-    )  # Base and groundplane joint
+    )
 
+    # Axis 2 joint
     create_joint(
-        joint_prim_path5,
+        AXIS2_JOINT_PATH,
         TOWER_CUBOID_PATH,
         SNAKE_BASE_PATH,
         "PhysicsPrismaticJoint",
         "Z",
-    )  # Axis2 joint
-    set_prismatic_joint_limits(joint_prim_path5, -1.5, 0.8)
+    )
+    set_prismatic_joint_limits(AXIS2_JOINT_PATH, -1.5, 0.8)
     enable_linear_drive(
-        joint_prim_path5,
+        AXIS2_JOINT_PATH,
         stiffness=1000,
         damping=100,
         max_force=100,
         target_position=0.0,
     )
 
-    create_surface_gripper(
-        GRIPPER_ACTION_GRAPH_PATH,
-        GRIPPER_OFFSET_PATH,
-        GRIPPER_PATH,
+    # Force sensor joint
+    create_joint(
+        PRISMATIC_JOINT_FORCE_SENSOR,
+        FORCE_SENSOR_PATH,
+        SNAKE_PATH,
+        "PhysicsPrismaticJoint",
+        "Z",
+    )
+    enable_linear_drive(
+        PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
     )
 
-    apply_articulation_root(ROBOT_PATH)
 
 def apply_articulation_root(path):
     stage = get_current_stage()
@@ -314,7 +304,6 @@ def apply_articulation_root(path):
 
     if robot_prim and robot_prim.IsValid():
         UsdPhysics.ArticulationRootAPI.Apply(robot_prim)
-        print(f"Applied articulation root at {path}")
     else:
         print(f"Could not find prim at {path}")
 
@@ -361,19 +350,26 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
             ],
         },
     )
-    print("Created surface gripper action graph")
 
 
 def setup_scene():
     stage = get_current_stage()
     UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
-    print("Setting up scene...")
-
     create_ground_plane(GROUND_PLANE_PATH)
 
-    create_xform(ROBOT_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-    create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+    create_xform(
+        ROBOT_PATH,
+        translate=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(1, 1, 1))
+    
+    create_xform(
+        TOWER_PATH,
+        translate=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(1, 1, 1))
+    
     create_xform(
         AXIS2_PATH,
         translate=(0, 0, 0),
@@ -388,17 +384,7 @@ def setup_scene():
         scale=(1, 1, 1),
     )
 
-    setup_robot(
-        GRIPPER_PATH,
-        TOWER_CUBOID_PATH,
-        SNAKE_PATH,
-        ROBOT_BASE_CUBE_PATH,
-        SNAKE_BASE_PATH,
-        AXIS4_JOINT_PATH,
-        AXIS3_JOINT_PATH,
-        AXIS1_JOINT_PATH,
-        FIXED_JOINT_BASE_GROUND,
-        AXIS2_JOINT_PATH,
+    create_base_robot_model(
         position1=(0.0, 2.25, 2.3),
         scale1=(0.6, 0.3, 0.1),
         color1=(0.2, 0.5, 0.7),
@@ -414,7 +400,20 @@ def setup_scene():
         position5=(0, 0, 2.5),
         scale5=(0.5, 7, 0.3),
         color5=(0.1, 0.2, 0.2),
+        position6=(0.0, 2.25, 2.39),
+        scale6=(0.2, 0.2, 0.05),
+        color6=(1.0, 0.0, 0.0),
     )
+
+    create_joints()
+
+    create_surface_gripper(
+        GRIPPER_ACTION_GRAPH_PATH,
+        GRIPPER_OFFSET_PATH,
+        GRIPPER_PATH,
+    )
+
+    apply_articulation_root(ROBOT_PATH)
 
     create_xform(
         GRIPPER_OFFSET_PATH,
