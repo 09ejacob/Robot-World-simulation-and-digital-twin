@@ -12,8 +12,10 @@ from pxr import Usd, UsdGeom
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
+from omni.isaac.sensor.effort_sensor import EffortSensor
 
 from .global_variables import (
+    JOINTS_PATH,
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS2_PATH,
@@ -237,7 +239,7 @@ def setup_robot(
 
     stage = get_current_stage()
     snake_base_prim = stage.GetPrimAtPath(prim_path5)
-    # Create the primvar if it doesn't exist, then set it to True.
+
     snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
         True
     )
@@ -305,6 +307,29 @@ def setup_robot(
         GRIPPER_PATH,
     )
 
+    apply_articulation_root(ROBOT_PATH)
+
+    create_effort_sensor(PRISMATIC_JOINT_FORCE_SENSOR)
+
+
+def apply_articulation_root(path):
+    stage = get_current_stage()
+    robot_prim = stage.GetPrimAtPath(path)
+
+    if robot_prim and robot_prim.IsValid():
+        UsdPhysics.ArticulationRootAPI.Apply(robot_prim)
+        print(f"Applied articulation root at {path}")
+    else:
+        print(f"Could not find prim at {path}")
+
+
+def create_effort_sensor(path):
+    sensor = EffortSensor(
+        prim_path=path,
+        sensor_period=0.1,
+        use_latest_data=False,
+        enabled=True
+    )
 
 def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
     force_sensor = DynamicCuboid(
@@ -321,7 +346,7 @@ def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
         "PhysicsPrismaticJoint",
         "Z",
     )
-    #set_prismatic_joint_limits(PRISMATIC_JOINT_FORCE_SENSOR, -1.0, 1.5)
+    #set_prismatic_joUsdPhysics.ArticulationRootAPI.Apply(robot_root)int_limits(PRISMATIC_JOINT_FORCE_SENSOR, -1.0, 1.5)
     enable_linear_drive(
         PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
     )
