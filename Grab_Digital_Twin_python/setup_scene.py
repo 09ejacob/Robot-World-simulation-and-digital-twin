@@ -24,6 +24,7 @@ from .global_variables import (
     FIXED_JOINT_BASE_GROUND,
     PRISMATIC_JOINT_FORCE_SENSOR,
     ROBOT_BASE_JOINT_PATH,
+    AXIS2_TOWER_JOINT_PATH,
     FORCE_SENSOR_PATH,
     GRIPPER_ACTION_GRAPH_PATH,
     GRIPPER_OFFSET_PATH,
@@ -37,7 +38,8 @@ from .global_variables import (
     SNAKE_PATH,
     AXIS2_BASE_PATH,
     TOWER_PATH,
-    ROBOT_BASE,
+    ROBOT_BASE_PATH,
+    AXIS2_TOWER_PATH,
 )
 
 
@@ -172,6 +174,9 @@ def create_base_robot_model(
     position7=(0, 0, 0),
     scale7=(1, 1, 1),
     color7=(0, 0, 0),
+    position8=(0, 0, 0),
+    scale8=(1, 1, 1),
+    color8=(0, 0, 0),
 ):
     gripper = DynamicCuboid(
         prim_path=GRIPPER_PATH,
@@ -216,10 +221,17 @@ def create_base_robot_model(
     )
 
     robot_base = DynamicCylinder(
-        prim_path=ROBOT_BASE,
+        prim_path=ROBOT_BASE_PATH,
         position=np.array(position7),
         scale=np.array(scale7),
         color=np.array(color7),
+    )
+
+    axis2_tower = DynamicCuboid(
+        prim_path=AXIS2_TOWER_PATH,
+        position=np.array(position8),
+        scale=np.array(scale8),
+        color=np.array(color8),
     )
 
     # Make snake_base have no collision and no volume
@@ -321,12 +333,22 @@ def create_joints():
         PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
     )
 
+    # Robot base joint
     create_joint(
         ROBOT_BASE_JOINT_PATH,
         SNAKE_BASE_PATH,
-        ROBOT_BASE,
+        ROBOT_BASE_PATH,
         "PhysicsRevoluteJoint",
         "Z",
+    )
+
+    # Axis2 tower joint
+    create_joint(
+        AXIS2_TOWER_JOINT_PATH,
+        AXIS2_TOWER_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        "PhysicsFixedJoint",
+        None,
     )
 
 
@@ -386,31 +408,35 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
 # Values
 gripper_pos = (0.0, 2.25, 2.3)
 gripper_scale = (0.6, 0.3, 0.1)
-gripper_color = (0.2, 0.5, 0.7)
+gripper_color = (0.05, 0.05, 0.05)
 
 axis2_base_pos = (0.0, 0, 2)
 axis2_base_scale = (0.5, 0.5, 3)
-axis2_base_color = (0.7, 0.3, 0.5)
+axis2_base_color = (0.05, 0.05, 0.05)
 
 snake_pos = (0.0, 2.2, 2.5)
 snake_scale = (0.15, 0.4, 0.15)
-snake_color = (0.2, 0.5, 0.3)
+snake_color = (0.05, 0.05, 0.05)
 
 base_pos = (0, 0, 0.25)
-base_scale = (2, 6, 0.5)
-base_color = (0.6, 0.2, 0.2)
+base_scale = (1, 2, 0.5)
+base_color = (0.05, 0.05, 0.05)
 
 snake_base_pos = (0, 0, 2.5)
 snake_base_scale = (0.5, 7, 0.3)
-snake_base_color = (0.1, 0.2, 0.2)
+snake_base_color = (0.05, 0.05, 0.05)
 
 force_sensor_pos = (0.0, 2.25, 2.39)
 force_sensor_scale = (0.2, 0.2, 0.05)
-force_sensor_color = (1.0, 0.0, 0.0)
+force_sensor_color = (0.2, 0.2, 0.2)
 
-robot_base_pos = (0.0, 0.0, 2.75)
-robot_base_scale = (0.6, 0.6, 0.3)
-robot_base_color = (1, 1, 1)
+robot_base_pos = (0.0, 0.0, 2.65)
+robot_base_scale = (0.6, 0.6, 0.2)
+robot_base_color = (0.05, 0.05, 0.05)
+
+axis2_tower_pos = (0, -0.75, 2)
+axis2_tower_scale = (0.3, 0.3, 3)
+axis2_tower_color = (0.05, 0.05, 0.05)
 
 def setup_scene():
     stage = get_current_stage()
@@ -466,6 +492,9 @@ def setup_scene():
         robot_base_pos,
         robot_base_scale,
         robot_base_color,
+        axis2_tower_pos,
+        axis2_tower_scale,
+        axis2_tower_color,
     )
 
     create_joints()

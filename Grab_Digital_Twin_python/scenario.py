@@ -41,9 +41,9 @@ class PickBoxScenario:
 
         pickBox = DynamicCuboid(
             prim_path=PICK_BOX_PATH,
-            position=np.array((0, 2.3, 0.9)),
+            position=np.array((3, 0, 0.5)),
             scale=np.array((1, 1, 0.5)),
-            color=np.array((2, 2, 2)),
+            color=np.array((0.05, 0.5, 0.05)),
         )
 
         self._scenario_generator = self._run_simulation()
