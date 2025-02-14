@@ -25,6 +25,7 @@ from .global_variables import (
     PRISMATIC_JOINT_FORCE_SENSOR,
     ROBOT_BASE_JOINT_PATH,
     AXIS2_TOWER_JOINT_PATH,
+    PALLET_BASE_JOINT_PATH,
     FORCE_SENSOR_PATH,
     GRIPPER_ACTION_GRAPH_PATH,
     GRIPPER_OFFSET_PATH,
@@ -40,6 +41,7 @@ from .global_variables import (
     TOWER_PATH,
     ROBOT_BASE_PATH,
     AXIS2_TOWER_PATH,
+    PALLET_BASE_PATH,
 )
 
 
@@ -177,6 +179,9 @@ def create_base_robot_model(
     position8=(0, 0, 0),
     scale8=(1, 1, 1),
     color8=(0, 0, 0),
+    position9=(0, 0, 0),
+    scale9=(1, 1, 1),
+    color9=(0, 0, 0),
 ):
     gripper = DynamicCuboid(
         prim_path=GRIPPER_PATH,
@@ -232,6 +237,13 @@ def create_base_robot_model(
         position=np.array(position8),
         scale=np.array(scale8),
         color=np.array(color8),
+    )
+
+    pallet_base = DynamicCuboid(
+        prim_path=PALLET_BASE_PATH,
+        position=np.array(position9),
+        scale=np.array(scale9),
+        color=np.array(color9),
     )
 
     # Make snake_base have no collision and no volume
@@ -351,6 +363,15 @@ def create_joints():
         None,
     )
 
+    # Pallet base joint
+    create_joint(
+        PALLET_BASE_JOINT_PATH,
+        PALLET_BASE_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        "PhysicsFixedJoint",
+        None,
+    )
+
 
 def apply_articulation_root(path):
     stage = get_current_stage()
@@ -405,6 +426,7 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
         },
     )
 
+
 # Values
 gripper_pos = (0.0, 2.25, 2.3)
 gripper_scale = (0.6, 0.3, 0.1)
@@ -419,7 +441,7 @@ snake_scale = (0.15, 0.4, 0.15)
 snake_color = (0.05, 0.05, 0.05)
 
 base_pos = (0, 0, 0.25)
-base_scale = (1, 2, 0.5)
+base_scale = (0.6, 2, 0.5)
 base_color = (0.05, 0.05, 0.05)
 
 snake_base_pos = (0, 0, 2.5)
@@ -437,6 +459,11 @@ robot_base_color = (0.05, 0.05, 0.05)
 axis2_tower_pos = (0, -0.75, 2)
 axis2_tower_scale = (0.3, 0.3, 3)
 axis2_tower_color = (0.05, 0.05, 0.05)
+
+pallet_base_pos = (0.0, 2.2, 0.4)
+pallet_base_scale = (1.2, 2.4, 0.8)
+pallet_base_color = (0.05, 0.05, 0.05)
+
 
 def setup_scene():
     stage = get_current_stage()
@@ -495,6 +522,9 @@ def setup_scene():
         axis2_tower_pos,
         axis2_tower_scale,
         axis2_tower_color,
+        pallet_base_pos,
+        pallet_base_scale,
+        pallet_base_color,
     )
 
     create_joints()
