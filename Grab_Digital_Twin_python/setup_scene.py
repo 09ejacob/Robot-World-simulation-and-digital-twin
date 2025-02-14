@@ -209,7 +209,7 @@ def create_base_robot_model(
         scale=np.array(scale6),
         color=np.array(color6),
     )
-
+    
     # Make snake_base have no collision and no volume
     stage = get_current_stage()
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, SNAKE_BASE_PATH)
@@ -220,6 +220,13 @@ def create_base_robot_model(
 
     snake_base_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
         True
+    )
+
+    setup_camera(
+    prim_path="/World/Robot/Tower/cameraSensor",
+    position=[0,0.44,3],
+    orientation=[0.81, 0.57, 0, 0],
+    resolution=(1920, 1080),
     )
 
 def create_joints():
