@@ -24,11 +24,12 @@ AXIS2_PATH = f"{TOWER_PATH}/Axis2"
 GRIPPER_PATH = f"{AXIS2_PATH}/gripper"
 
 # Additional robot parts
-TOWER_CUBOID_PATH = f"{TOWER_PATH}/tower"
+AXIS2_BASE_PATH = f"{TOWER_PATH}/axis2_base"
 SNAKE_PATH = f"{AXIS2_PATH}/snake"
 SNAKE_BASE_PATH = f"{AXIS2_PATH}/snakeBase"
 ROBOT_BASE_GROUP_PATH = f"{ROBOT_PATH}/Base"
 ROBOT_BASE_CUBE_PATH = f"{ROBOT_PATH}/Base/base"
+ROBOT_BASE = f"{AXIS2_PATH}/robot_base"
 
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
@@ -41,6 +42,7 @@ AXIS3_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis3"
 AXIS4_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis4"
 FIXED_JOINT_BASE_GROUND = f"{JOINTS_PATH}/FixedJointBaseGround"
 PRISMATIC_JOINT_FORCE_SENSOR = f"{JOINTS_PATH}/PrismaticJointForceSensor"
+ROBOT_BASE_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointRobotBase"
 
 # Gripper Action Graph Paths
 GRIPPER_ACTION_GRAPH_PATH = f"{GRIPPER_PATH}/SurfaceGripperActionGraph"
