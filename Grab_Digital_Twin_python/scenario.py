@@ -3,14 +3,22 @@
 import numpy as np
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
+from omni.isaac.dynamic_control import _dynamic_control
 from .robot_controller import (
+    get_dof_index_for_joint_prim_path,
     open_gripper,
     close_gripper,
     set_angular_drive_target,
     set_prismatic_joint_position,
     read_force_sensor_value,
+    wait_for_joint_position,
 )
-from .global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, PICK_BOX_PATH
+from .global_variables import (
+    AXIS1_JOINT_PATH,
+    AXIS2_JOINT_PATH,
+    AXIS3_JOINT_PATH,
+    PICK_BOX_PATH,
+)
 
 
 class PickBoxScenario:
@@ -33,9 +41,9 @@ class PickBoxScenario:
 
         pickBox = DynamicCuboid(
             prim_path=PICK_BOX_PATH,
-            position=np.array((0, 2.3, 0.9)),
-            scale=np.array((1, 1, 0.5)),
-            color=np.array((2, 2, 2)),
+            position=np.array((3, 0, 0.5)),
+            scale=np.array((1, 1, 1)),
+            color=np.array((0.05, 0.5, 0.05)),
         )
 
         self._scenario_generator = self._run_simulation()
@@ -58,45 +66,113 @@ class PickBoxScenario:
             return True
 
     def _run_simulation(self):
-        print("Starting robot action simulation...")
-        self._world.play()
+        dc_interface = _dynamic_control.acquire_dynamic_control_interface()
+        articulation = dc_interface.get_articulation("/World/Robot")
 
+        # Find which DOF index corresponds to prismatic or revolute joint
+        axis2_dof_index = get_dof_index_for_joint_prim_path(
+            dc_interface, articulation, AXIS2_JOINT_PATH
+        )
+        axis1_dof_index = get_dof_index_for_joint_prim_path(
+            dc_interface, articulation, AXIS1_JOINT_PATH
+        )
+        axis3_dof_index = get_dof_index_for_joint_prim_path(
+            dc_interface, articulation, AXIS3_JOINT_PATH
+        )
+
+        print(f"axis2_dof_index: {axis2_dof_index}, axis1_dof_index: {axis1_dof_index}")
+
+        # Start
         for _ in range(60):
             self._world.step(render=True)
             yield
-        print("Lowering prismatic joint...")
-        set_prismatic_joint_position(AXIS2_JOINT_PATH, -1.4)
-        for _ in range(60):
-            self._world.step(render=True)
-            yield
 
-        print("Closing gripper...")
-        close_gripper()
-        for _ in range(50):
-            self._world.step(render=True)
-            yield
+        # Rotate axis1
+        set_angular_drive_target(AXIS1_JOINT_PATH, 90)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis1_dof_index,
+            target_position=90,
+            pos_threshold=1.0,
+            max_frames=100,
+            is_angular=True,
+        )
 
-        print("Raising prismatic joint...")
-        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
-        for _ in range(60):
-            self._world.step(render=True)
-            yield
+        # Move axis3 out
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.9)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=-0.9,
+            pos_threshold=1,
+        )
 
-        print("Rotating angular joint...")
-        set_angular_drive_target(AXIS1_JOINT_PATH, 180)
-        for _ in range(300):
-            self._world.step(render=True)
-            yield
- 
-        read_force_sensor_value()
-
-        print("Opening gripper...")
-        open_gripper()
         for _ in range(100):
             self._world.step(render=True)
             yield
 
-        read_force_sensor_value()
+        # Lower axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, -1.3)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=-1.3,
+            pos_threshold=1.0,
+        )
+
+        for _ in range(60):
+            self._world.step(render=True)
+            yield
+
+        # Close gripper
+        close_gripper()
+
+        # Raise axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.6)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.6,
+            pos_threshold=1.0,
+        )
+
+        # Rotate axis1
+        set_angular_drive_target(AXIS1_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis1_dof_index,
+            target_position=0,
+            pos_threshold=0.01,
+            max_frames=100,
+            is_angular=True,
+        )
+
+        # Move axis3 out
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=0,
+            pos_threshold=1,
+        )
+
+        for _ in range(100):
+            self._world.step(render=True)
+            yield
+
+        open_gripper()
+
+
+        # Finish
+        for _ in range(60):
+            self._world.step(render=True)
+            yield
 
         print("Simulation complete. Stopping simulation.")
         self._world.stop()

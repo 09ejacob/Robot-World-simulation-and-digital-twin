@@ -23,6 +23,9 @@ from .global_variables import (
     AXIS4_JOINT_PATH,
     FIXED_JOINT_BASE_GROUND,
     PRISMATIC_JOINT_FORCE_SENSOR,
+    ROBOT_BASE_JOINT_PATH,
+    AXIS2_TOWER_JOINT_PATH,
+    PALLET_BASE_JOINT_PATH,
     FORCE_SENSOR_PATH,
     GRIPPER_ACTION_GRAPH_PATH,
     GRIPPER_OFFSET_PATH,
@@ -34,8 +37,11 @@ from .global_variables import (
     ROBOT_PATH,
     SNAKE_BASE_PATH,
     SNAKE_PATH,
-    TOWER_CUBOID_PATH,
+    AXIS2_BASE_PATH,
     TOWER_PATH,
+    ROBOT_BASE_PATH,
+    AXIS2_TOWER_PATH,
+    PALLET_BASE_PATH,
 )
 
 
@@ -167,6 +173,15 @@ def create_base_robot_model(
     position6=(0, 0, 0),
     scale6=(1, 1, 1),
     color6=(0, 0, 0),
+    position7=(0, 0, 0),
+    scale7=(1, 1, 1),
+    color7=(0, 0, 0),
+    position8=(0, 0, 0),
+    scale8=(1, 1, 1),
+    color8=(0, 0, 0),
+    position9=(0, 0, 0),
+    scale9=(1, 1, 1),
+    color9=(0, 0, 0),
 ):
     gripper = DynamicCuboid(
         prim_path=GRIPPER_PATH,
@@ -175,8 +190,8 @@ def create_base_robot_model(
         color=np.array(color1),
     )
 
-    tower = DynamicCuboid(
-        prim_path=TOWER_CUBOID_PATH,
+    axis2_base = DynamicCuboid(
+        prim_path=AXIS2_BASE_PATH,
         position=np.array(position2),
         scale=np.array(scale2),
         color=np.array(color2),
@@ -209,7 +224,7 @@ def create_base_robot_model(
         scale=np.array(scale6),
         color=np.array(color6),
     )
-    
+
     # Make snake_base have no collision and no volume
     stage = get_current_stage()
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, SNAKE_BASE_PATH)
@@ -227,6 +242,17 @@ def create_base_robot_model(
     position=[0,0.44,3],
     orientation=[0.81, 0.57, 0, 0],
     resolution=(1920, 1080),
+    )
+
+    # Axis2_base no volume and collision
+    collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
+    collisionAPI.GetCollisionEnabledAttr().Set(False)
+
+    stage = get_current_stage()
+    axis2_base = stage.GetPrimAtPath(AXIS2_BASE_PATH)
+
+    axis2_base.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
+        True
     )
 
 def create_joints():
@@ -260,7 +286,7 @@ def create_joints():
     # Axis 1 joint
     create_joint(
         AXIS1_JOINT_PATH,
-        TOWER_CUBOID_PATH,
+        AXIS2_BASE_PATH,
         ROBOT_BASE_CUBE_PATH,
         "PhysicsRevoluteJoint",
         "Z",
@@ -279,7 +305,7 @@ def create_joints():
     # Axis 2 joint
     create_joint(
         AXIS2_JOINT_PATH,
-        TOWER_CUBOID_PATH,
+        AXIS2_BASE_PATH,
         SNAKE_BASE_PATH,
         "PhysicsPrismaticJoint",
         "Z",
@@ -303,6 +329,33 @@ def create_joints():
     )
     enable_linear_drive(
         PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
+    )
+
+    # Robot base joint
+    create_joint(
+        ROBOT_BASE_JOINT_PATH,
+        SNAKE_BASE_PATH,
+        ROBOT_BASE_PATH,
+        "PhysicsRevoluteJoint",
+        "Z",
+    )
+
+    # Axis2 tower joint
+    create_joint(
+        AXIS2_TOWER_JOINT_PATH,
+        AXIS2_TOWER_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        "PhysicsFixedJoint",
+        None,
+    )
+
+    # Pallet base joint
+    create_joint(
+        PALLET_BASE_JOINT_PATH,
+        PALLET_BASE_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        "PhysicsFixedJoint",
+        None,
     )
 
 
@@ -360,6 +413,44 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
     )
 
 
+# Values
+gripper_pos = (0.0, 2.25, 2.3)
+gripper_scale = (0.6, 0.3, 0.1)
+gripper_color = (0.05, 0.05, 0.05)
+
+axis2_base_pos = (0.0, 0, 2)
+axis2_base_scale = (0.5, 0.5, 3)
+axis2_base_color = (0.05, 0.05, 0.05)
+
+snake_pos = (0.0, 2.2, 2.5)
+snake_scale = (0.15, 0.4, 0.15)
+snake_color = (0.05, 0.05, 0.05)
+
+base_pos = (0, 0, 0.25)
+base_scale = (0.6, 2, 0.5)
+base_color = (0.05, 0.05, 0.05)
+
+snake_base_pos = (0, 0, 2.5)
+snake_base_scale = (0.5, 7, 0.3)
+snake_base_color = (0.05, 0.05, 0.05)
+
+force_sensor_pos = (0.0, 2.25, 2.39)
+force_sensor_scale = (0.2, 0.2, 0.05)
+force_sensor_color = (0.2, 0.2, 0.2)
+
+robot_base_pos = (0.0, 0.0, 2.65)
+robot_base_scale = (0.6, 0.6, 0.2)
+robot_base_color = (0.05, 0.05, 0.05)
+
+axis2_tower_pos = (0, -0.75, 2)
+axis2_tower_scale = (0.3, 0.3, 3)
+axis2_tower_color = (0.05, 0.05, 0.05)
+
+pallet_base_pos = (0.0, 2.2, 0.4)
+pallet_base_scale = (1.2, 2.4, 0.8)
+pallet_base_color = (0.05, 0.05, 0.05)
+
+
 def setup_scene():
     stage = get_current_stage()
     UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
@@ -393,24 +484,33 @@ def setup_scene():
     )
 
     create_base_robot_model(
-        position1=(0.0, 2.25, 2.3),
-        scale1=(0.6, 0.3, 0.1),
-        color1=(0.2, 0.5, 0.7),
-        position2=(0.0, 0, 2),
-        scale2=(0.8, 0.5, 3),
-        color2=(0.7, 0.3, 0.5),
-        position3=(0.0, 2.2, 2.5),
-        scale3=(0.15, 0.4, 0.15),
-        color3=(0.2, 0.5, 0.3),
-        position4=(0, 0, 0.25),
-        scale4=(2, 6, 0.5),
-        color4=(0.6, 0.2, 0.2),
-        position5=(0, 0, 2.5),
-        scale5=(0.5, 7, 0.3),
-        color5=(0.1, 0.2, 0.2),
-        position6=(0.0, 2.25, 2.39),
-        scale6=(0.2, 0.2, 0.05),
-        color6=(1.0, 0.0, 0.0),
+        gripper_pos,
+        gripper_scale,
+        gripper_color,
+        axis2_base_pos,
+        axis2_base_scale,
+        axis2_base_color,
+        snake_pos,
+        snake_scale,
+        snake_color,
+        base_pos,
+        base_scale,
+        base_color,
+        snake_base_pos,
+        snake_base_scale,
+        snake_base_color,
+        force_sensor_pos,
+        force_sensor_scale,
+        force_sensor_color,
+        robot_base_pos,
+        robot_base_scale,
+        robot_base_color,
+        axis2_tower_pos,
+        axis2_tower_scale,
+        axis2_tower_color,
+        pallet_base_pos,
+        pallet_base_scale,
+        pallet_base_color,
     )
 
     create_joints()
