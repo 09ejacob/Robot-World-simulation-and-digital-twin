@@ -222,6 +222,17 @@ def create_base_robot_model(
         True
     )
 
+    # Tower no volume and collision
+    # collisionAPI = UsdPhysics.CollisionAPI.Get(stage, TOWER_CUBOID_PATH)
+    # collisionAPI.GetCollisionEnabledAttr().Set(False)
+
+    # stage = get_current_stage()
+    # tower_prim = stage.GetPrimAtPath(TOWER_CUBOID_PATH)
+
+    # tower_prim.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
+    #     True
+    # )
+
 def create_joints():
     # Axis 4 joint
     create_joint(
@@ -352,6 +363,30 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
         },
     )
 
+# Values
+gripper_pos = (0.0, 2.25, 2.3)
+gripper_scale = (0.6, 0.3, 0.1)
+gripper_color = (0.2, 0.5, 0.7)
+
+tower_pos = (0.0, 0, 2)
+tower_scale = (0.5, 0.5, 3)
+tower_color = (0.7, 0.3, 0.5)
+
+snake_pos = (0.0, 2.2, 2.5)
+snake_scale = (0.15, 0.4, 0.15)
+snake_color = (0.2, 0.5, 0.3)
+
+base_pos = (0, 0, 0.25)
+base_scale = (2, 6, 0.5)
+base_color = (0.6, 0.2, 0.2)
+
+snake_base_pos = (0, 0, 2.5)
+snake_base_scale = (0.5, 7, 0.3)
+snake_base_color = (0.1, 0.2, 0.2)
+
+force_sensor_pos = (0.0, 2.25, 2.39)
+force_sensor_scale = (0.2, 0.2, 0.05)
+force_sensor_color = (1.0, 0.0, 0.0)
 
 def setup_scene():
     stage = get_current_stage()
@@ -386,24 +421,24 @@ def setup_scene():
     )
 
     create_base_robot_model(
-        position1=(0.0, 2.25, 2.3),
-        scale1=(0.6, 0.3, 0.1),
-        color1=(0.2, 0.5, 0.7),
-        position2=(0.0, 0, 2),
-        scale2=(0.8, 0.5, 3),
-        color2=(0.7, 0.3, 0.5),
-        position3=(0.0, 2.2, 2.5),
-        scale3=(0.15, 0.4, 0.15),
-        color3=(0.2, 0.5, 0.3),
-        position4=(0, 0, 0.25),
-        scale4=(2, 6, 0.5),
-        color4=(0.6, 0.2, 0.2),
-        position5=(0, 0, 2.5),
-        scale5=(0.5, 7, 0.3),
-        color5=(0.1, 0.2, 0.2),
-        position6=(0.0, 2.25, 2.39),
-        scale6=(0.2, 0.2, 0.05),
-        color6=(1.0, 0.0, 0.0),
+        gripper_pos,
+        gripper_scale,
+        gripper_color,
+        tower_pos,
+        tower_scale,
+        tower_color,
+        snake_pos,
+        snake_scale,
+        snake_color,
+        base_pos,
+        base_scale,
+        base_color,
+        snake_base_pos,
+        snake_base_scale,
+        snake_base_color,
+        force_sensor_pos,
+        force_sensor_scale,
+        force_sensor_color,
     )
 
     create_joints()
