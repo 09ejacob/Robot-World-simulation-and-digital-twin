@@ -93,9 +93,9 @@ class PickBoxScenario:
             dc_interface,
             articulation,
             axis1_dof_index,
-            target_position=90,
-            pos_threshold=1.0,
-            max_frames=100,
+            target_position=-90,
+            pos_threshold=0.1,
+            max_frames=1000,
             is_angular=True,
         )
 
@@ -120,7 +120,7 @@ class PickBoxScenario:
             articulation,
             axis2_dof_index,
             target_position=-1.3,
-            pos_threshold=1.0,
+            pos_threshold=0.1,
         )
 
         for _ in range(60):
@@ -137,7 +137,7 @@ class PickBoxScenario:
             articulation,
             axis2_dof_index,
             target_position=0.6,
-            pos_threshold=1.0,
+            pos_threshold=0.1,
         )
 
         # Rotate axis1
@@ -148,7 +148,7 @@ class PickBoxScenario:
             axis1_dof_index,
             target_position=0,
             pos_threshold=0.01,
-            max_frames=100,
+            max_frames=1000,
             is_angular=True,
         )
 
@@ -159,15 +159,10 @@ class PickBoxScenario:
             articulation,
             axis3_dof_index,
             target_position=0,
-            pos_threshold=1,
+            pos_threshold=0.1,
         )
 
-        for _ in range(100):
-            self._world.step(render=True)
-            yield
-
         open_gripper()
-
 
         # Finish
         for _ in range(60):

@@ -1,5 +1,5 @@
 import numpy as np
-from omni.isaac.core.objects import DynamicCuboid   
+from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.core.objects import DynamicCylinder
 from omni.isaac.core.objects.ground_plane import GroundPlane
 from isaacsim.robot.surface_gripper import SurfaceGripper
@@ -247,7 +247,6 @@ def create_base_robot_model(
         color=np.array(color9),
     )
 
-
     # Make snake_base have no collision and no volume
     stage = get_current_stage()
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, SNAKE_BASE_PATH)
@@ -261,10 +260,10 @@ def create_base_robot_model(
     )
 
     setup_camera(
-    prim_path=CAMERA_SENSOR_PATH,
-    position=[0,0.44,3],
-    orientation=[0.81, 0.57, 0, 0],
-    resolution=(1920, 1080),
+        prim_path=CAMERA_SENSOR_PATH,
+        position=[0, 0.44, 3],
+        orientation=[0.81, 0.57, 0, 0],
+        resolution=(1920, 1080),
     )
 
     # Axis2_base no volume and collision
@@ -274,9 +273,8 @@ def create_base_robot_model(
     stage = get_current_stage()
     axis2_base = stage.GetPrimAtPath(AXIS2_BASE_PATH)
 
-    axis2_base.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(
-        True
-    )
+    axis2_base.CreateAttribute("primvars:isVolume", Sdf.ValueTypeNames.Bool).Set(True)
+
 
 def create_joints():
     # Axis 4 joint
@@ -299,11 +297,7 @@ def create_joints():
     )
     set_prismatic_joint_limits(AXIS3_JOINT_PATH, -1.0, 1.5)
     enable_linear_drive(
-        AXIS3_JOINT_PATH,
-        stiffness=100,
-        damping=100,
-        max_force=100,
-        target_position=0.0
+        AXIS3_JOINT_PATH, stiffness=100, damping=100, max_force=100, target_position=0.0
     )
 
     # Axis 1 joint
@@ -337,7 +331,7 @@ def create_joints():
     enable_linear_drive(
         AXIS2_JOINT_PATH,
         stiffness=1000,
-        damping=100,
+        damping=500,
         max_force=100,
         target_position=0.0,
     )
@@ -351,7 +345,11 @@ def create_joints():
         "Z",
     )
     enable_linear_drive(
-        PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
+        PRISMATIC_JOINT_FORCE_SENSOR,
+        stiffness=10000,
+        damping=10000,
+        max_force=100,
+        target_position=0.0,
     )
 
     # Robot base joint
@@ -391,6 +389,7 @@ def apply_articulation_root(path):
     else:
         print(f"Could not find prim at {path}")
 
+
 def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
     force_sensor = DynamicCuboid(
         prim_path=sensor_prim_path,
@@ -406,9 +405,13 @@ def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
         "PhysicsPrismaticJoint",
         "Z",
     )
-    #set_prismatic_joUsdPhysics.ArticulationRootAPI.Apply(robot_root)int_limits(PRISMATIC_JOINT_FORCE_SENSOR, -1.0, 1.5)
+    # set_prismatic_joUsdPhysics.ArticulationRootAPI.Apply(robot_root)int_limits(PRISMATIC_JOINT_FORCE_SENSOR, -1.0, 1.5)
     enable_linear_drive(
-        PRISMATIC_JOINT_FORCE_SENSOR, stiffness=10000, damping=10000, max_force=100, target_position=0.0
+        PRISMATIC_JOINT_FORCE_SENSOR,
+        stiffness=10000,
+        damping=10000,
+        max_force=100,
+        target_position=0.0,
     )
 
 
@@ -480,18 +483,10 @@ def setup_scene():
 
     create_ground_plane(GROUND_PLANE_PATH)
 
-    create_xform(
-        ROBOT_PATH,
-        translate=(0, 0, 0),
-        rotation=(0, 0, 0),
-        scale=(1, 1, 1))
-    
-    create_xform(
-        TOWER_PATH,
-        translate=(0, 0, 0),
-        rotation=(0, 0, 0),
-        scale=(1, 1, 1))
-    
+    create_xform(ROBOT_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+
+    create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+
     create_xform(
         AXIS2_PATH,
         translate=(0, 0, 0),
