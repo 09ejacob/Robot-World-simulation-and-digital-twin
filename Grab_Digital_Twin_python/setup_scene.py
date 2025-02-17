@@ -42,6 +42,7 @@ from .global_variables import (
     ROBOT_BASE_PATH,
     AXIS2_TOWER_PATH,
     PALLET_BASE_PATH,
+    CAMERA_SENSOR_PATH,
 )
 
 
@@ -225,6 +226,28 @@ def create_base_robot_model(
         color=np.array(color6),
     )
 
+    robot_base = DynamicCylinder(
+        prim_path=ROBOT_BASE_PATH,
+        position=np.array(position7),
+        scale=np.array(scale7),
+        color=np.array(color7),
+    )
+
+    axis2_tower = DynamicCuboid(
+        prim_path=AXIS2_TOWER_PATH,
+        position=np.array(position8),
+        scale=np.array(scale8),
+        color=np.array(color8),
+    )
+
+    pallet_base = DynamicCuboid(
+        prim_path=PALLET_BASE_PATH,
+        position=np.array(position9),
+        scale=np.array(scale9),
+        color=np.array(color9),
+    )
+
+
     # Make snake_base have no collision and no volume
     stage = get_current_stage()
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, SNAKE_BASE_PATH)
@@ -238,7 +261,7 @@ def create_base_robot_model(
     )
 
     setup_camera(
-    prim_path="/World/Robot/Tower/cameraSensor",
+    prim_path=CAMERA_SENSOR_PATH,
     position=[0,0.44,3],
     orientation=[0.81, 0.57, 0, 0],
     resolution=(1920, 1080),

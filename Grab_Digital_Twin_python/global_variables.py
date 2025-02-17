@@ -35,6 +35,7 @@ PALLET_BASE_PATH=f"{ROBOT_BASE_GROUP_PATH}/pallet_base"
 
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
+CAMERA_SENSOR_PATH = f"{TOWER_PATH}/cameraSensor"
 
 # Joints
 JOINTS_PATH = f"{ROBOT_PATH}/Joints"
