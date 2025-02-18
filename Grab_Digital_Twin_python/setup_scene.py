@@ -263,7 +263,7 @@ def create_base_robot_model(
     setup_camera(
     prim_path=CAMERA_SENSOR_PATH,
     position=[0,0.44,3],
-    orientation=[0.81, 0.57, 0, 0],
+    euler_orientation=[0, 70, 0],
     resolution=(1920, 1080),
     )
 
