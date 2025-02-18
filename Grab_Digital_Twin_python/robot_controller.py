@@ -164,11 +164,11 @@ def wait_for_joint_position(
         current_pos = dof_states["pos"][dof_index]
 
         # For debugging
-        # if frames % 10 == 0:
-        #    unit = "rad" if is_angular else "m"
-        #    print(
-        #        f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
-        #    )
+        if frames % 10 == 0:
+           unit = "rad" if is_angular else "m"
+           print(
+               f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
+           )
 
         # If angular, normalize the angles to be within [-π, π] range
         if is_angular:

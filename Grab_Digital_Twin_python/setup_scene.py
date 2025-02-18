@@ -450,7 +450,7 @@ base_pos = (0, 0, 0.1)
 base_scale = (0.6, 1.1, 0.2)
 base_color = (0.05, 0.05, 0.05)
 
-snake_base_pos = (0, 0, 0.395)
+snake_base_pos = (0, 0, 1)
 snake_base_scale = (0.5, 4.0, 0.3)
 snake_base_color = (0.05, 0.05, 0.05)
 
