@@ -26,6 +26,7 @@ from .global_variables import (
     ROBOT_BASE_JOINT_PATH,
     AXIS2_TOWER_JOINT_PATH,
     PALLET_BASE_JOINT_PATH,
+    CABINET_BASE_JOINT_PATH,
     FORCE_SENSOR_PATH,
     GRIPPER_ACTION_GRAPH_PATH,
     GRIPPER_OFFSET_PATH,
@@ -42,6 +43,7 @@ from .global_variables import (
     ROBOT_BASE_PATH,
     AXIS2_TOWER_PATH,
     PALLET_BASE_PATH,
+    CABINET_PATH,
     CAMERA_SENSOR_PATH,
 )
 
@@ -183,6 +185,9 @@ def create_base_robot_model(
     position9=(0, 0, 0),
     scale9=(1, 1, 1),
     color9=(0, 0, 0),
+    position10=(0, 0, 0),
+    scale10=(1, 1, 1),
+    color10=(0, 0, 0),
 ):
     gripper = DynamicCuboid(
         prim_path=GRIPPER_PATH,
@@ -245,6 +250,13 @@ def create_base_robot_model(
         position=np.array(position9),
         scale=np.array(scale9),
         color=np.array(color9),
+    )
+
+    cabinet = DynamicCuboid(
+        prim_path=CABINET_PATH,
+        position=np.array(position10),
+        scale=np.array(scale10),
+        color=np.array(color10),
     )
 
     # Make snake_base have no collision and no volume
@@ -379,6 +391,14 @@ def create_joints():
         None,
     )
 
+    create_joint(
+        CABINET_BASE_JOINT_PATH,
+        CABINET_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        "PhysicsFixedJoint",
+        None,
+    )
+
 
 def apply_articulation_root(path):
     stage = get_current_stage()
@@ -427,7 +447,7 @@ snake_scale = (0.13, 0.3, 0.13)
 snake_color = (0.05, 0.05, 0.05)
 
 base_pos = (0, 0, 0.1)
-base_scale = (0.6, 1.2, 0.2)
+base_scale = (0.6, 1.1, 0.2)
 base_color = (0.05, 0.05, 0.05)
 
 snake_base_pos = (0, 0, 0.395)
@@ -446,9 +466,13 @@ axis2_tower_pos = (0, -0.45, 1.2)
 axis2_tower_scale = (0.2, 0.2, 2)
 axis2_tower_color = (0.05, 0.05, 0.05)
 
-pallet_base_pos = (0.0, 1.3, 0.3)
+pallet_base_pos = (0.0, 1.25, 0.25)
 pallet_base_scale = (1, 1.4, 0.5)
 pallet_base_color = (0.05, 0.05, 0.05)
+
+cabinet_pos = (0.0, -0.8, 0.7)
+cabinet_scale = (1, 0.5, 1.4)
+cabinet_color = (0.05, 0.05, 0.05)
 
 
 def setup_scene():
@@ -503,6 +527,9 @@ def setup_scene():
         pallet_base_pos,
         pallet_base_scale,
         pallet_base_color,
+        cabinet_pos,
+        cabinet_scale,
+        cabinet_color,
     )
 
     create_joints()
