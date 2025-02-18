@@ -15,7 +15,11 @@ EXTENSION_DESCRIPTION = "solwr.grab.digital.twin"
 WORLD_PATH = "/World"
 GROUND_PLANE_PATH = f"{WORLD_PATH}/groundPlane"
 PHYSICS_SCENE_PATH = f"{WORLD_PATH}/PhysicsScene"
-PICK_BOX_PATH = f"{WORLD_PATH}/Environment/pickBox"
+
+PALLET_PATH = f"{WORLD_PATH}/Environment/pallet"
+PICK_BOX_1 = f"{WORLD_PATH}/Environment/pickBox1"
+PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
+PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 
 # Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
