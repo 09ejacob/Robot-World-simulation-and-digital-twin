@@ -155,7 +155,7 @@ class UIBuilder:
                 ui.Label("Set Axis2 position:")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
-                    "Set position (-1.5, 0.8)",
+                    "Set position (-2.0, 0.0)",
                     clicked_fn=lambda: set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
@@ -165,7 +165,7 @@ class UIBuilder:
                 ui.Label("Set Axis3 position:")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
-                    "Set position (-1, 1.5)",
+                    "Set position (0.0, 1.6)",
                     clicked_fn=lambda: set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),

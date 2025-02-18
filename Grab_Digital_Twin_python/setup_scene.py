@@ -26,6 +26,7 @@ from .global_variables import (
     ROBOT_BASE_JOINT_PATH,
     AXIS2_TOWER_JOINT_PATH,
     PALLET_BASE_JOINT_PATH,
+    CABINET_BASE_JOINT_PATH,
     FORCE_SENSOR_PATH,
     GRIPPER_ACTION_GRAPH_PATH,
     GRIPPER_OFFSET_PATH,
@@ -42,6 +43,7 @@ from .global_variables import (
     ROBOT_BASE_PATH,
     AXIS2_TOWER_PATH,
     PALLET_BASE_PATH,
+    CABINET_PATH,
     CAMERA_SENSOR_PATH,
 )
 
@@ -183,6 +185,9 @@ def create_base_robot_model(
     position9=(0, 0, 0),
     scale9=(1, 1, 1),
     color9=(0, 0, 0),
+    position10=(0, 0, 0),
+    scale10=(1, 1, 1),
+    color10=(0, 0, 0),
 ):
     gripper = DynamicCuboid(
         prim_path=GRIPPER_PATH,
@@ -247,6 +252,13 @@ def create_base_robot_model(
         color=np.array(color9),
     )
 
+    cabinet = DynamicCuboid(
+        prim_path=CABINET_PATH,
+        position=np.array(position10),
+        scale=np.array(scale10),
+        color=np.array(color10),
+    )
+
     # Make snake_base have no collision and no volume
     stage = get_current_stage()
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, SNAKE_BASE_PATH)
@@ -259,12 +271,12 @@ def create_base_robot_model(
         True
     )
 
-    setup_camera(
-        prim_path=CAMERA_SENSOR_PATH,
-        position=[0, 0.44, 3],
-        orientation=[0.81, 0.57, 0, 0],
-        resolution=(1920, 1080),
-    )
+    # setup_camera(
+    #     prim_path=CAMERA_SENSOR_PATH,
+    #     position=[0, 0.44, 3],
+    #     orientation=[0.81, 0.57, 0, 0],
+    #     resolution=(1920, 1080),
+    # )
 
     # Axis2_base no volume and collision
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
@@ -295,7 +307,7 @@ def create_joints():
         "PhysicsPrismaticJoint",
         "Y",
     )
-    set_prismatic_joint_limits(AXIS3_JOINT_PATH, -1.0, 1.5)
+    set_prismatic_joint_limits(AXIS3_JOINT_PATH, -2.0, 0)
     enable_linear_drive(
         AXIS3_JOINT_PATH, stiffness=100, damping=100, max_force=100, target_position=0.0
     )
@@ -327,7 +339,7 @@ def create_joints():
         "PhysicsPrismaticJoint",
         "Z",
     )
-    set_prismatic_joint_limits(AXIS2_JOINT_PATH, -1.5, 0.8)
+    set_prismatic_joint_limits(AXIS2_JOINT_PATH, 0, 1.6)
     enable_linear_drive(
         AXIS2_JOINT_PATH,
         stiffness=1000,
@@ -379,6 +391,14 @@ def create_joints():
         None,
     )
 
+    create_joint(
+        CABINET_BASE_JOINT_PATH,
+        CABINET_PATH,
+        ROBOT_BASE_CUBE_PATH,
+        "PhysicsFixedJoint",
+        None,
+    )
+
 
 def apply_articulation_root(path):
     stage = get_current_stage()
@@ -388,32 +408,6 @@ def apply_articulation_root(path):
         UsdPhysics.ArticulationRootAPI.Apply(robot_prim)
     else:
         print(f"Could not find prim at {path}")
-
-
-def create_force_sensor(sensor_prim_path, sensor_offset=(0.0, 0.0, 0.0)):
-    force_sensor = DynamicCuboid(
-        prim_path=sensor_prim_path,
-        position=np.array(sensor_offset),
-        scale=np.array([0.2, 0.2, 0.05]),
-        color=np.array([1.0, 0.0, 0.0]),
-    )
-
-    create_joint(
-        PRISMATIC_JOINT_FORCE_SENSOR,
-        FORCE_SENSOR_PATH,
-        SNAKE_PATH,
-        "PhysicsPrismaticJoint",
-        "Z",
-    )
-    # set_prismatic_joUsdPhysics.ArticulationRootAPI.Apply(robot_root)int_limits(PRISMATIC_JOINT_FORCE_SENSOR, -1.0, 1.5)
-    enable_linear_drive(
-        PRISMATIC_JOINT_FORCE_SENSOR,
-        stiffness=10000,
-        damping=10000,
-        max_force=100,
-        target_position=0.0,
-    )
-
 
 def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path):
     keys = og.Controller.Keys
@@ -440,41 +434,45 @@ def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path
 
 
 # Values
-gripper_pos = (0.0, 2.25, 2.3)
-gripper_scale = (0.6, 0.3, 0.1)
+gripper_pos = (0.0, 0.05, 0.25)
+gripper_scale = (0.25, 0.15, 0.05)
 gripper_color = (0.05, 0.05, 0.05)
 
-axis2_base_pos = (0.0, 0, 2)
-axis2_base_scale = (0.5, 0.5, 3)
+axis2_base_pos = (0.0, 0, 1.2)
+axis2_base_scale = (0.3, 0.3, 2)
 axis2_base_color = (0.05, 0.05, 0.05)
 
-snake_pos = (0.0, 2.2, 2.5)
-snake_scale = (0.15, 0.4, 0.15)
+snake_pos = (0.0, 0.0, 0.37)
+snake_scale = (0.13, 0.3, 0.13)
 snake_color = (0.05, 0.05, 0.05)
 
-base_pos = (0, 0, 0.25)
-base_scale = (0.6, 2, 0.5)
+base_pos = (0, 0, 0.1)
+base_scale = (0.6, 1.1, 0.2)
 base_color = (0.05, 0.05, 0.05)
 
-snake_base_pos = (0, 0, 2.5)
-snake_base_scale = (0.5, 7, 0.3)
+snake_base_pos = (0, 0, 0.395)
+snake_base_scale = (0.5, 4.0, 0.3)
 snake_base_color = (0.05, 0.05, 0.05)
 
-force_sensor_pos = (0.0, 2.25, 2.39)
-force_sensor_scale = (0.2, 0.2, 0.05)
+force_sensor_pos = (0.0, 0.05, 0.29)
+force_sensor_scale = (0.1, 0.1, 0.02)
 force_sensor_color = (0.2, 0.2, 0.2)
 
-robot_base_pos = (0.0, 0.0, 2.65)
-robot_base_scale = (0.6, 0.6, 0.2)
+robot_base_pos = (0.0, 0.0, 0.5)
+robot_base_scale = (0.35, 0.35, 0.1)
 robot_base_color = (0.05, 0.05, 0.05)
 
-axis2_tower_pos = (0, -0.75, 2)
-axis2_tower_scale = (0.3, 0.3, 3)
+axis2_tower_pos = (0, -0.45, 1.2)
+axis2_tower_scale = (0.2, 0.2, 2)
 axis2_tower_color = (0.05, 0.05, 0.05)
 
-pallet_base_pos = (0.0, 2.2, 0.4)
-pallet_base_scale = (1.2, 2.4, 0.8)
+pallet_base_pos = (0.0, 1.25, 0.25)
+pallet_base_scale = (1, 1.4, 0.5)
 pallet_base_color = (0.05, 0.05, 0.05)
+
+cabinet_pos = (0.0, -0.8, 0.7)
+cabinet_scale = (1, 0.5, 1.4)
+cabinet_color = (0.05, 0.05, 0.05)
 
 
 def setup_scene():
@@ -529,6 +527,9 @@ def setup_scene():
         pallet_base_pos,
         pallet_base_scale,
         pallet_base_color,
+        cabinet_pos,
+        cabinet_scale,
+        cabinet_color,
     )
 
     create_joints()
