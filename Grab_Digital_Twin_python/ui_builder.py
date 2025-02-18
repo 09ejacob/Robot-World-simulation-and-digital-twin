@@ -30,7 +30,7 @@ from .global_variables import (
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
 )
-from .scenario import PickBoxScenario
+from .scenarios.scenario import PickBoxScenario
 
 
 class UIBuilder:

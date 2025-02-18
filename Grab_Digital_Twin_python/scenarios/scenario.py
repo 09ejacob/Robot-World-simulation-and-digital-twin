@@ -4,7 +4,7 @@ import numpy as np
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
-from .robot_controller import (
+from ..robot_controller import (
     get_dof_index_for_joint_prim_path,
     open_gripper,
     close_gripper,
@@ -13,7 +13,7 @@ from .robot_controller import (
     read_force_sensor_value,
     wait_for_joint_position,
 )
-from .global_variables import (
+from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
