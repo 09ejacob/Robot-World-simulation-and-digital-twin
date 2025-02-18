@@ -30,7 +30,8 @@ from .global_variables import (
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
 )
-from .scenario import PickBoxScenario
+from .scenarios.scenario import PickBoxScenario
+from .scenarios.stack_box_scenario import StackBoxScenario
 
 
 class UIBuilder:
@@ -44,7 +45,16 @@ class UIBuilder:
         self._timeline = omni.timeline.get_timeline_interface()
 
         # Run initialization for the provided example
+        self._scenarios = {
+            "Pick Box": PickBoxScenario,
+            "Stack Box": StackBoxScenario,
+        }
+        self._current_scenario_name = "Pick Box"  # Default scenario
+
+        # We'll store the chosen scenario here:
         self._scenario = None
+
+        # Initialize with a default scenario (optional)
         self._on_init()
 
     ###################################################################################
@@ -63,7 +73,7 @@ class UIBuilder:
             self._scenario_state_btn.reset()
 
             # Only disable if the scenario is actually finished
-            if self._scenario._did_run:
+            if self._scenario and self._scenario._did_run:
                 self._scenario_state_btn.enabled = False
 
     def on_physics_step(self, step: float):
@@ -97,7 +107,6 @@ class UIBuilder:
         This function will be called any time the UI window is closed and reopened.
         """
         world_controls_frame = CollapsableFrame("World Controls", collapsed=False)
-
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 self._load_btn = LoadButton(
@@ -120,10 +129,19 @@ class UIBuilder:
                 self._reset_btn.enabled = False
                 self.wrapped_ui_elements.append(self._reset_btn)
 
-        run_scenario_frame = CollapsableFrame("Run Scenario")
-
-        with run_scenario_frame:
+        scenario_frame = CollapsableFrame("Scenario", collapsed=False)
+        with scenario_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
+                # -- Scenario Selection --
+                ui.Label("Select Scenario:")
+
+                self._scenario_dropdown = ui.ComboBox(
+                    0,
+                    *list(self._scenarios.keys()),
+                    on_value_changed_fn=self._on_scenario_selected,
+                )
+
+                # -- Run / Stop Buttons --
                 self._scenario_state_btn = StateButton(
                     "Run Scenario",
                     "RUN",
@@ -136,7 +154,6 @@ class UIBuilder:
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
 
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
-
         with robot_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 ui.Button("Open Gripper", clicked_fn=open_gripper)
@@ -155,7 +172,7 @@ class UIBuilder:
                 ui.Label("Set Axis2 position:")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
-                    "Set position (-1.5, 0.8)",
+                    "Set position (-2.0, 0.0)",
                     clicked_fn=lambda: set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
@@ -165,7 +182,7 @@ class UIBuilder:
                 ui.Label("Set Axis3 position:")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
-                    "Set position (-1, 1.5)",
+                    "Set position (0.0, 1.6)",
                     clicked_fn=lambda: set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
@@ -183,6 +200,7 @@ class UIBuilder:
                 )
 
         self.frames.append(world_controls_frame)
+        self.frames.append(scenario_frame)
         self.frames.append(robot_controls_frame)
 
     ######################################################################################
@@ -191,6 +209,17 @@ class UIBuilder:
 
     def _on_init(self):
         self._scenario = PickBoxScenario()
+
+    def _on_scenario_selected(self, combo, selected_value):
+        """
+        Called when the user changes the scenario ComboBox.
+        We update `_scenario` here, so that next time user presses LOAD,
+        that scenario will get set up.
+        """
+        self._current_scenario_name = selected_value
+        scenario_cls = self._scenarios[self._current_scenario_name]
+        self._scenario = scenario_cls()
+        print(f"Scenario switched to {self._current_scenario_name}")
 
     def _add_light_to_stage(self):
         """
@@ -221,7 +250,8 @@ class UIBuilder:
         The user may assume that their assets have been loaded by their setup_scene_fn callback, that
         their objects are properly initialized, and that the timeline is paused on timestep 0.
         """
-        self._scenario.setup()
+        if self._scenario is not None:
+            self._scenario.setup()
 
         # UI management
         self._scenario_state_btn.reset()
@@ -236,7 +266,8 @@ class UIBuilder:
         They may also assume that objects that were added to the World.Scene have been moved to their default positions.
         I.e. the cube prim will move back to the position it was in when it was created in self._setup_scene().
         """
-        self._scenario.reset()
+        if self._scenario is not None:
+            self._scenario.reset()
 
         # UI management
         self._scenario_state_btn.reset()
@@ -253,6 +284,9 @@ class UIBuilder:
         Args:
             step (float): The dt of the current physics step
         """
+        if self._scenario is None:
+            return
+
         done = self._scenario.update(step)
         if done:
             self._scenario_state_btn.enabled = False
