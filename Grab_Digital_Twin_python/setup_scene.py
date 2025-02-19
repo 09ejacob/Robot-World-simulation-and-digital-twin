@@ -12,7 +12,6 @@ from pxr import Usd, UsdGeom
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
-import numpy as np
 
 from .global_variables import (
     JOINTS_PATH,
@@ -408,6 +407,7 @@ def apply_articulation_root(path):
         UsdPhysics.ArticulationRootAPI.Apply(robot_prim)
     else:
         print(f"Could not find prim at {path}")
+
 
 def create_surface_gripper(graph_path, grip_position_path, parent_rigidBody_path):
     keys = og.Controller.Keys
