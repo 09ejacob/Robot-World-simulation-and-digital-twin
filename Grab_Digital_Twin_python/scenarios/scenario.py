@@ -138,34 +138,34 @@ class PickBoxScenario:
         )
 
         # Move axis3 out
-        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.2659)
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.209) #-1.259
         yield from wait_for_joint_position(
             dc_interface,
             articulation,
             axis3_dof_index,
-            target_position=1.2659,
+            target_position=1.209,
             pos_threshold=0.1,
         )
 
         # Rotate axis1
-        set_angular_drive_target(AXIS1_JOINT_PATH, 80.91)
+        set_angular_drive_target(AXIS1_JOINT_PATH, 83.1573)
         yield from wait_for_joint_position(
             dc_interface,
             articulation,
             axis1_dof_index,
-            target_position=-80.91,
+            target_position=-83.1573,
             pos_threshold=0.01,
             max_frames=1000,
             is_angular=True,
         )
 
         # Rotate axis4
-        set_angular_drive_target(AXIS4_JOINT_PATH, -9.09)
+        set_angular_drive_target(AXIS4_JOINT_PATH, -6.8427)
         yield from wait_for_joint_position(
             dc_interface,
             articulation,
             axis4_dof_index,
-            target_position=-9.09,
+            target_position=-6.8472,
             pos_threshold=0.01,
             max_frames=1000,
             is_angular=True,
@@ -185,20 +185,259 @@ class PickBoxScenario:
         close_gripper()
 
         # Raise axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.7)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.7,
+            pos_threshold=0.1,
+        )
+
+        # Rotate axis4
+        set_angular_drive_target(AXIS4_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis4_dof_index,
+            target_position=0,
+            pos_threshold=0.01,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Move axis3 in
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=0,
+            pos_threshold=0.1,
+        )
+
+        # Rotate axis1
+        set_angular_drive_target(AXIS1_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis1_dof_index,
+            target_position=0,
+            pos_threshold=0.1,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Move axis3 out
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=1,
+            pos_threshold=0.1,
+        )
+
+        # Lower axis2
         set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.5)
         yield from wait_for_joint_position(
             dc_interface,
             articulation,
             axis2_dof_index,
             target_position=0.5,
+            pos_threshold=0.0185,
+        )
+
+        open_gripper()
+
+        # Move axis3 in
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=0,
             pos_threshold=0.1,
         )
 
+        # Rotate axis1
+        set_angular_drive_target(AXIS1_JOINT_PATH, 90)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis1_dof_index,
+            target_position=-90,
+            pos_threshold=0.1,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Lower axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0,
+            pos_threshold=0.1,
+        )
+
+        # Raise axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.3)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.3,
+            pos_threshold=0.1,
+        )
+
+        # Move axis3 out
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.209)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=1.209,
+            pos_threshold=0.1,
+        )
+
+        # Rotate axis1
+        set_angular_drive_target(AXIS1_JOINT_PATH, 96.8427)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis1_dof_index,
+            target_position=-96.8427,
+            pos_threshold=0.1,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Rotate axis4
+        set_angular_drive_target(AXIS4_JOINT_PATH, 6.8427)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis4_dof_index,
+            target_position=6.8472,
+            pos_threshold=0.01,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Lower axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.1)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.1,
+            pos_threshold=0.0185,
+        )
+
+        close_gripper()
+
+        # Raise axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.7)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.7,
+            pos_threshold=0.1,
+        )
+
+        # Rotate axis4
+        set_angular_drive_target(AXIS4_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis4_dof_index,
+            target_position=0,
+            pos_threshold=0.01,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Move axis3 in
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=0,
+            pos_threshold=0.1,
+        )
+
+        # Rotate axis1
+        set_angular_drive_target(AXIS1_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis1_dof_index,
+            target_position=0,
+            pos_threshold=0.1,
+            max_frames=1000,
+            is_angular=True,
+        )
+
+        # Raise axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.9)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.9,
+            pos_threshold=0.1,
+        )
+
+        # Move axis3 out
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=1,
+            pos_threshold=0.1,
+        )
+
+        # Lower axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0.8,
+            pos_threshold=0.0185,
+        )
+
+        open_gripper()
+
+        # Move axis3 out
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis3_dof_index,
+            target_position=0,
+            pos_threshold=0.1,
+        )
+
+        # Lower axis2
+        set_prismatic_joint_position(AXIS2_JOINT_PATH, 0)
+        yield from wait_for_joint_position(
+            dc_interface,
+            articulation,
+            axis2_dof_index,
+            target_position=0,
+            pos_threshold=0.0185,
+        )
 
 
-        # for _ in range(100):
-        #     self._world.step(render=True)
-        #     yield
+        for _ in range(100):
+            self._world.step(render=True)
+            yield
 
         # # Lower axis2
         # set_prismatic_joint_position(AXIS2_JOINT_PATH, -1.3)
