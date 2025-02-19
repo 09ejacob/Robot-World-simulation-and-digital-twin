@@ -159,7 +159,7 @@ class PickBoxScenario:
             is_angular=True,
         )
 
-        # Rotate axis1
+        # Rotate axis4
         set_angular_drive_target(AXIS4_JOINT_PATH, -9.09)
         yield from wait_for_joint_position(
             dc_interface,
@@ -178,7 +178,7 @@ class PickBoxScenario:
             articulation,
             axis2_dof_index,
             target_position=0.1,
-            pos_threshold=0.01,
+            pos_threshold=0.0185,
         )
 
         # # Close gripper

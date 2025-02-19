@@ -544,7 +544,7 @@ def setup_scene():
 
     create_xform(
         GRIPPER_OFFSET_PATH,
-        translate=(0, 0, -0.500997),
+        translate=(0, 0, -0.2),
         rotation=(0, 0, 0),
         scale=(1, 1, 1),
     )
