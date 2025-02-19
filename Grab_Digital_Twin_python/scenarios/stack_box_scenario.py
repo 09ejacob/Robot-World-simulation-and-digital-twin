@@ -14,7 +14,7 @@ from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
-    PICK_BOX_PATH,
+    PICK_BOX_1,
 )
 
 
@@ -33,14 +33,14 @@ class StackBoxScenario:
         self._did_run = False
 
         self.box1 = DynamicCuboid(
-            prim_path=f"{PICK_BOX_PATH}_1",
+            prim_path=f"{PICK_BOX_1}_1",
             position=np.array((3, 0, 0.5)),
             scale=np.array((1, 1, 1)),
             color=np.array((0.1, 0.2, 0.9)),
         )
 
         self.box2 = DynamicCuboid(
-            prim_path=f"{PICK_BOX_PATH}_2",
+            prim_path=f"{PICK_BOX_1}_2",
             position=np.array((3, 0, 1.0)),
             scale=np.array((1, 1, 1)),
             color=np.array((0.9, 0.2, 0.1)),
