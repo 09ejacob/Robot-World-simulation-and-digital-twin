@@ -1,6 +1,7 @@
 # scenario.py
 
 import numpy as np
+import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
@@ -25,7 +26,7 @@ from ..global_variables import (
 )
 
 
-class PickBoxScenario:
+class PickBoxesScenario:
     """
     A minimal scenario class that runs a single sequence of robot actions.
     """
@@ -54,33 +55,35 @@ class PickBoxScenario:
             prim_path=PICK_BOX_1,
             position=np.array((1.25, -0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
-            color=np.array((0.05, 0.1, 0.08))
+            color=np.array((0.05, 0.1, 0.08)),
         )
 
         pickBox2 = DynamicCuboid(
             prim_path=PICK_BOX_2,
             position=np.array((1.25, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
-            color=np.array((0.1, 0.08, 0.05))
+            color=np.array((0.1, 0.08, 0.05)),
         )
 
         pickBox3 = DynamicCuboid(
             prim_path=PICK_BOX_3,
             position=np.array((1.55, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
-            color=np.array((0.08, 0.05, 0.1))
+            color=np.array((0.08, 0.05, 0.1)),
         )
 
         self._scenario_generator = self._run_simulation()
 
     def reset(self):
-        """
-        Called whenever the user presses the RESET button.
-        Put everything back into its default state so the simulation can be run again.
-        """
         self._did_run = False
         if self._world is not None:
             self._world.reset()
+        # Remove scenario-specific prims from the stage.
+        stage = omni.usd.get_context().get_stage()
+        for prim_path in [PALLET_PATH, PICK_BOX_1, PICK_BOX_2, PICK_BOX_3]:
+            prim = stage.GetPrimAtPath(prim_path)
+            if prim.IsValid():
+                stage.RemovePrim(prim_path)
 
     def update(self, step: float):
         try:
@@ -138,7 +141,7 @@ class PickBoxScenario:
         )
 
         # Move axis3 out
-        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.209) #-1.259
+        set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.209)  # -1.259
         yield from wait_for_joint_position(
             dc_interface,
             articulation,
@@ -433,7 +436,6 @@ class PickBoxScenario:
             target_position=0,
             pos_threshold=0.0185,
         )
-
 
         for _ in range(100):
             self._world.step(render=True)

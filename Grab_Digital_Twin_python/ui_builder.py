@@ -30,7 +30,7 @@ from .global_variables import (
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
 )
-from .scenarios.scenario import PickBoxScenario
+from .scenarios.pick_boxes_scenario import PickBoxesScenario
 from .scenarios.stack_box_scenario import StackBoxScenario
 
 
@@ -44,17 +44,14 @@ class UIBuilder:
         # Get access to the timeline to control stop/pause/play programmatically
         self._timeline = omni.timeline.get_timeline_interface()
 
-        # Run initialization for the provided example
         self._scenarios = {
-            "Pick Box": PickBoxScenario,
+            "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
         }
-        self._current_scenario_name = "Pick Box"  # Default scenario
+        self._current_scenario_name = "Pick Boxes"  # Default scenario
 
-        # We'll store the chosen scenario here:
         self._scenario = None
 
-        # Initialize with a default scenario (optional)
         self._on_init()
 
     ###################################################################################
@@ -132,16 +129,18 @@ class UIBuilder:
         scenario_frame = CollapsableFrame("Scenario", collapsed=False)
         with scenario_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
-                # -- Scenario Selection --
                 ui.Label("Select Scenario:")
 
                 self._scenario_dropdown = ui.ComboBox(
                     0,
                     *list(self._scenarios.keys()),
-                    on_value_changed_fn=self._on_scenario_selected,
                 )
 
-                # -- Run / Stop Buttons --
+                ui.Button(
+                    "Select Scenario",
+                    clicked_fn=self._select_scenario,
+                )
+
                 self._scenario_state_btn = StateButton(
                     "Run Scenario",
                     "RUN",
@@ -172,7 +171,7 @@ class UIBuilder:
                 ui.Label("Set Axis2 position:")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
-                    "Set position (-2.0, 0.0)",
+                    "Set position (0, 1.6)",
                     clicked_fn=lambda: set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
@@ -182,7 +181,7 @@ class UIBuilder:
                 ui.Label("Set Axis3 position:")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
-                    "Set position (0.0, 1.6)",
+                    "Set position (-2.0, 0)",
                     clicked_fn=lambda: set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
@@ -208,18 +207,31 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._scenario = PickBoxScenario()
+        self._scenario = PickBoxesScenario()
 
-    def _on_scenario_selected(self, combo, selected_value):
+    def _select_scenario(self):
         """
-        Called when the user changes the scenario ComboBox.
-        We update `_scenario` here, so that next time user presses LOAD,
-        that scenario will get set up.
+        Selects the scenario from the dropdown when the "Select Scenario" button is clicked.
         """
-        self._current_scenario_name = selected_value
-        scenario_cls = self._scenarios[self._current_scenario_name]
+        value_model = self._scenario_dropdown.model.get_item_value_model()
+        selected_index = value_model.as_int
+
+        scenario_names = list(self._scenarios.keys())
+
+        if selected_index < 0 or selected_index >= len(scenario_names):
+            print(f"⚠️ Error: Invalid scenario index {selected_index}")
+            return
+
+        selected_scenario = scenario_names[selected_index]
+        print(f"Switching to scenario: {selected_scenario}")
+
+        # Reset the previous scenario
+        if self._scenario is not None:
+            self._scenario.reset()
+
+        scenario_cls = self._scenarios[selected_scenario]
         self._scenario = scenario_cls()
-        print(f"Scenario switched to {self._current_scenario_name}")
+        self._setup_scenario()
 
     def _add_light_to_stage(self):
         """
@@ -250,13 +262,11 @@ class UIBuilder:
         The user may assume that their assets have been loaded by their setup_scene_fn callback, that
         their objects are properly initialized, and that the timeline is paused on timestep 0.
         """
-        if self._scenario is not None:
+        if self._scenario:
             self._scenario.setup()
-
-        # UI management
-        self._scenario_state_btn.reset()
-        self._scenario_state_btn.enabled = True
-        self._reset_btn.enabled = True
+            self._scenario_state_btn.reset()
+            self._scenario_state_btn.enabled = True
+            self._reset_btn.enabled = True
 
     def _on_post_reset_btn(self):
         """
@@ -266,12 +276,10 @@ class UIBuilder:
         They may also assume that objects that were added to the World.Scene have been moved to their default positions.
         I.e. the cube prim will move back to the position it was in when it was created in self._setup_scene().
         """
-        if self._scenario is not None:
+        if self._scenario:
             self._scenario.reset()
-
-        # UI management
-        self._scenario_state_btn.reset()
-        self._scenario_state_btn.enabled = True
+            self._scenario_state_btn.reset()
+            self._scenario_state_btn.enabled = True
 
     def _update_scenario(self, step: float):
         """This function is attached to the Run Scenario StateButton.
@@ -284,23 +292,16 @@ class UIBuilder:
         Args:
             step (float): The dt of the current physics step
         """
-        if self._scenario is None:
-            return
-
-        done = self._scenario.update(step)
-        if done:
+        if self._scenario and self._scenario.update(step):
             self._scenario_state_btn.enabled = False
 
     def start_scenario(self):
-        """
-        This function is attached to the Run Scenario StateButton.
-        This function was passed in as the on_a_click_fn argument.
-        It is called when the StateButton is clicked while saying a_text "RUN".
+        """Starts the selected scenario."""
+        if self._scenario is None:
+            print("No scenario selected! Click 'Select Scenario' first.")
+            return
 
-        This function simply plays the timeline, which means that physics steps will start happening.  After the world is loaded or reset,
-        the timeline is paused, which means that no physics steps will occur until the user makes it play either programmatically or
-        through the left-hand UI toolbar.
-        """
+        print(f"Running scenario: {self._current_scenario_name}")
         self._timeline.play()
 
     def stop_scenario(self):
