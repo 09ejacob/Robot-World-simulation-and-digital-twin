@@ -116,19 +116,19 @@ class StackBoxScenario:
                 articulation,
                 axis3_dof_index,
                 target_position=1.45,
-                pos_threshold=0.05,
+                pos_threshold=0.01,
             )
 
             # Lower
             if i == 1:  # For box2 (second iteration)
                 # Lower more for box2
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.07)
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.05)
                 yield from wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
-                    target_position=0.07,
-                    pos_threshold=0.05,
+                    target_position=0.05,
+                    pos_threshold=0.04,
                 )
             else:
                 set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.34)
@@ -191,8 +191,28 @@ class StackBoxScenario:
                 articulation,
                 axis3_dof_index,
                 target_position=1,
-                pos_threshold=0.1,
+                pos_threshold=0.01,
             )
+
+            # Lower
+            if i == 1:  # For box2, raise more
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.9)
+                yield from wait_for_joint_position(
+                    dc_interface,
+                    articulation,
+                    axis2_dof_index,
+                    target_position=0.9,
+                    pos_threshold=0.01,
+                )
+            else:
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.58)
+                yield from wait_for_joint_position(
+                    dc_interface,
+                    articulation,
+                    axis2_dof_index,
+                    target_position=0.58,
+                    pos_threshold=0.01,
+                )
 
             open_gripper()
 
