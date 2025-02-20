@@ -45,6 +45,7 @@ from .global_variables import (
     PALLET_BASE_PATH,
     CABINET_PATH,
     CAMERA_SENSOR_PATH,
+    BOXCAMERA_PATH,
 )
 
 
@@ -271,12 +272,7 @@ def create_base_robot_model(
         True
     )
 
-    # setup_camera(
-    #     prim_path=CAMERA_SENSOR_PATH,
-    #     position=[0, 0.44, 3],
-    #     euler_orientation=[0, 70, 0],
-    #     resolution=(1920, 1080),
-    # )
+    camera = setup_camera()
 
     # Axis2_base no volume and collision
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
@@ -484,6 +480,9 @@ def setup_scene():
     create_xform(ROBOT_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 
     create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+
+    create_xform(BOXCAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+
 
     create_xform(
         AXIS2_PATH,
