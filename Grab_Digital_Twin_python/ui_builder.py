@@ -30,7 +30,7 @@ from .global_variables import (
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
 )
-from .scenarios.scenario import PickBoxScenario
+from .scenarios.pick_boxes_scenario import PickBoxesScenario
 from .scenarios.stack_box_scenario import StackBoxScenario
 
 
@@ -44,17 +44,14 @@ class UIBuilder:
         # Get access to the timeline to control stop/pause/play programmatically
         self._timeline = omni.timeline.get_timeline_interface()
 
-        # Run initialization for the provided example
         self._scenarios = {
-            "Pick Box": PickBoxScenario,
+            "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
         }
-        self._current_scenario_name = "Pick Box"  # Default scenario
+        self._current_scenario_name = "Pick Boxes"  # Default scenario
 
-        # We'll store the chosen scenario here:
         self._scenario = None
 
-        # Initialize with a default scenario (optional)
         self._on_init()
 
     ###################################################################################
@@ -210,7 +207,7 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._scenario = PickBoxScenario()
+        self._scenario = PickBoxesScenario()
 
     def _select_scenario(self):
         """

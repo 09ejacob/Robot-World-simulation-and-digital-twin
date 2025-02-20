@@ -26,7 +26,7 @@ from ..global_variables import (
 )
 
 
-class PickBoxScenario:
+class PickBoxesScenario:
     """
     A minimal scenario class that runs a single sequence of robot actions.
     """
