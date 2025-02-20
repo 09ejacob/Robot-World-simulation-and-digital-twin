@@ -44,9 +44,9 @@ def set_angular_drive_target(joint_prim_path, target_position):
 
     # Set the target position
     drive_api.GetTargetPositionAttr().Set(target_position)
-    print(
-        f"Target position set to {target_position} degrees for joint at {joint_prim_path}."
-    )
+    # print(
+    #     f"Target position set to {target_position} degrees for joint at {joint_prim_path}."
+    # )
 
 
 def set_prismatic_joint_position(joint_prim_path, position):
@@ -78,9 +78,9 @@ def set_prismatic_joint_position(joint_prim_path, position):
     # Now set the drive API's target position:
     drive_api.GetTargetPositionAttr().Set(clamped_position)
 
-    print(
-        f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
-    )
+    # print(
+    #     f"Prismatic joint at {joint_prim_path} -> targetPosition = {clamped_position}"
+    # )
 
 
 def read_force_sensor_value():
@@ -166,9 +166,9 @@ def wait_for_joint_position(
         # For debugging
         if frames % 10 == 0:
            unit = "rad" if is_angular else "m"
-           print(
-               f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
-           )
+        #    print(
+        #        f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
+        #    )
 
         # If angular, normalize the angles to be within [-π, π] range
         if is_angular:
@@ -181,7 +181,7 @@ def wait_for_joint_position(
 
         frames += 1
         if frames >= max_frames:
-            print(f"Timeout waiting for DOF {dof_index} to reach {target_position}")
+            # print(f"Timeout waiting for DOF {dof_index} to reach {target_position}")
 
             break  # Timeout
 
