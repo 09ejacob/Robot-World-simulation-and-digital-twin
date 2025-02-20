@@ -1,4 +1,5 @@
 import numpy as np
+import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
@@ -49,9 +50,21 @@ class StackBoxScenario:
         self._scenario_generator = self._run_simulation()
 
     def reset(self):
+        """
+        Called whenever the user presses the RESET button.
+        Resets the simulation and removes the scenario-specific prims from the stage.
+        """
         self._did_run = False
         if self._world is not None:
             self._world.reset()
+
+        # Remove the prims created in setup
+        stage = omni.usd.get_context().get_stage()
+        for prim_path in [f"{PICK_BOX_1}_1", f"{PICK_BOX_1}_2"]:
+            prim = stage.GetPrimAtPath(prim_path)
+            if prim.IsValid():
+                stage.RemovePrim(prim_path)
+                print(f"Removed prim at: {prim_path}")
 
     def update(self, step: float):
         try:
