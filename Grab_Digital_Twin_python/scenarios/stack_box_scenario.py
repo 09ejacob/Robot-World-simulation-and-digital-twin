@@ -35,15 +35,15 @@ class StackBoxScenario:
 
         self.box1 = DynamicCuboid(
             prim_path=f"{PICK_BOX_1}_1",
-            position=np.array((3, 0, 0.5)),
-            scale=np.array((1, 1, 1)),
+            position=np.array((1.5, 0, 0.5)),
+            scale=np.array((0.3, 0.3, 0.3)),
             color=np.array((0.1, 0.2, 0.9)),
         )
 
         self.box2 = DynamicCuboid(
             prim_path=f"{PICK_BOX_1}_2",
-            position=np.array((3, 0, 1.0)),
-            scale=np.array((1, 1, 1)),
+            position=np.array((1.5, 0, 1.0)),
+            scale=np.array((0.3, 0.3, 0.3)),
             color=np.array((0.9, 0.2, 0.1)),
         )
 
@@ -88,36 +88,7 @@ class StackBoxScenario:
         )
 
         # Simulate stacking
-        for box in [self.box1, self.box2]:
-            # Move robot to box position
-            set_angular_drive_target(AXIS1_JOINT_PATH, 90)
-            yield from wait_for_joint_position(
-                dc_interface,
-                articulation,
-                axis1_dof_index,
-                target_position=-90,
-                pos_threshold=0.1,
-            )
-
-            set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.9)
-            yield from wait_for_joint_position(
-                dc_interface,
-                articulation,
-                axis3_dof_index,
-                target_position=-0.9,
-                pos_threshold=0.1,
-            )
-
-            set_prismatic_joint_position(AXIS2_JOINT_PATH, -1.3)
-            yield from wait_for_joint_position(
-                dc_interface,
-                articulation,
-                axis2_dof_index,
-                target_position=-1.3,
-                pos_threshold=0.1,
-            )
-
-            close_gripper()
+        for i, box in enumerate([self.box1, self.box2]):
             set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.6)
             yield from wait_for_joint_position(
                 dc_interface,
@@ -127,7 +98,82 @@ class StackBoxScenario:
                 pos_threshold=0.1,
             )
 
-            # Move robot to stacking position
+            # Rotate 90
+            set_angular_drive_target(AXIS1_JOINT_PATH, 90)
+            yield from wait_for_joint_position(
+                dc_interface,
+                articulation,
+                axis1_dof_index,
+                target_position=-90,
+                pos_threshold=0.2,
+                is_angular=True,
+            )
+
+            # Move snake out
+            set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.45)
+            yield from wait_for_joint_position(
+                dc_interface,
+                articulation,
+                axis3_dof_index,
+                target_position=1.45,
+                pos_threshold=0.05,
+            )
+
+            # Lower
+            if i == 1:  # For box2 (second iteration)
+                # Lower more for box2
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.07)
+                yield from wait_for_joint_position(
+                    dc_interface,
+                    articulation,
+                    axis2_dof_index,
+                    target_position=0.07,
+                    pos_threshold=0.05,
+                )
+            else:
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.34)
+                yield from wait_for_joint_position(
+                    dc_interface,
+                    articulation,
+                    axis2_dof_index,
+                    target_position=0.34,
+                    pos_threshold=0.04,
+                )
+
+            # Close gripper
+            close_gripper()
+
+            # Raise
+            if i == 1:  # For box2, raise more
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 1.0)
+                yield from wait_for_joint_position(
+                    dc_interface,
+                    articulation,
+                    axis2_dof_index,
+                    target_position=1.0,
+                    pos_threshold=0.1,
+                )
+            else:
+                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
+                yield from wait_for_joint_position(
+                    dc_interface,
+                    articulation,
+                    axis2_dof_index,
+                    target_position=0.8,
+                    pos_threshold=0.1,
+                )
+
+            # Move snake in
+            set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.5)
+            yield from wait_for_joint_position(
+                dc_interface,
+                articulation,
+                axis3_dof_index,
+                target_position=0.5,
+                pos_threshold=0.1,
+            )
+
+            # Rotate 90 back to 0
             set_angular_drive_target(AXIS1_JOINT_PATH, 0)
             yield from wait_for_joint_position(
                 dc_interface,
@@ -135,25 +181,24 @@ class StackBoxScenario:
                 axis1_dof_index,
                 target_position=0,
                 pos_threshold=0.1,
+                is_angular=True,
             )
 
-            set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+            # Move snake out
+            set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
             yield from wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis3_dof_index,
-                target_position=0,
+                target_position=1,
                 pos_threshold=0.1,
             )
 
             open_gripper()
-            yield from wait_for_joint_position(
-                dc_interface,
-                articulation,
-                axis2_dof_index,
-                target_position=1.0,
-                pos_threshold=0.1,
-            )
+
+        for _ in range(180):
+            self._world.step(render=True)
+            yield
 
         print("Stacking scenario complete.")
         self._world.stop()
