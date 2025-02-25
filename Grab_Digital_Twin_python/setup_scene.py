@@ -9,6 +9,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 import omni.graph.core as og
 from pxr import Usd, UsdGeom
+from isaacsim.sensors.camera import Camera
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
@@ -45,6 +46,7 @@ from .global_variables import (
     CABINET_PATH,
     CAMERA_SENSOR_PATH,
     BOXCAMERA_PATH,
+    CAMERA_SNAKE_JOINT_PATH,
 )
 
 
@@ -271,7 +273,7 @@ def create_base_robot_model(
         True
     )
 
-    camera = setup_camera()
+    setup_camera()
 
     # Axis2_base no volume and collision
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
@@ -302,11 +304,13 @@ def create_joints():
         "PhysicsPrismaticJoint",
         "Y",
     )
+    
     set_prismatic_joint_limits(AXIS3_JOINT_PATH, -2.0, 0)
     enable_linear_drive(
         AXIS3_JOINT_PATH, stiffness=100, damping=100, max_force=100, target_position=0.0
     )
 
+ 
     # Axis 1 joint
     create_joint(
         AXIS1_JOINT_PATH,
@@ -393,6 +397,16 @@ def create_joints():
         "PhysicsFixedJoint",
         None,
     )
+ 
+    # Camera snake joint
+    create_joint(
+        CAMERA_SNAKE_JOINT_PATH,  
+        SNAKE_BASE_PATH,
+        CAMERA_SENSOR_PATH,
+        "PhysicsFixedJoint",
+        None,
+    )
+
 
 
 def apply_articulation_root(path):
