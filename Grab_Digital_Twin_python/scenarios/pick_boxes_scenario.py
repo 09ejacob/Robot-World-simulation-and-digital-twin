@@ -1,5 +1,3 @@
-# scenario.py
-
 import numpy as np
 import omni.usd
 from omni.isaac.core import World
