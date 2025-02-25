@@ -47,6 +47,7 @@ from .global_variables import (
     CAMERA_SENSOR_PATH,
     BOXCAMERA_PATH,
     CAMERA_SNAKE_JOINT_PATH,
+    CAMERA_AXIS2_JOINT_PATH,
 )
 
 
@@ -381,7 +382,7 @@ def create_joints():
         None,
     )
 
-    # Pallet base joint
+    # Pallet base jointS
     create_joint(
         PALLET_BASE_JOINT_PATH,
         PALLET_BASE_PATH,
@@ -398,14 +399,23 @@ def create_joints():
         None,
     )
  
-    # Camera snake joint
+    # Axis 2 joint
     create_joint(
-        CAMERA_SNAKE_JOINT_PATH,  
-        SNAKE_BASE_PATH,
-        CAMERA_SENSOR_PATH,
-        "PhysicsFixedJoint",
-        None,
+        CAMERA_AXIS2_JOINT_PATH,
+        AXIS2_BASE_PATH,
+        BOXCAMERA_PATH,
+        "PhysicsPrismaticJoint",
+        "Z",
     )
+
+    #Camera snake joint
+    ##create_joint(
+    ##    CAMERA_SNAKE_JOINT_PATH,  
+    ##    BOXCAMERA_PATH,
+    ##    SNAKE_BASE_PATH,
+    ##    "PhysicsPrismaticJoint",
+    ##    "Z",
+    ##)
 
 
 
