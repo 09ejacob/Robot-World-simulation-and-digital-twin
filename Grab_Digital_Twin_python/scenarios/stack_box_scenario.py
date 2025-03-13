@@ -3,14 +3,6 @@ import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
-from ..robot.robot_controller import (
-    get_dof_index_for_joint_prim_path,
-    open_gripper,
-    close_gripper,
-    set_angular_drive_target,
-    set_prismatic_joint_position,
-    wait_for_joint_position,
-)
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
@@ -24,7 +16,8 @@ class StackBoxScenario:
     A scenario where the robot picks up multiple boxes and stacks them.
     """
 
-    def __init__(self):
+    def __init__(self, robot_controller):
+        self._robot_controller = robot_controller
         self._world = None
         self._did_run = False
 
@@ -32,6 +25,7 @@ class StackBoxScenario:
         self._world = World()
         self._world.reset()
         self._did_run = False
+        self._robot_controller.refresh_handles()
 
         self.box1 = DynamicCuboid(
             prim_path=f"{PICK_BOX_1}_1",
@@ -77,20 +71,20 @@ class StackBoxScenario:
         dc_interface = _dynamic_control.acquire_dynamic_control_interface()
         articulation = dc_interface.get_articulation("/World/Robot")
 
-        axis2_dof_index = get_dof_index_for_joint_prim_path(
-            dc_interface, articulation, AXIS2_JOINT_PATH
+        axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
+            AXIS2_JOINT_PATH
         )
-        axis1_dof_index = get_dof_index_for_joint_prim_path(
-            dc_interface, articulation, AXIS1_JOINT_PATH
+        axis1_dof_index = self._robot_controller.get_dof_index_for_joint(
+            AXIS1_JOINT_PATH
         )
-        axis3_dof_index = get_dof_index_for_joint_prim_path(
-            dc_interface, articulation, AXIS3_JOINT_PATH
+        axis3_dof_index = self._robot_controller.get_dof_index_for_joint(
+            AXIS3_JOINT_PATH
         )
 
         # Simulate stacking
         for i, box in enumerate([self.box1, self.box2]):
-            set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.6)
-            yield from wait_for_joint_position(
+            self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.6)
+            yield from self._robot_controller.wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis2_dof_index,
@@ -99,8 +93,8 @@ class StackBoxScenario:
             )
 
             # Rotate 90
-            set_angular_drive_target(AXIS1_JOINT_PATH, 90)
-            yield from wait_for_joint_position(
+            self._robot_controller.set_angular_drive_target(AXIS1_JOINT_PATH, 90)
+            yield from self._robot_controller.wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis1_dof_index,
@@ -110,8 +104,8 @@ class StackBoxScenario:
             )
 
             # Move snake out
-            set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.45)
-            yield from wait_for_joint_position(
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.45)
+            yield from self._robot_controller.wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis3_dof_index,
@@ -122,8 +116,10 @@ class StackBoxScenario:
             # Lower
             if i == 1:  # For box2 (second iteration)
                 # Lower more for box2
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.05)
-                yield from wait_for_joint_position(
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 0.05
+                )
+                yield from self._robot_controller.wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
@@ -131,8 +127,10 @@ class StackBoxScenario:
                     pos_threshold=0.04,
                 )
             else:
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.34)
-                yield from wait_for_joint_position(
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 0.34
+                )
+                yield from self._robot_controller.wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
@@ -141,12 +139,14 @@ class StackBoxScenario:
                 )
 
             # Close gripper
-            close_gripper()
+            self._robot_controller.close_gripper()
 
             # Raise
             if i == 1:  # For box2, raise more
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 1.0)
-                yield from wait_for_joint_position(
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 1.0
+                )
+                yield from self._robot_controller.wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
@@ -154,8 +154,10 @@ class StackBoxScenario:
                     pos_threshold=0.1,
                 )
             else:
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
-                yield from wait_for_joint_position(
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 0.8
+                )
+                yield from self._robot_controller.wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
@@ -164,8 +166,8 @@ class StackBoxScenario:
                 )
 
             # Move snake in
-            set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.5)
-            yield from wait_for_joint_position(
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.5)
+            yield from self._robot_controller.wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis3_dof_index,
@@ -174,8 +176,8 @@ class StackBoxScenario:
             )
 
             # Rotate 90 back to 0
-            set_angular_drive_target(AXIS1_JOINT_PATH, 0)
-            yield from wait_for_joint_position(
+            self._robot_controller.set_angular_drive_target(AXIS1_JOINT_PATH, 0)
+            yield from self._robot_controller.wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis1_dof_index,
@@ -185,8 +187,8 @@ class StackBoxScenario:
             )
 
             # Move snake out
-            set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
-            yield from wait_for_joint_position(
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
+            yield from self._robot_controller.wait_for_joint_position(
                 dc_interface,
                 articulation,
                 axis3_dof_index,
@@ -196,8 +198,10 @@ class StackBoxScenario:
 
             # Lower
             if i == 1:  # For box2, raise more
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.9)
-                yield from wait_for_joint_position(
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 0.9
+                )
+                yield from self._robot_controller.wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
@@ -205,8 +209,10 @@ class StackBoxScenario:
                     pos_threshold=0.01,
                 )
             else:
-                set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.58)
-                yield from wait_for_joint_position(
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 0.58
+                )
+                yield from self._robot_controller.wait_for_joint_position(
                     dc_interface,
                     articulation,
                     axis2_dof_index,
@@ -214,7 +220,7 @@ class StackBoxScenario:
                     pos_threshold=0.01,
                 )
 
-            open_gripper()
+            self._robot_controller.open_gripper()
 
         for _ in range(180):
             self._world.step(render=True)

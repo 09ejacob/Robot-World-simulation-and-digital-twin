@@ -5,14 +5,6 @@ import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
-from ..robot.robot_controller import (
-    get_dof_index_for_joint_prim_path,
-    open_gripper,
-    close_gripper,
-    set_angular_drive_target,
-    set_prismatic_joint_position,
-    wait_for_joint_position,
-)
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
@@ -22,11 +14,13 @@ from ..global_variables import (
 
 
 class UDPControllerScenario:
-    def __init__(self):
+    def __init__(self, robot_controller):
+        self._robot_controller = robot_controller
         self._world = None
         self.last_udp_message = None
         self._did_run = False
         self._udp_thread = None
+        self._robot_controller.refresh_handles()
 
     def reset(self):
         """
@@ -90,13 +84,19 @@ class UDPControllerScenario:
             return
 
         if axis_id == 1:
-            set_angular_drive_target(AXIS1_JOINT_PATH, target_value)
+            self._robot_controller.set_angular_drive_target(
+                AXIS1_JOINT_PATH, target_value
+            )
             print(f"Set angular drive target for axis 1 to {target_value}")
         elif axis_id == 2:
-            set_prismatic_joint_position(AXIS2_JOINT_PATH, target_value)
+            self._robot_controller.set_prismatic_joint_position(
+                AXIS2_JOINT_PATH, target_value
+            )
             print(f"Set prismatic joint position for axis 2 to {target_value}")
         elif axis_id == 3:
-            set_prismatic_joint_position(AXIS3_JOINT_PATH, target_value)
+            self._robot_controller.set_prismatic_joint_position(
+                AXIS3_JOINT_PATH, target_value
+            )
             print(f"Set prismatic joint position for axis 3 to {target_value}")
         else:
             print("Axis id not recognized:", axis_id)
