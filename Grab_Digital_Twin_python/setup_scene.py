@@ -9,6 +9,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 import omni.graph.core as og
 from pxr import Usd, UsdGeom
+from isaacsim.sensors.camera import Camera
 from .camera import setup_camera
 import asyncio
 import omni.kit.app
@@ -43,8 +44,11 @@ from .global_variables import (
     AXIS2_TOWER_PATH,
     PALLET_BASE_PATH,
     CABINET_PATH,
-    CAMERA_SENSOR_PATH,
-    BOXCAMERA_PATH,
+    CAMERA_PATH,
+    BOX_CAMERA_1,
+    BOX_CAMERA_2,
+    BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH,
+    BOX_CAMERA_2_SNAKE_BASE_JOINT_PATH,
 )
 
 
@@ -271,7 +275,19 @@ def create_base_robot_model(
         True
     )
 
-    camera = setup_camera()
+    setup_camera(
+        BOX_CAMERA_1, 
+        position=np.array([0.25 / 2, 0.3 / 2, 1.6 / 2]),
+        euler_angles=np.array([70, 0, 0]),
+        resolution=(1920, 1080),
+    )
+
+    setup_camera(
+        BOX_CAMERA_2, 
+        position=np.array([-0.25 / 2, 0.3 / 2, 1.6 / 2]),
+        euler_angles=np.array([70, 0, 0]),
+        resolution=(1920, 1080),
+    )
 
     # Axis2_base no volume and collision
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
@@ -302,11 +318,13 @@ def create_joints():
         "PhysicsPrismaticJoint",
         "Y",
     )
+    
     set_prismatic_joint_limits(AXIS3_JOINT_PATH, -2.0, 0)
     enable_linear_drive(
         AXIS3_JOINT_PATH, stiffness=100, damping=100, max_force=100, target_position=0.0
     )
 
+ 
     # Axis 1 joint
     create_joint(
         AXIS1_JOINT_PATH,
@@ -386,6 +404,7 @@ def create_joints():
         None,
     )
 
+    # Cabinet base joint
     create_joint(
         CABINET_BASE_JOINT_PATH,
         CABINET_PATH,
@@ -393,6 +412,25 @@ def create_joints():
         "PhysicsFixedJoint",
         None,
     )
+ 
+    # Box cameras snake base joint
+    create_joint(
+        BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH,
+        SNAKE_BASE_PATH,
+        CAMERA_PATH,
+        "PhysicsFixedJoint",
+        None,
+    )
+
+    #Camera snake joint
+    ##create_joint(
+    ##    CAMERA_SNAKE_JOINT_PATH,  
+    ##    BOXCAMERA_PATH,
+    ##    SNAKE_BASE_PATH,
+    ##    "PhysicsPrismaticJoint",
+    ##    "Z",
+    ##)
+
 
 
 def apply_articulation_root(path):
@@ -481,8 +519,7 @@ def setup_scene():
 
     create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 
-    create_xform(BOXCAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-
+    create_xform(CAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(0.5, 0.5, 0.5))
 
     create_xform(
         AXIS2_PATH,
