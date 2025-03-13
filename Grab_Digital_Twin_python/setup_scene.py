@@ -44,10 +44,9 @@ from .global_variables import (
     AXIS2_TOWER_PATH,
     PALLET_BASE_PATH,
     CABINET_PATH,
-    CAMERA_SENSOR_PATH,
-    BOXCAMERA_PATH,
-    CAMERA_SNAKE_JOINT_PATH,
-    CAMERA_AXIS2_JOINT_PATH,
+    CAMERA_PATH,
+    BOX_CAMERA_1,
+    CAMERA_SNAKE_BASE_JOINT_PATH,
 )
 
 
@@ -401,11 +400,11 @@ def create_joints():
  
     # Axis 2 joint
     create_joint(
-        CAMERA_AXIS2_JOINT_PATH,
-        AXIS2_BASE_PATH,
-        BOXCAMERA_PATH,
-        "PhysicsPrismaticJoint",
-        "Z",
+        CAMERA_SNAKE_BASE_JOINT_PATH,
+        SNAKE_BASE_PATH,
+        BOX_CAMERA_1,
+        "PhysicsFixedJoint",
+        None,
     )
 
     #Camera snake joint
@@ -505,7 +504,7 @@ def setup_scene():
 
     create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 
-    create_xform(BOXCAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
+    create_xform(CAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 
 
     create_xform(

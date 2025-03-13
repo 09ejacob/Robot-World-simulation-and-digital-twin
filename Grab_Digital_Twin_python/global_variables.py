@@ -24,7 +24,7 @@ PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 # Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
-BOXCAMERA_PATH = f"{ROBOT_PATH}/boxcamera"
+CAMERA_PATH = f"{ROBOT_PATH}/Camera"
 AXIS2_PATH = f"{TOWER_PATH}/Axis2"
 GRIPPER_PATH = f"{AXIS2_PATH}/gripper"
 
@@ -41,7 +41,7 @@ CABINET_PATH=f"{ROBOT_BASE_GROUP_PATH}/cabinet"
 
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
-CAMERA_SENSOR_PATH = f"{BOXCAMERA_PATH}/cameraSensor"
+BOX_CAMERA_1 = f"{CAMERA_PATH}/boxCamera1"
 
 # Joints
 JOINTS_PATH = f"{ROBOT_PATH}/Joints"
@@ -49,8 +49,7 @@ AXIS1_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis1"
 AXIS2_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis2"
 AXIS3_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis3"
 AXIS4_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis4"
-CAMERA_SNAKE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointCameraSnake"
-CAMERA_AXIS2_JOINT_PATH = f"{JOINTS_PATH}/FixedJointCameraAxis2"
+CAMERA_SNAKE_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointSnakeBaseBoxCamera1"
 FIXED_JOINT_BASE_GROUND = f"{JOINTS_PATH}/FixedJointBaseGround"
 PRISMATIC_JOINT_FORCE_SENSOR = f"{JOINTS_PATH}/PrismaticJointForceSensor"
 ROBOT_BASE_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointRobotBase"

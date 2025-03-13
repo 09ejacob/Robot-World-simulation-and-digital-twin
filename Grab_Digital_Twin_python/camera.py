@@ -1,12 +1,15 @@
 import numpy as np
 import isaacsim.core.utils.numpy.rotations as rot_utils
 from isaacsim.sensors.camera import Camera
+import omni.usd
+from pxr import UsdPhysics, PhysxSchema
 from .global_variables import (
-    CAMERA_SENSOR_PATH
+    BOX_CAMERA_1,
+    CAMERA_PATH,
 )
 
 def setup_camera(
-    prim_path=CAMERA_SENSOR_PATH,
+    prim_path=BOX_CAMERA_1,
     position=np.array([0, 1, 1]),
     euler_angles=np.array([70, 0, 0]),  # Change Euler angles as needed
     resolution=(1920, 1080),
@@ -16,6 +19,9 @@ def setup_camera(
     Sets up a camera using Euler angles converted to quaternion (w, x, y, z) for Isaac Sim,
     ensuring no automatic rotation using `camera_axes="usd"`.
     """
+
+    stage = omni.usd.get_context().get_stage()
+    camera_Xform_prim = stage.GetPrimAtPath(CAMERA_PATH)
 
     print(f"Initializing camera at {prim_path}")
     print(f"Original Euler angles (degrees): {euler_angles}")
@@ -35,6 +41,11 @@ def setup_camera(
 
     # Set correct pose with `camera_axes="usd"` to disable auto-rotation
     camera.set_world_pose(position, quat_xyzw, camera_axes="usd")
+
+    physicsAPI = UsdPhysics.RigidBodyAPI.Apply(camera_Xform_prim)
+    PhysxSchema.PhysxRigidBodyAPI.Apply(camera_Xform_prim)
+
+    attr = camera_Xform_prim.GetAttribute("physxRigidBody:disableGravity")
 
     print(f"Camera successfully created with orientation: {quat_xyzw}")
     return camera
