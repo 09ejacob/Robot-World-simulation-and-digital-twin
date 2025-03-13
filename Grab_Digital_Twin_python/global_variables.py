@@ -24,7 +24,7 @@ PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 # Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
-CAMERA_PATH = f"{ROBOT_PATH}/Camera"
+CAMERA_PATH = f"{ROBOT_PATH}/BoxCamera"
 AXIS2_PATH = f"{TOWER_PATH}/Axis2"
 GRIPPER_PATH = f"{AXIS2_PATH}/gripper"
 
