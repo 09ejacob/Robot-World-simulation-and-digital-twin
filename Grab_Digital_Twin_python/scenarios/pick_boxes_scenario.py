@@ -114,7 +114,7 @@ class PickBoxesScenario:
         yield from self._robot_controller.wait_for_joint_position(
             axis1_dof_index,
             target_position=-90,
-            pos_threshold=0.1,
+            pos_threshold=0.2,
             max_frames=1000,
             is_angular=True,
         )
