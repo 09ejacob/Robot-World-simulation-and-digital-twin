@@ -46,7 +46,9 @@ from .global_variables import (
     CABINET_PATH,
     CAMERA_PATH,
     BOX_CAMERA_1,
-    CAMERA_SNAKE_BASE_JOINT_PATH,
+    BOX_CAMERA_2,
+    BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH,
+    BOX_CAMERA_2_SNAKE_BASE_JOINT_PATH,
 )
 
 
@@ -273,7 +275,19 @@ def create_base_robot_model(
         True
     )
 
-    setup_camera()
+    setup_camera(
+        BOX_CAMERA_1, 
+        position=np.array([0.25 / 2, 0.3 / 2, 1.6 / 2]),
+        euler_angles=np.array([70, 0, 0]),
+        resolution=(1920, 1080),
+    )
+
+    setup_camera(
+        BOX_CAMERA_2, 
+        position=np.array([-0.25 / 2, 0.3 / 2, 1.6 / 2]),
+        euler_angles=np.array([70, 0, 0]),
+        resolution=(1920, 1080),
+    )
 
     # Axis2_base no volume and collision
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
@@ -381,7 +395,7 @@ def create_joints():
         None,
     )
 
-    # Pallet base jointS
+    # Pallet base joint
     create_joint(
         PALLET_BASE_JOINT_PATH,
         PALLET_BASE_PATH,
@@ -390,6 +404,7 @@ def create_joints():
         None,
     )
 
+    # Cabinet base joint
     create_joint(
         CABINET_BASE_JOINT_PATH,
         CABINET_PATH,
@@ -398,11 +413,11 @@ def create_joints():
         None,
     )
  
-    # Axis 2 joint
+    # Box cameras snake base joint
     create_joint(
-        CAMERA_SNAKE_BASE_JOINT_PATH,
+        BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH,
         SNAKE_BASE_PATH,
-        BOX_CAMERA_1,
+        CAMERA_PATH,
         "PhysicsFixedJoint",
         None,
     )
@@ -504,8 +519,7 @@ def setup_scene():
 
     create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 
-    create_xform(CAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
-
+    create_xform(CAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(0.5, 0.5, 0.5))
 
     create_xform(
         AXIS2_PATH,

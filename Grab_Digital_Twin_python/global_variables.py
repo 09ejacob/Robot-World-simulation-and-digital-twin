@@ -42,6 +42,7 @@ CABINET_PATH=f"{ROBOT_BASE_GROUP_PATH}/cabinet"
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
 BOX_CAMERA_1 = f"{CAMERA_PATH}/boxCamera1"
+BOX_CAMERA_2 = f"{CAMERA_PATH}/boxCamera2"
 
 # Joints
 JOINTS_PATH = f"{ROBOT_PATH}/Joints"
@@ -49,7 +50,8 @@ AXIS1_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis1"
 AXIS2_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis2"
 AXIS3_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis3"
 AXIS4_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis4"
-CAMERA_SNAKE_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointSnakeBaseBoxCamera1"
+BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointSnakeBaseBoxCamera1"
+BOX_CAMERA_2_SNAKE_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointSnakeBaseBoxCamera2"
 FIXED_JOINT_BASE_GROUND = f"{JOINTS_PATH}/FixedJointBaseGround"
 PRISMATIC_JOINT_FORCE_SENSOR = f"{JOINTS_PATH}/PrismaticJointForceSensor"
 ROBOT_BASE_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointRobotBase"
