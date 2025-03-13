@@ -85,8 +85,6 @@ class StackBoxScenario:
         for i, box in enumerate([self.box1, self.box2]):
             self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.6)
             yield from self._robot_controller.wait_for_joint_position(
-                dc_interface,
-                articulation,
                 axis2_dof_index,
                 target_position=0.6,
                 pos_threshold=0.1,
@@ -95,8 +93,6 @@ class StackBoxScenario:
             # Rotate 90
             self._robot_controller.set_angular_drive_target(AXIS1_JOINT_PATH, 90)
             yield from self._robot_controller.wait_for_joint_position(
-                dc_interface,
-                articulation,
                 axis1_dof_index,
                 target_position=-90,
                 pos_threshold=0.2,
@@ -106,8 +102,6 @@ class StackBoxScenario:
             # Move snake out
             self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.45)
             yield from self._robot_controller.wait_for_joint_position(
-                dc_interface,
-                articulation,
                 axis3_dof_index,
                 target_position=1.45,
                 pos_threshold=0.01,
@@ -120,8 +114,6 @@ class StackBoxScenario:
                     AXIS2_JOINT_PATH, 0.05
                 )
                 yield from self._robot_controller.wait_for_joint_position(
-                    dc_interface,
-                    articulation,
                     axis2_dof_index,
                     target_position=0.05,
                     pos_threshold=0.04,
@@ -131,8 +123,6 @@ class StackBoxScenario:
                     AXIS2_JOINT_PATH, 0.34
                 )
                 yield from self._robot_controller.wait_for_joint_position(
-                    dc_interface,
-                    articulation,
                     axis2_dof_index,
                     target_position=0.34,
                     pos_threshold=0.04,
@@ -147,8 +137,6 @@ class StackBoxScenario:
                     AXIS2_JOINT_PATH, 1.0
                 )
                 yield from self._robot_controller.wait_for_joint_position(
-                    dc_interface,
-                    articulation,
                     axis2_dof_index,
                     target_position=1.0,
                     pos_threshold=0.1,
@@ -158,8 +146,6 @@ class StackBoxScenario:
                     AXIS2_JOINT_PATH, 0.8
                 )
                 yield from self._robot_controller.wait_for_joint_position(
-                    dc_interface,
-                    articulation,
                     axis2_dof_index,
                     target_position=0.8,
                     pos_threshold=0.1,
@@ -168,8 +154,6 @@ class StackBoxScenario:
             # Move snake in
             self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.5)
             yield from self._robot_controller.wait_for_joint_position(
-                dc_interface,
-                articulation,
                 axis3_dof_index,
                 target_position=0.5,
                 pos_threshold=0.1,
@@ -178,8 +162,6 @@ class StackBoxScenario:
             # Rotate 90 back to 0
             self._robot_controller.set_angular_drive_target(AXIS1_JOINT_PATH, 0)
             yield from self._robot_controller.wait_for_joint_position(
-                dc_interface,
-                articulation,
                 axis1_dof_index,
                 target_position=0,
                 pos_threshold=0.1,
@@ -189,8 +171,6 @@ class StackBoxScenario:
             # Move snake out
             self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
             yield from self._robot_controller.wait_for_joint_position(
-                dc_interface,
-                articulation,
                 axis3_dof_index,
                 target_position=1,
                 pos_threshold=0.01,
@@ -202,8 +182,6 @@ class StackBoxScenario:
                     AXIS2_JOINT_PATH, 0.9
                 )
                 yield from self._robot_controller.wait_for_joint_position(
-                    dc_interface,
-                    articulation,
                     axis2_dof_index,
                     target_position=0.9,
                     pos_threshold=0.01,
@@ -213,8 +191,6 @@ class StackBoxScenario:
                     AXIS2_JOINT_PATH, 0.58
                 )
                 yield from self._robot_controller.wait_for_joint_position(
-                    dc_interface,
-                    articulation,
                     axis2_dof_index,
                     target_position=0.58,
                     pos_threshold=0.01,

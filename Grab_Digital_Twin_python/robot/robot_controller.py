@@ -124,6 +124,7 @@ class RobotController:
             )
             current_pos = dof_states["pos"][dof_index]
 
+            # For debugging
             # if frames % 10 == 0:
             #     unit = "rad" if is_angular else "m"
             #     print(
