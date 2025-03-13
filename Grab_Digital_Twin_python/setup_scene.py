@@ -277,16 +277,18 @@ def create_base_robot_model(
 
     setup_camera(
         BOX_CAMERA_1, 
-        position=np.array([0.25 / 2, 0.3 / 2, 1.6 / 2]),
+        position=np.array([0.25 / 2, 0.3 / 2, 2.0 / 2]),
         euler_angles=np.array([70, 0, 0]),
         resolution=(1920, 1080),
+        focal_length=15/10,
     )
 
     setup_camera(
-        BOX_CAMERA_2, 
-        position=np.array([-0.25 / 2, 0.3 / 2, 1.6 / 2]),
-        euler_angles=np.array([70, 0, 0]),
-        resolution=(1920, 1080),
+       BOX_CAMERA_2, 
+       position=np.array([-0.25 / 2, 0.3 / 2, 1.6 / 2]),
+       euler_angles=np.array([70, 0, 0]),
+       resolution=(1920, 1080),
+       focal_length=25,
     )
 
     # Axis2_base no volume and collision
