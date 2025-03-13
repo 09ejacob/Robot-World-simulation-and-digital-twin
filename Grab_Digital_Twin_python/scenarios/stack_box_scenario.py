@@ -3,7 +3,7 @@ import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
-from ..robot_controller import (
+from ..robot.robot_controller import (
     get_dof_index_for_joint_prim_path,
     open_gripper,
     close_gripper,

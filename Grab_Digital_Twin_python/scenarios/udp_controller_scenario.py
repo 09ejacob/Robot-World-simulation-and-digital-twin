@@ -5,7 +5,7 @@ import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
 from omni.isaac.dynamic_control import _dynamic_control
-from ..robot_controller import (
+from ..robot.robot_controller import (
     get_dof_index_for_joint_prim_path,
     open_gripper,
     close_gripper,
@@ -19,6 +19,8 @@ from ..global_variables import (
     AXIS3_JOINT_PATH,
     PICK_BOX_1,
 )
+
+
 class UDPControllerScenario:
     def __init__(self):
         self._world = None
@@ -35,7 +37,7 @@ class UDPControllerScenario:
         if self._world is not None:
             self._world.reset()
 
-    def start_udp_server(self, host='0.0.0.0', port=9999):
+    def start_udp_server(self, host="0.0.0.0", port=9999):
         if self._udp_thread is not None and self._udp_thread.is_alive():
             print("[UDP Server] Already running.")
             return
@@ -58,7 +60,7 @@ class UDPControllerScenario:
             while True:
                 try:
                     data, addr = udp_sock.recvfrom(1024)
-                    message = data.decode('utf-8').strip()
+                    message = data.decode("utf-8").strip()
                     print(f"[UDP Server] Received from {addr}: {message}")
                     self.last_udp_message = message
                 except Exception as e:
@@ -72,7 +74,7 @@ class UDPControllerScenario:
         Parse command in the form "axis:<axis_id>:<target_value>"
         and calls control robot function.
         """
-        parts = message.split(':')
+        parts = message.split(":")
         if len(parts) != 3:
             print("Invalid command format:", message)
             return
@@ -110,6 +112,7 @@ class UDPControllerScenario:
             self.parse_and_execute_command(self.last_udp_message)
             self.last_udp_message = None
         time.sleep(step)
+
 
 if __name__ == "__main__":
     scenario = UDPControllerScenario()

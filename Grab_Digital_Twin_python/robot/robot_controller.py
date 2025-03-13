@@ -7,7 +7,7 @@ import omni.usd
 import omni.graph as og2
 from omni.isaac.dynamic_control import _dynamic_control
 
-from .global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
+from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
 stage = omni.usd.get_context().get_stage()
 
@@ -165,7 +165,7 @@ def wait_for_joint_position(
 
         # For debugging
         if frames % 10 == 0:
-           unit = "rad" if is_angular else "m"
+            unit = "rad" if is_angular else "m"
         #    print(
         #        f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
         #    )
