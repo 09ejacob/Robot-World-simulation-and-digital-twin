@@ -15,6 +15,7 @@ import asyncio
 import omni.kit.app
 
 from .global_variables import (
+    BASE_CAMERA_BASE_JOINT_PATH,
     JOINTS_PATH,
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
@@ -49,6 +50,9 @@ from .global_variables import (
     BOX_CAMERA_2,
     BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH,
     BOX_CAMERA_2_SNAKE_BASE_JOINT_PATH,
+    BASE_CAMERA_PATH,
+    BASE_CAMERA_XFORM_PATH,
+    BASE_CAMERA_BASE_JOINT_PATH,
 )
 
 
@@ -277,18 +281,26 @@ def create_base_robot_model(
 
     setup_camera(
         BOX_CAMERA_1, 
-        position=np.array([0.25 / 2, 0.3 / 2, 2.0 / 2]),
-        euler_angles=np.array([70, 0, 0]),
+        position=np.array([0.25 / 2, -0.5 / 2, 2.4 / 2]),
+        euler_angles=np.array([65, 0, 0]),
         resolution=(1920, 1080),
-        focal_length=15/10,
+        focal_length=13/10,
     )
 
     setup_camera(
        BOX_CAMERA_2, 
-       position=np.array([-0.25 / 2, 0.3 / 2, 1.6 / 2]),
-       euler_angles=np.array([70, 0, 0]),
+       position=np.array([-0.25 / 2, -0.5 / 2, 2.4 / 2]),
+       euler_angles=np.array([65, 0, 0]),
        resolution=(1920, 1080),
-       focal_length=25,
+       focal_length=13/10,
+    )
+
+    setup_camera(
+        BASE_CAMERA_PATH,
+        position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
+        euler_angles=np.array([-180, 0, 0]),
+        resolution=(1920, 1080),
+        focal_length=13/10,
     )
 
     # Axis2_base no volume and collision
@@ -522,6 +534,9 @@ def setup_scene():
     create_xform(TOWER_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1))
 
     create_xform(CAMERA_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(0.5, 0.5, 0.5))
+
+    create_xform(BASE_CAMERA_XFORM_PATH, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(0.5, 0.5, 0.5))
+
 
     create_xform(
         AXIS2_PATH,
