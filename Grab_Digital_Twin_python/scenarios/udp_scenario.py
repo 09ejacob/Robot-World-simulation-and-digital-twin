@@ -1,40 +1,46 @@
 import time
+import omni.usd
 from omni.isaac.core import World
-from ..global_variables import (
-    AXIS1_JOINT_PATH,
-    AXIS2_JOINT_PATH,
-    AXIS3_JOINT_PATH,
-    PICK_BOX_1)
-from ..networking .UDP_controller import UDPController
+from ..global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, AXIS3_JOINT_PATH, PICK_BOX_1
+from ..networking.udp_controller import UDPController
 
 class UDPControllerScenario:
     def __init__(self, robot_controller):
         self._robot_controller = robot_controller
-        self._world = World()
+        self._world = None
+        self.last_udp_message = None
+        self._did_run = False
+        self._udp_thread = None
         self._robot_controller.refresh_handles()
 
-        # Minimal attributes to satisfy UI integration:
-        self._did_run = False
-        self._timeline = None
-        self.ui_builder = self
-
-        # Create the UDP controller and set its callback.
         self.udp = UDPController()
-        self.udp.callback = self.parse_and_execute_command
+        self.udp.callback = self._udp_callback
+
+    def _udp_callback(self, message):
+        self.last_udp_message = message
 
     def reset(self):
         self._did_run = False
-        if self._world:
+        if self._world is not None:
             self._world.reset()
+
+    def start_udp_server(self, host="0.0.0.0", port=9999):
+        self.udp.host = host
+        self.udp.port = port
+        self.udp.start()
 
     def parse_and_execute_command(self, message):
         parts = message.split(":")
-        if len(parts) != 3 or parts[0].lower() != "axis":
+        if len(parts) != 3:
             print("Invalid command format:", message)
             return
+        command, axis_str, value_str = parts
+        if command.lower() != "axis":
+            print("Unknown command type:", command)
+            return
         try:
-            axis_id = int(parts[1])
-            target_value = float(parts[2])
+            axis_id = int(axis_str)
+            target_value = float(value_str)
         except ValueError:
             print("Invalid axis id or target value in command:", message)
             return
@@ -52,18 +58,19 @@ class UDPControllerScenario:
             print("Axis id not recognized:", axis_id)
 
     def setup(self):
+        self._world = World()
         self._world.reset()
-        self.udp.start()
+        self.start_udp_server()
 
-    # Minimal update method to support timeline callbacks.
     def update(self, step: float = 0.1):
-        self._did_run = True
+        if self.last_udp_message:
+            print(f"[Scenario] UDP Message: {self.last_udp_message}")
+            self.parse_and_execute_command(self.last_udp_message)
+            self.last_udp_message = None
         time.sleep(step)
-        return False
 
 if __name__ == "__main__":
-    # Provide your actual robot_controller instance.
-    robot_controller = ...  # Replace with your robot controller initialization.
+    robot_controller = ... # dont need this probably
     scenario = UDPControllerScenario(robot_controller)
     scenario.setup()
     try:
