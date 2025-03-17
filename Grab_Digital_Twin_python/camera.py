@@ -11,8 +11,10 @@ def setup_camera(
     position=np.array([0, 0, 0]),  
     euler_angles=np.array([0, 0, 0]),
     resolution=(1920, 1080),
-    focal_length=35,  # Default focal length
-    horizontal_aperture=20.955  # Default horizontal aperture (Omniverse default)
+    focal_length=35,
+    clipping_range=(0,0), 
+    horizontal_aperture= 0, 
+
 ):
     stage = omni.usd.get_context().get_stage()
     camera_Xform_prim = stage.GetPrimAtPath(CAMERA_PATH)
@@ -27,9 +29,11 @@ def setup_camera(
         prim_path=prim_path,
         resolution=resolution, 
         position=position,
-        orientation=np.array([1, 0, 0, 0]),
+        orientation=quat_xyzw,
     )
-
+  # Initialize the camera to ensure product_render_path is set
+    camera.initialize()
+    
     camera.set_world_pose(position, quat_xyzw, camera_axes="usd")
 
     # Apply physics properties
@@ -40,7 +44,8 @@ def setup_camera(
     attr = camera_Xform_prim.GetAttribute("physxRigidBody:disableGravity")
 
     camera.set_focal_length(focal_length)
+    camera.set_clipping_range(clipping_range[0], clipping_range[1])
+    camera.set_horizontal_aperture(horizontal_aperture) 
     print(f"Camera successfully created with orientation: {quat_xyzw}")
-    print(f"Set focal length: {focal_length} mm, Horizontal Aperture: {horizontal_aperture} mm")
     
     return camera

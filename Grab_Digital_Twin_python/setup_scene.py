@@ -297,10 +297,12 @@ def create_base_robot_model(
 
     setup_camera(
         BASE_CAMERA_PATH,
-        position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
+        position=np.array([-0.07/2 , 0.02 / 2, 0.01 / 2]),
         euler_angles=np.array([-180, 0, 0]),
         resolution=(1920, 1080),
-        focal_length=13/10,
+        focal_length=10/10,
+        horizontal_aperture=25,
+        clipping_range=(0.2,10000),
     )
 
     # Axis2_base no volume and collision
