@@ -281,18 +281,22 @@ def create_base_robot_model(
 
     setup_camera(
         BOX_CAMERA_1, 
-        position=np.array([0.25 / 2, -0.5 / 2, 2.4 / 2]),
-        euler_angles=np.array([65, 0, 0]),
+        position=np.array([0.25 / 2, -0.3 / 2, 2 / 2]),
+        euler_angles=np.array([65, 10, 0]),
         resolution=(1920, 1080),
-        focal_length=13/10,
+        focal_length=13,
+        clipping_range=(0.2,10000),
+        horizontal_aperture=20,
     )
 
     setup_camera(
        BOX_CAMERA_2, 
-       position=np.array([-0.25 / 2, -0.5 / 2, 2.4 / 2]),
-       euler_angles=np.array([65, 0, 0]),
+       position=np.array([-0.25 / 2, -0.3 / 2, 2 / 2]),
+       euler_angles=np.array([65, -10, 0]),
        resolution=(1920, 1080),
-       focal_length=13/10,
+       focal_length=13,
+       clipping_range=(0.2,10000),
+       horizontal_aperture=20,
     )
 
     setup_camera(
@@ -300,7 +304,7 @@ def create_base_robot_model(
         position=np.array([-0.07/2 , 0.02 / 2, 0.01 / 2]),
         euler_angles=np.array([-180, 0, 0]),
         resolution=(1920, 1080),
-        focal_length=10/10,
+        focal_length=9,
         horizontal_aperture=25,
         clipping_range=(0.2,10000),
     )

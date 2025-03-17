@@ -12,13 +12,15 @@ def setup_camera(
     euler_angles=np.array([0, 0, 0]),
     resolution=(1920, 1080),
     focal_length=35,
-    clipping_range=(0,0), 
-    horizontal_aperture= 0, 
+    clipping_range=(1,10000), 
+    horizontal_aperture= 20, 
 
 ):
     stage = omni.usd.get_context().get_stage()
     camera_Xform_prim = stage.GetPrimAtPath(CAMERA_PATH)
-
+    if not camera_Xform_prim:
+        print(f"Camera Xform not found at {CAMERA_PATH}")
+        return None
     print(f"Initializing camera at {prim_path}")
     print(f"Original Euler angles (degrees): {euler_angles}")
 
@@ -33,7 +35,7 @@ def setup_camera(
     )
   # Initialize the camera to ensure product_render_path is set
     camera.initialize()
-    
+
     camera.set_world_pose(position, quat_xyzw, camera_axes="usd")
 
     # Apply physics properties
@@ -43,9 +45,9 @@ def setup_camera(
     # Disable gravity for the camera
     attr = camera_Xform_prim.GetAttribute("physxRigidBody:disableGravity")
 
-    camera.set_focal_length(focal_length)
+    camera.set_focal_length(focal_length/10)
     camera.set_clipping_range(clipping_range[0], clipping_range[1])
-    camera.set_horizontal_aperture(horizontal_aperture) 
+    camera.set_horizontal_aperture(horizontal_aperture/10) 
     print(f"Camera successfully created with orientation: {quat_xyzw}")
     
     return camera
