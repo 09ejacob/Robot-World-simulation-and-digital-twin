@@ -2,6 +2,7 @@ import numpy as np
 import isaacsim.core.utils.numpy.rotations as rot_utils
 from isaacsim.sensors.camera import Camera
 import omni.usd
+import time 
 from pxr import UsdPhysics, PhysxSchema
 
 from .global_variables import CAMERA_PATH
@@ -13,8 +14,9 @@ def setup_camera(
     resolution=(1920, 1080),
     focal_length=35,
     clipping_range=(1,10000), 
-    horizontal_aperture= 20, 
-
+    horizontal_aperture= 20,
+    camera_capture=None
+ 
 ):
     stage = omni.usd.get_context().get_stage()
     camera_Xform_prim = stage.GetPrimAtPath(CAMERA_PATH)
@@ -22,10 +24,8 @@ def setup_camera(
         print(f"Camera Xform not found at {CAMERA_PATH}")
         return None
     print(f"Initializing camera at {prim_path}")
-    print(f"Original Euler angles (degrees): {euler_angles}")
 
     quat_xyzw = rot_utils.euler_angles_to_quats(euler_angles, extrinsic=True, degrees=True)
-    print(f"Quaternion in (xyzw) format: {quat_xyzw}")
 
     camera = Camera(
         prim_path=prim_path,
@@ -48,6 +48,13 @@ def setup_camera(
     camera.set_focal_length(focal_length/10)
     camera.set_clipping_range(clipping_range[0], clipping_range[1])
     camera.set_horizontal_aperture(horizontal_aperture/10) 
-    print(f"Camera successfully created with orientation: {quat_xyzw}")
+    camera.get_current_frame()
+    print(f"Camera {camera.get_current_frame} initialized")
+    
+
+    # Register with camera capture system if provided
+    if camera_capture is not None:
+        camera_id = prim_path.split('/')[-1]  # Use the last part of the path as ID
+        camera_capture.register_camera(camera_id, camera)
     
     return camera

@@ -11,6 +11,7 @@ import omni.graph.core as og
 from pxr import Usd, UsdGeom
 from isaacsim.sensors.camera import Camera
 from .camera import setup_camera
+from .camera_capture import CameraCapture
 import asyncio
 import omni.kit.app
 
@@ -279,6 +280,8 @@ def create_base_robot_model(
         True
     )
 
+    camera_capture = CameraCapture(base_save_dir="camera_captures")
+
     setup_camera(
         BOX_CAMERA_1, 
         position=np.array([0.25 / 2, -0.3 / 2, 2 / 2]),
@@ -287,6 +290,7 @@ def create_base_robot_model(
         focal_length=13,
         clipping_range=(0.2,10000),
         horizontal_aperture=20,
+        camera_capture=camera_capture,
     )
 
     setup_camera(
@@ -297,6 +301,7 @@ def create_base_robot_model(
        focal_length=13,
        clipping_range=(0.2,10000),
        horizontal_aperture=20,
+       camera_capture=camera_capture,
     )
 
     setup_camera(
@@ -307,7 +312,13 @@ def create_base_robot_model(
         focal_length=9,
         horizontal_aperture=25,
         clipping_range=(0.2,10000),
+        camera_capture=camera_capture,
     )
+
+
+    image_paths = camera_capture.capture_all_cameras()
+    for camera_id, image_path in image_paths.items():
+        print(f"✅ Image saved from {camera_id} at: {image_path}")
 
     # Axis2_base no volume and collision
     collisionAPI = UsdPhysics.CollisionAPI.Get(stage, AXIS2_BASE_PATH)
