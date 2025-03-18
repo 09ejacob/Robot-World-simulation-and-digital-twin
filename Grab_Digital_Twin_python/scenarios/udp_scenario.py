@@ -21,6 +21,7 @@ class UDPControllerScenario:
 
     def reset(self):
         self._did_run = False
+        self.udp.stop()  
         if self._world is not None:
             self._world.reset()
 
