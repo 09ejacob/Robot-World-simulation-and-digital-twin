@@ -72,5 +72,4 @@ def setup_scene():
 
     load_grab_usd()
 
-    # TODO: Currently does not work (might not even be necessary with the additional joint)
-    # create_additional_joints()
+    create_additional_joints()
