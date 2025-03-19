@@ -1,6 +1,7 @@
 import socket
 import threading
 
+
 class UDPController:
     def __init__(self, host="0.0.0.0", port=9999):
         self.host = host
@@ -19,10 +20,6 @@ class UDPController:
         def udp_server():
             udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            try:
-                udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            except Exception as e:
-                print("SO_REUSEPORT not available:", e)
             try:
                 udp_sock.bind((self.host, self.port))
             except Exception as e:
