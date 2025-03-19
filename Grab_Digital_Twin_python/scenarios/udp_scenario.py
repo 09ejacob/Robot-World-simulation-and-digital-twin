@@ -1,8 +1,10 @@
 import time
 import omni.usd
+import numpy as np
 from omni.isaac.core import World
 from ..global_variables import AXIS1_JOINT_PATH, AXIS2_JOINT_PATH, AXIS3_JOINT_PATH, PICK_BOX_1
 from ..networking.udp_controller import UDPController
+from omni.isaac.core.objects import DynamicCuboid
 
 class UDPControllerScenario:
     def __init__(self, robot_controller):
@@ -77,6 +79,14 @@ class UDPControllerScenario:
     def setup(self):
         self._world = World()
         self._world.reset()
+
+        self.box1 = DynamicCuboid(
+            prim_path=f"/World/cube",
+            position=np.array((1.5, 0, 0.2)),
+            scale=np.array((0.3, 0.3, 0.3)),
+            color=np.array((0.1, 0.2, 0.9)),
+        )
+
         self.start_udp_server()
 
     def update(self, step: float = 0.1):
