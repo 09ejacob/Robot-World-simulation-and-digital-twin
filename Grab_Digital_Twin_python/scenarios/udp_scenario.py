@@ -32,8 +32,18 @@ class UDPControllerScenario:
 
     def parse_and_execute_command(self, message):
         if message.strip().lower() == "force_data":
-            self._robot_controller.read_force_sensor_value()
             print("Read force sensor value")
+            self._robot_controller.read_force_sensor_value()
+            return
+        
+        if message.strip().lower() == "close_gripper":
+            print("Close gripper")
+            self._robot_controller.close_gripper()
+            return
+    
+        if message.strip().lower() == "open_gripper":
+            print("Open gripper")
+            self._robot_controller.open_gripper()
             return
 
         parts = message.split(":")
