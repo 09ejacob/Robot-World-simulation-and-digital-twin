@@ -13,7 +13,7 @@ from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
 
 
-class UDPControllerScenario:
+class UDPScenario:
     def __init__(self, robot_controller):
         self._robot_controller = robot_controller
         self._world = None
@@ -121,7 +121,7 @@ class UDPControllerScenario:
 
 if __name__ == "__main__":
     robot_controller = ...  # dont need this probably
-    scenario = UDPControllerScenario(robot_controller)
+    scenario = UDPScenario(robot_controller)
     scenario.setup()
     try:
         while True:
