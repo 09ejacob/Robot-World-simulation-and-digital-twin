@@ -1,5 +1,5 @@
 import numpy as np
-from os.path import abspath
+from os.path import dirname, abspath, join
 from omni.isaac.core.objects.ground_plane import GroundPlane
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
@@ -57,8 +57,10 @@ def create_additional_joints():
 
 
 def load_grab_usd():
+    # Isaac Sim needs the absolute path
+    current_dir = dirname(abspath(__file__))
     usd_path = abspath(
-        "./extsUser/Robot_World_simulation_and_digital_twin_Bachelor_group_9_2025/Grab_Digital_Twin_python/usd/Grab.usd"
+        join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
     )
 
     add_reference_to_stage(usd_path=usd_path, prim_path="/World/Robot")
