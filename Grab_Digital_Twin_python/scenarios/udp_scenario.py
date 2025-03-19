@@ -31,6 +31,11 @@ class UDPControllerScenario:
         self.udp.start()
 
     def parse_and_execute_command(self, message):
+        if message.strip().lower() == "force_data":
+            self._robot_controller.read_force_sensor_value()
+            print("Read force sensor value")
+            return
+
         parts = message.split(":")
         if len(parts) != 3:
             print("Invalid command format:", message)
@@ -57,6 +62,7 @@ class UDPControllerScenario:
             print(f"Set prismatic joint position for axis 3 to {target_value}")
         else:
             print("Axis id not recognized:", axis_id)
+
 
     def setup(self):
         self._world = World()
