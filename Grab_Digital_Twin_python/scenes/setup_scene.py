@@ -6,6 +6,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf
 from .camera import setup_camera
+from ..camera_capture import CameraCapture
 
 from ..global_variables import (
     FIXED_JOINT_BASE_GROUND,
@@ -57,17 +58,23 @@ def create_additional_joints():
         None,
     )
 
+def create_camera():
+    camera_capture = CameraCapture(base_save_dir="camera_capture")
 
-def create_additional_camera():
     setup_camera(
-        BASE_CAMERA_PATH,
-        position=np.array([-0.07 / 2, 0.02 / 2, 0.01 / 2]),
-        euler_angles=np.array([-180, 0, 0]),
+        prim_path="/World/TestCamera",
+        position=np.array([0, 0, 2]),
+        euler_angles=np.array([0, 0, 0]),
         resolution=(1920, 1080),
-        focal_length=9,
-        clipping_range=(0.2, 10000),
+        focal_length=35,
+        clipping_range=(1, 10000),
+        horizontal_aperture=20,
+        camera_capture=camera_capture,
     )
 
+    image_paths = camera_capture.capture_all_cameras()
+    for camera_id, image_path in image_paths.items():
+        print(f"✅ Image saved from {camera_id} at: {image_path}")
 
 def load_grab_usd():
     # Isaac Sim needs the absolute path
@@ -86,6 +93,5 @@ def setup_scene():
     create_ground_plane(GROUND_PLANE_PATH)
 
     load_grab_usd()
-
+    create_camera()
     create_additional_joints()
-    create_additional_camera()
