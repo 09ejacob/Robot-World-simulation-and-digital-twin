@@ -87,6 +87,12 @@ class Extension(omni.ext.IExt):
         self._timeline = omni.timeline.get_timeline_interface()
 
     def on_shutdown(self):
+        scenario = self.ui_builder._scenario
+
+        if scenario is not None and hasattr(scenario, "udp"):
+            print("Stopping UDP")
+            scenario.udp.stop()
+
         self._models = {}
         remove_menu_items(self._menu_items, EXTENSION_TITLE)
 

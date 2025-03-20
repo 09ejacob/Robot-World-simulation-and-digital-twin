@@ -1,19 +1,19 @@
-import socket
-import threading
 import time
 import omni.usd
+import numpy as np
+import psutil
 from omni.isaac.core import World
-from omni.isaac.core.objects import DynamicCuboid
-from omni.isaac.dynamic_control import _dynamic_control
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
     PICK_BOX_1,
 )
+from ..networking.udp_controller import UDPController
+from omni.isaac.core.objects import DynamicCuboid
 
 
-class UDPControllerScenario:
+class UDPScenario:
     def __init__(self, robot_controller):
         self._robot_controller = robot_controller
         self._world = None
@@ -22,52 +22,49 @@ class UDPControllerScenario:
         self._udp_thread = None
         self._robot_controller.refresh_handles()
 
+        self.udp = UDPController()
+        self.udp.callback = self._udp_callback
+
+    def _udp_callback(self, message):
+        self.last_udp_message = message
+
     def reset(self):
-        """
-        Called when the user presses the RESET button.
-        Resets the simulation.
-        """
         self._did_run = False
+        self.udp.stop()
         if self._world is not None:
             self._world.reset()
 
     def start_udp_server(self, host="0.0.0.0", port=9999):
-        if self._udp_thread is not None and self._udp_thread.is_alive():
-            print("[UDP Server] Already running.")
+        if self.port_in_use(port):
+            print(f"Port {port} is already in use. Skipping new server.")
             return
 
-        def udp_server():
-            udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.udp.host = host
+        self.udp.port = port
+        self.udp.start()
 
-            try:
-                udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            except Exception as e:
-                print("SO_REUSEPORT not available:", e)
-            try:
-                udp_sock.bind((host, port))
-            except Exception as e:
-                print(f"[UDP Server] Bind exception: {e}")
-                return
-
-            print(f"[UDP Server] Listening on {host}:{port}")
-            while True:
-                try:
-                    data, addr = udp_sock.recvfrom(1024)
-                    message = data.decode("utf-8").strip()
-                    print(f"[UDP Server] Received from {addr}: {message}")
-                    self.last_udp_message = message
-                except Exception as e:
-                    print(f"[UDP Server] Exception: {e}")
-
-        self._udp_thread = threading.Thread(target=udp_server, daemon=True)
-        self._udp_thread.start()
+    def port_in_use(self, port):
+        for conn in psutil.net_connections(kind="udp"):
+            if conn.laddr.port == port:
+                return True
+        return False
 
     def parse_and_execute_command(self, message):
-        """
-        Parse command in the form "axis:<axis_id>:<target_value>"
-        and calls control robot function.
-        """
+        if message.strip().lower() == "force_data":
+            print("Read force sensor value")
+            self._robot_controller.read_force_sensor_value()
+            return
+
+        if message.strip().lower() == "close_gripper":
+            print("Close gripper")
+            self._robot_controller.close_gripper()
+            return
+
+        if message.strip().lower() == "open_gripper":
+            print("Open gripper")
+            self._robot_controller.open_gripper()
+            return
+
         parts = message.split(":")
         if len(parts) != 3:
             print("Invalid command format:", message)
@@ -104,6 +101,14 @@ class UDPControllerScenario:
     def setup(self):
         self._world = World()
         self._world.reset()
+
+        self.box1 = DynamicCuboid(
+            prim_path=f"/World/cube",
+            position=np.array((1.5, 0, 0.2)),
+            scale=np.array((0.3, 0.3, 0.3)),
+            color=np.array((0.1, 0.2, 0.9)),
+        )
+
         self.start_udp_server()
 
     def update(self, step: float = 0.1):
@@ -115,7 +120,8 @@ class UDPControllerScenario:
 
 
 if __name__ == "__main__":
-    scenario = UDPControllerScenario()
+    robot_controller = ...  # dont need this probably
+    scenario = UDPScenario(robot_controller)
     scenario.setup()
     try:
         while True:

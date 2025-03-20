@@ -26,7 +26,7 @@ from ..global_variables import (
 )
 from ..scenarios.pick_boxes_scenario import PickBoxesScenario
 from ..scenarios.stack_box_scenario import StackBoxScenario
-from ..scenarios.udp_controller_scenario import UDPControllerScenario
+from ..scenarios.udp_scenario import UDPScenario
 from ..robot.robot_controller import RobotController
 
 
@@ -44,7 +44,7 @@ class UIBuilder:
         self._scenarios = {
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
-            "UDP controller": UDPControllerScenario,
+            "UDP": UDPScenario,
         }
         self._current_scenario_name = "Pick Boxes"  # Default scenario
 
