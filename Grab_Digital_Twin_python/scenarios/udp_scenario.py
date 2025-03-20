@@ -27,6 +27,7 @@ class UDPScenario:
         self.udp.callback = self._udp_callback
 
     def _udp_callback(self, message):
+        self.command_queue.put(message)
 
     def reset(self):
         self._did_run = False
