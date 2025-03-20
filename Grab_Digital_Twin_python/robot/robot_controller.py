@@ -76,14 +76,40 @@ class RobotController:
         clamped_position = max(lower_limit, min(position, upper_limit))
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
+    # For information:
+    # DOF index 0 belongs to joint: /World/Robot/Joints/RevoluteJointAxis1
+    # DOF index 1 belongs to joint: /World/Robot/Joints/PrismaticJointAxis2
+    # DOF index 2 belongs to joint: /World/Robot/Joints/PrismaticJointAxis3
+    # DOF index 3 belongs to joint: /World/Robot/Joints/RevoluteJointRobotBase
+    # DOF index 4 belongs to joint: /World/Robot/Joints/PrismaticJointForceSensor
+    # DOF index 5 belongs to joint: /World/Robot/Joints/RevoluteJointAxis4
     def read_force_sensor_value(self):
+        # Get all DOF states for the articulation.
         dof_states = self.dc_interface.get_articulation_dof_states(
             self.articulation, _dynamic_control.STATE_ALL
         )
-        sensor_dof_index = 2
+        
+        # Hard-coded mapping of DOF indexes to joint paths (based on your documentation)
+        dof_joint_mapping = {
+            0: "/World/Robot/Joints/RevoluteJointAxis1",
+            1: "/World/Robot/Joints/PrismaticJointAxis2",
+            2: "/World/Robot/Joints/PrismaticJointAxis3",
+            3: "/World/Robot/Joints/RevoluteJointRobotBase",
+            4: "/World/Robot/Joints/PrismaticJointForceSensor",
+            5: "/World/Robot/Joints/RevoluteJointAxis4",
+        }
+        
+        # Loop through each DOF index in the mapping and print its effort (force reading) 
+        for dof_idx, joint_path in dof_joint_mapping.items():
+            force_val = dof_states["effort"][dof_idx]
+            print(f"DOF index {dof_idx} for joint {joint_path} has effort: {force_val}")
+        
+        # Read the force sensor reading from DOF index 4.
+        sensor_dof_index = 4
         force_value = dof_states["effort"][sensor_dof_index]
-        print("Effort sensor reading:", force_value)
+        print("Force sensor reading:", force_value)
         return force_value
+
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
