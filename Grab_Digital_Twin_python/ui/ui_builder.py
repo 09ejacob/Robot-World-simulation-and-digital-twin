@@ -42,11 +42,11 @@ class UIBuilder:
 
         self._robot_controller = RobotController()
         self._scenarios = {
+            "UDP": UDPScenario,
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
-            "UDP": UDPScenario,
         }
-        self._current_scenario_name = "Pick Boxes"  # Default scenario
+        self._current_scenario_name = "UDP"  # Default scenario
 
         self._scenario = None
 
@@ -209,7 +209,7 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._scenario = PickBoxesScenario(robot_controller=self._robot_controller)
+        self._scenario = UDPScenario(robot_controller=self._robot_controller)
 
     def _select_scenario(self):
         """
