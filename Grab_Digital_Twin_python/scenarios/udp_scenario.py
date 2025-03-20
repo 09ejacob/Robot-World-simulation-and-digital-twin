@@ -1,4 +1,6 @@
 import time
+import queue
+import threading
 import omni.usd
 import numpy as np
 import psutil
@@ -17,16 +19,14 @@ class UDPScenario:
     def __init__(self, robot_controller):
         self._robot_controller = robot_controller
         self._world = None
-        self.last_udp_message = None
         self._did_run = False
-        self._udp_thread = None
-        self._robot_controller.refresh_handles()
+
+        self.command_queue = queue.Queue()
 
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
     def _udp_callback(self, message):
-        self.last_udp_message = message
 
     def reset(self):
         self._did_run = False
@@ -67,17 +67,19 @@ class UDPScenario:
 
         parts = message.split(":")
         if len(parts) != 3:
-            print("Invalid command format:", message)
+            print("[ERROR] Invalid command format:", message)
             return
+
         command, axis_str, value_str = parts
         if command.lower() != "axis":
-            print("Unknown command type:", command)
+            print("[ERROR] Unknown command type:", command)
             return
+
         try:
             axis_id = int(axis_str)
             target_value = float(value_str)
         except ValueError:
-            print("Invalid axis id or target value in command:", message)
+            print("[ERROR] Invalid axis id or target value:", message)
             return
 
         if axis_id == 1:
@@ -96,7 +98,7 @@ class UDPScenario:
             )
             print(f"Set prismatic joint position for axis 3 to {target_value}")
         else:
-            print("Axis id not recognized:", axis_id)
+            print("[ERROR] Axis id not recognized:", axis_id)
 
     def setup(self):
         self._world = World()
@@ -112,17 +114,16 @@ class UDPScenario:
         self.start_udp_server()
 
     def update(self, step: float = 0.1):
-        if self.last_udp_message:
-            print(f"[Scenario] UDP Message: {self.last_udp_message}")
-            self.parse_and_execute_command(self.last_udp_message)
-            self.last_udp_message = None
-        time.sleep(step)
+        while not self.command_queue.empty():
+            message = self.command_queue.get()
+            self.parse_and_execute_command(message)
 
 
 if __name__ == "__main__":
-    robot_controller = ...  # dont need this probably
+    robot_controller = ...
     scenario = UDPScenario(robot_controller)
     scenario.setup()
+
     try:
         while True:
             scenario.update()
