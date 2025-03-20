@@ -58,65 +58,68 @@ class CameraCapture:
     def capture_image(self, camera_id, filename=None):
         """
         Capture an image from the specified camera with additional debugging.
-        
-        Args:
-            camera_id (str): ID of the camera to capture from
-            filename (str, optional): Custom filename for the image
-            
-        Returns:
-            str: Path to the saved image file, or None if capture failed
         """
         print(f"\n📸 Attempting to capture image from {camera_id}...")
 
-        # 🔹 Check if the camera exists
+        # Check if the camera exists
         if camera_id not in self.camera_registry:
             print(f"❌ Error: Camera with ID {camera_id} not registered.")
             return None
-        print(f"✅ Camera {self.camera_registry} found in registry.")
         print(f"✅ Camera {camera_id} found in registry.")
 
         camera = self.camera_registry[camera_id]
 
-        # 🔹 Ensure we have the latest frame
+        # Ensure we have the latest frame
         print(f"🔄 Fetching latest frame from {camera_id}...")
-        camera.get_current_frame()  
-        print(f"✅ Latest frame fetched from {camera_id}." + str(camera.get_current_frame()))
+        frame = camera.get_current_frame()
+        print(f"✅ Latest frame fetched from {camera_id}. Frame info: {frame}")
         
-        # 🔹 Capture RGB image
-        rgb_img = camera.get_rgb()
+        # Check if frame has RGBA data
+        if frame is None or 'rgba' not in frame:
+            print(f"❌ Error: No valid frame data from camera {camera_id}")
+            return None
+            
+        # Extract RGB from RGBA
+        rgba = frame['rgba']
+        if rgba is None or rgba.size == 0:
+            print(f"❌ Error: Empty RGBA data from camera {camera_id}")
+            return None
+            
+        # Get RGB by dropping alpha channel
+        rgb_img = rgba[:,:,:3]
         
-        if rgb_img is None:
-            print(f"❌ Error: Failed to capture image from camera {camera_id}" )
+        if rgb_img is None or rgb_img.size == 0:
+            print(f"❌ Error: Failed to extract RGB data from camera {camera_id}")
             return None
 
-        # 🔹 Log image shape and type
-        print(f"✅ Captured image from {camera_id} with shape: {rgb_img.shape}, dtype: {rgb_img.dtype}" + str(rgb_img))
+        # Log image shape and type
+        print(f"✅ Captured image from {camera_id} with shape: {rgb_img.shape}, dtype: {rgb_img.dtype}")
 
-        # 🔹 Ensure the image has 3 dimensions (H, W, C)
+        # Ensure the image has 3 dimensions (H, W, C)
         if len(rgb_img.shape) != 3 or rgb_img.shape[2] != 3:
             print(f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}")
             return None
 
-        # 🔹 Convert Float Image to Uint8 Format
+        # Convert Float Image to Uint8 Format
         if rgb_img.dtype in [np.float32, np.float64]:
             print(f"🔄 Converting float image to uint8 for {camera_id}...")
             rgb_img = (rgb_img * 255).clip(0, 255).astype(np.uint8)
 
-        # 🔹 Ensure image is in "RGB" format
+        # Ensure image is in "RGB" format
         try:
             image = Image.fromarray(rgb_img, mode="RGB")
         except Exception as e:
             print(f"❌ Error converting image to PIL format: {e}")
             return None
 
-        # 🔹 Generate filename if not provided
+        # Generate filename if not provided
         if filename is None:
             counter = self.capture_counters[camera_id]
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{camera_id}_{timestamp}_{counter:04d}.png"
             self.capture_counters[camera_id] += 1
 
-        # 🔹 Save the image
+        # Save the image
         camera_dir = os.path.join(self.base_save_dir, camera_id)
         os.makedirs(camera_dir, exist_ok=True)  # Ensure directory exists
         save_path = os.path.join(camera_dir, filename)
@@ -130,7 +133,6 @@ class CameraCapture:
             return None
 
         return save_path
-
 
     def capture_timed(self, camera_id, interval_seconds=1.0):
         """

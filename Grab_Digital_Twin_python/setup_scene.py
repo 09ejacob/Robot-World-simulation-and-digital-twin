@@ -289,8 +289,6 @@ def create_base_robot_model(
         resolution=(1920, 1080),
         focal_length=13,
         clipping_range=(0.2,10000),
-        horizontal_aperture=20,
-        camera_capture=camera_capture,
     )
 
     setup_camera(
@@ -300,8 +298,6 @@ def create_base_robot_model(
        resolution=(1920, 1080),
        focal_length=13,
        clipping_range=(0.2,10000),
-       horizontal_aperture=20,
-       camera_capture=camera_capture,
     )
 
     setup_camera(
@@ -310,9 +306,7 @@ def create_base_robot_model(
         euler_angles=np.array([-180, 0, 0]),
         resolution=(1920, 1080),
         focal_length=9,
-        horizontal_aperture=25,
         clipping_range=(0.2,10000),
-        camera_capture=camera_capture,
     )
 
 

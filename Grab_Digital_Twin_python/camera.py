@@ -7,6 +7,8 @@ from pxr import UsdPhysics, PhysxSchema
 
 from .global_variables import CAMERA_PATH
 
+initialized_cameras = {}
+
 def setup_camera(
     prim_path="",
     position=np.array([0, 0, 0]),  
@@ -18,6 +20,13 @@ def setup_camera(
     camera_capture=None
  
 ):
+    
+# Avoid re-initializing if already created
+    if prim_path in initialized_cameras:
+        print(f"Camera at {prim_path} already initialized. Returning existing instance.")
+        return initialized_cameras[prim_path]
+    
+    
     stage = omni.usd.get_context().get_stage()
     camera_Xform_prim = stage.GetPrimAtPath(CAMERA_PATH)
     if not camera_Xform_prim:
@@ -48,8 +57,24 @@ def setup_camera(
     camera.set_focal_length(focal_length/10)
     camera.set_clipping_range(clipping_range[0], clipping_range[1])
     camera.set_horizontal_aperture(horizontal_aperture/10) 
-    camera.get_current_frame()
-    print(f"Camera {camera.get_current_frame} initialized")
+
+   # Get a test frame to ensure the camera is working
+    try:
+        frame = camera.get_current_frame()
+        print(f"Camera initialized with frame data available: {frame is not None}")
+        
+        # Try to get RGBA data to verify camera is working
+        if frame is not None:
+            if isinstance(frame, dict) and 'rgba' in frame:
+                rgba = frame['rgba']
+                print(f"RGBA shape: {rgba.shape if rgba is not None else 'None'}")
+            else:
+                print(f"Frame type: {type(frame)}")
+        else:
+            print("No frame data available yet")
+    except Exception as e:
+        print(f"Warning: Could not get test frame: {e}")
+
     
 
     # Register with camera capture system if provided
