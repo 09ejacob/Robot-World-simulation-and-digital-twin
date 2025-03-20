@@ -22,7 +22,7 @@ from omni.kit.menu.utils import add_menu_items, remove_menu_items
 from omni.usd import StageEventType
 
 from .global_variables import EXTENSION_DESCRIPTION, EXTENSION_TITLE
-from .ui_builder import UIBuilder
+from .ui.ui_builder import UIBuilder
 
 """
 This file serves as a basic template for the standard boilerplate operations
@@ -52,7 +52,11 @@ class Extension(omni.ext.IExt):
 
         # Build Window
         self._window = ScrollingWindow(
-            title=EXTENSION_TITLE, width=600, height=500, visible=False, dockPreference=ui.DockPreference.LEFT_BOTTOM
+            title=EXTENSION_TITLE,
+            width=600,
+            height=500,
+            visible=False,
+            dockPreference=ui.DockPreference.LEFT_BOTTOM,
         )
         self._window.set_visibility_changed_fn(self._on_window)
 
@@ -64,7 +68,10 @@ class Extension(omni.ext.IExt):
             description=f"Add {EXTENSION_TITLE} Extension to UI toolbar",
         )
         self._menu_items = [
-            MenuItemDescription(name=EXTENSION_TITLE, onclick_action=(ext_id, f"CreateUIExtension:{EXTENSION_TITLE}"))
+            MenuItemDescription(
+                name=EXTENSION_TITLE,
+                onclick_action=(ext_id, f"CreateUIExtension:{EXTENSION_TITLE}"),
+            )
         ]
 
         add_menu_items(self._menu_items, EXTENSION_TITLE)
@@ -80,11 +87,19 @@ class Extension(omni.ext.IExt):
         self._timeline = omni.timeline.get_timeline_interface()
 
     def on_shutdown(self):
+        scenario = self.ui_builder._scenario
+
+        if scenario is not None and hasattr(scenario, "udp"):
+            print("Stopping UDP")
+            scenario.udp.stop()
+
         self._models = {}
         remove_menu_items(self._menu_items, EXTENSION_TITLE)
 
         action_registry = omni.kit.actions.core.get_action_registry()
-        action_registry.deregister_action(self.ext_id, f"CreateUIExtension:{EXTENSION_TITLE}")
+        action_registry.deregister_action(
+            self.ext_id, f"CreateUIExtension:{EXTENSION_TITLE}"
+        )
 
         if self._window:
             self._window = None
@@ -96,9 +111,13 @@ class Extension(omni.ext.IExt):
             # Subscribe to Stage and Timeline Events
             self._usd_context = omni.usd.get_context()
             events = self._usd_context.get_stage_event_stream()
-            self._stage_event_sub = events.create_subscription_to_pop(self._on_stage_event)
+            self._stage_event_sub = events.create_subscription_to_pop(
+                self._on_stage_event
+            )
             stream = self._timeline.get_timeline_event_stream()
-            self._timeline_event_sub = stream.create_subscription_to_pop(self._on_timeline_event)
+            self._timeline_event_sub = stream.create_subscription_to_pop(
+                self._on_timeline_event
+            )
 
             self._build_ui()
         else:
@@ -138,7 +157,11 @@ class Extension(omni.ext.IExt):
     def _on_timeline_event(self, event):
         if event.type == int(omni.timeline.TimelineEventType.PLAY):
             if not self._physx_subscription:
-                self._physx_subscription = self._physxIFace.subscribe_physics_step_events(self._on_physics_step)
+                self._physx_subscription = (
+                    self._physxIFace.subscribe_physics_step_events(
+                        self._on_physics_step
+                    )
+                )
         elif event.type == int(omni.timeline.TimelineEventType.STOP):
             self._physx_subscription = None
 
@@ -148,7 +171,9 @@ class Extension(omni.ext.IExt):
         self.ui_builder.on_physics_step(step)
 
     def _on_stage_event(self, event):
-        if event.type == int(StageEventType.OPENED) or event.type == int(StageEventType.CLOSED):
+        if event.type == int(StageEventType.OPENED) or event.type == int(
+            StageEventType.CLOSED
+        ):
             # stage was opened or closed, cleanup
             self._physx_subscription = None
             self.ui_builder.cleanup()

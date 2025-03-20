@@ -17,21 +17,17 @@ from isaacsim.gui.components.element_wrappers import CollapsableFrame, StateButt
 from isaacsim.gui.components.ui_utils import get_style
 from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
-from .setup_scene import setup_scene
-from .robot_controller import (
-    open_gripper,
-    close_gripper,
-    set_angular_drive_target,
-    set_prismatic_joint_position,
-)
-from .global_variables import (
+from ..scenes.setup_scene import setup_scene
+from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
 )
-from .scenarios.pick_boxes_scenario import PickBoxesScenario
-from .scenarios.stack_box_scenario import StackBoxScenario
+from ..scenarios.pick_boxes_scenario import PickBoxesScenario
+from ..scenarios.stack_box_scenario import StackBoxScenario
+from ..scenarios.udp_scenario import UDPScenario
+from ..robot.robot_controller import RobotController
 
 
 class UIBuilder:
@@ -44,9 +40,11 @@ class UIBuilder:
         # Get access to the timeline to control stop/pause/play programmatically
         self._timeline = omni.timeline.get_timeline_interface()
 
+        self._robot_controller = RobotController()
         self._scenarios = {
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
+            "UDP": UDPScenario,
         }
         self._current_scenario_name = "Pick Boxes"  # Default scenario
 
@@ -155,14 +153,18 @@ class UIBuilder:
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
         with robot_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
-                ui.Button("Open Gripper", clicked_fn=open_gripper)
-                ui.Button("Close Gripper", clicked_fn=close_gripper)
+                ui.Button(
+                    "Open Gripper", clicked_fn=self._robot_controller.open_gripper
+                )
+                ui.Button(
+                    "Close Gripper", clicked_fn=self._robot_controller.close_gripper
+                )
 
                 ui.Label("Set Axis1 position:")
                 self._angular_drive_input_axis1 = ui.FloatField()
                 ui.Button(
                     "Set position (0, 360)",
-                    clicked_fn=lambda: set_angular_drive_target(
+                    clicked_fn=lambda: self._robot_controller.set_angular_drive_target(
                         AXIS1_JOINT_PATH,
                         self._angular_drive_input_axis1.model.get_value_as_float(),
                     ),
@@ -172,7 +174,7 @@ class UIBuilder:
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
                     "Set position (0, 1.6)",
-                    clicked_fn=lambda: set_prismatic_joint_position(
+                    clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
                     ),
@@ -182,7 +184,7 @@ class UIBuilder:
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
                     "Set position (-2.0, 0)",
-                    clicked_fn=lambda: set_prismatic_joint_position(
+                    clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
                     ),
@@ -192,7 +194,7 @@ class UIBuilder:
                 self._angular_drive_input_axis4 = ui.FloatField()
                 ui.Button(
                     "Set position (0, 360)",
-                    clicked_fn=lambda: set_angular_drive_target(
+                    clicked_fn=lambda: self._robot_controller.set_angular_drive_target(
                         AXIS4_JOINT_PATH,
                         self._angular_drive_input_axis4.model.get_value_as_float(),
                     ),
@@ -207,7 +209,7 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._scenario = PickBoxesScenario()
+        self._scenario = PickBoxesScenario(robot_controller=self._robot_controller)
 
     def _select_scenario(self):
         """
@@ -230,7 +232,7 @@ class UIBuilder:
             self._scenario.reset()
 
         scenario_cls = self._scenarios[selected_scenario]
-        self._scenario = scenario_cls()
+        self._scenario = scenario_cls(robot_controller=self._robot_controller)
         self._setup_scenario()
 
     def _add_light_to_stage(self):

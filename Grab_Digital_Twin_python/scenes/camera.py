@@ -4,9 +4,9 @@ from isaacsim.sensors.camera import Camera
 import omni.usd
 import time 
 from pxr import UsdPhysics, PhysxSchema
-
-from .global_variables import CAMERA_PATH
-
+from ..global_variables import (
+    CAMERA_PATH,
+)
 initialized_cameras = {}
 
 def setup_camera(
@@ -38,7 +38,7 @@ def setup_camera(
 
     camera = Camera(
         prim_path=prim_path,
-        resolution=resolution, 
+        resolution=resolution,
         position=position,
         orientation=quat_xyzw,
     )
