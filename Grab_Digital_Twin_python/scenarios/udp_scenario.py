@@ -16,26 +16,37 @@ from omni.isaac.core.objects import DynamicCuboid
 
 
 class UDPScenario:
-    def __init__(self, robot_controller):
+    def __init__(self, robot_controller, enable_stats=False):
         self._robot_controller = robot_controller
         self._world = None
         self._did_run = False
 
         self.command_queue = queue.Queue()
 
+        # Performance tracking
+        self.enable_stats = enable_stats
+        self.udp_message_count = 0
+        self.executed_command_count = 0
+        self.last_time_check = time.time()
+
+        # Initialize the UDP server
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
     def _udp_callback(self, message):
+        """Receives UDP messages and stores them in a queue."""
         self.command_queue.put(message)
+        self.udp_message_count += 1  #
 
     def reset(self):
+        """Resets the scenario and stops the UDP server."""
         self._did_run = False
         self.udp.stop()
         if self._world is not None:
             self._world.reset()
 
     def start_udp_server(self, host="0.0.0.0", port=9999):
+        """Starts the UDP server if the port is not already in use."""
         if self.port_in_use(port):
             print(f"Port {port} is already in use. Skipping new server.")
             return
@@ -45,12 +56,16 @@ class UDPScenario:
         self.udp.start()
 
     def port_in_use(self, port):
+        """Checks if the given port is already in use."""
         for conn in psutil.net_connections(kind="udp"):
             if conn.laddr.port == port:
                 return True
         return False
 
     def parse_and_execute_command(self, message):
+        """Processes and executes commands from the queue."""
+        self.executed_command_count += 1  #
+
         if message.strip().lower() == "force_data":
             print("Read force sensor value")
             self._robot_controller.read_force_sensor_value()
@@ -102,6 +117,7 @@ class UDPScenario:
             print("[ERROR] Axis id not recognized:", axis_id)
 
     def setup(self):
+        """Initializes the world and starts the UDP server."""
         self._world = World()
         self._world.reset()
 
@@ -115,9 +131,21 @@ class UDPScenario:
         self.start_udp_server()
 
     def update(self, step: float = 0.1):
+        """Runs in the Isaac Sim main thread and processes queued UDP commands."""
+        start_time = time.time()
+
         while not self.command_queue.empty():
             message = self.command_queue.get()
             self.parse_and_execute_command(message)
+
+        # Print performance stats every 1 second
+        if self.enable_stats and (start_time - self.last_time_check >= 1.0):
+            print(
+                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
+            )
+            self.udp_message_count = 0  # Reset counters
+            self.executed_command_count = 0
+            self.last_time_check = start_time  # Reset time tracking
 
 
 if __name__ == "__main__":
