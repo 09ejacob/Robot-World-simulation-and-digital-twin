@@ -4,6 +4,9 @@ from omni.isaac.core.utils.stage import get_current_stage
 import omni.graph as og2
 import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
+from ..camera_capture import CameraCapture
+import time
+
 
 from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
@@ -143,3 +146,72 @@ class RobotController:
                 break
 
             yield
+    
+    def capture_from_camera(self, camera_id):
+        """
+        Capture an image from a specific camera
+        
+        Args:
+            camera_id (str): ID of the camera to capture from
+            
+        Returns:
+            str: Path to the saved image file, or None if capture failed
+        """
+        # Make sure timeline is playing to update frames
+        was_playing = self.timeline.is_playing()
+        if not was_playing:
+            self.timeline.play()
+            time.sleep(0.5)  # Allow time for frame update
+        
+        # Capture the image
+        result = CameraCapture.capture_image(camera_id)
+        
+        # Restore previous timeline state
+        if not was_playing:
+            self.timeline.pause()
+            
+        return result
+        
+    def capture_from_all_cameras(self):
+        """
+        Capture images from all registered cameras
+        
+        Returns:
+            dict: Map of camera IDs to saved image paths
+        """
+        # Make sure timeline is playing to update frames
+        was_playing = self.timeline.is_playing()
+        if not was_playing:
+            self.timeline.play()
+            time.sleep(0.5)  # Allow time for frame update
+        
+        # Capture from all cameras
+        results = CameraCapture.capture_all_cameras()
+        
+        # Restore previous timeline state
+        if not was_playing:
+            self.timeline.pause()
+            
+        return results
+    
+    def register_camera(self, camera_id, camera):
+        """
+        Register a camera with the capture system
+        
+        Args:
+            camera_id (str): Unique identifier for the camera
+            camera (Camera): Camera object from Isaac Sim
+            
+        Returns:
+            str: Path to the camera's dedicated directory
+        """
+        return CameraCapture.register_camera(camera_id, camera)
+    
+    def get_registered_cameras(self):
+        """
+        Get a list of all registered camera IDs
+        
+        Returns:
+            list: List of camera IDs
+        """
+        return list(CameraCapture.get_camera_registry().keys())

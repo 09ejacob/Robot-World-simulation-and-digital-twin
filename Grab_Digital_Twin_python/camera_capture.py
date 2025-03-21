@@ -167,7 +167,7 @@ class CameraCapture:
             results[camera_id] = self.capture_image(camera_id)
         return results
     
-    def capture_all_timed(self, interval_seconds=1.0):
+    def capture_all_timed(self, interval_seconds=2.0):
         """
         Capture images from all cameras if interval has passed.
         

@@ -66,7 +66,7 @@ def create_camera():
         position=np.array([0, 0, 2]),
         euler_angles=np.array([0, 0, 0]),
         resolution=(1920, 1080),
-        focal_length=35,
+        focal_length=20,
         clipping_range=(1, 10000),
         horizontal_aperture=20,
         camera_capture=camera_capture,
