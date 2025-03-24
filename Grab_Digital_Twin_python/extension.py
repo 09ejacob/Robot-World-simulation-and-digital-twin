@@ -6,14 +6,16 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
-
+import sys
 import asyncio
 import gc
+import carb
 
 import omni
 import omni.kit.commands
 import omni.physx as _physx
 import omni.timeline
+import omni.kit.actions.core as actions
 import omni.ui as ui
 import omni.usd
 from isaacsim.gui.components.element_wrappers import ScrollingWindow
@@ -23,6 +25,7 @@ from omni.usd import StageEventType
 
 from .global_variables import EXTENSION_DESCRIPTION, EXTENSION_TITLE
 from .ui.ui_builder import UIBuilder
+from .headless_runner import main
 
 """
 This file serves as a basic template for the standard boilerplate operations
@@ -43,6 +46,10 @@ This class sets up standard useful callback functions in UIBuilder:
 """
 
 
+def is_headless():
+    return "--no-window" in sys.argv or "--headless" in sys.argv
+
+
 class Extension(omni.ext.IExt):
     def on_startup(self, ext_id: str):
         """Initialize extension and UI elements"""
@@ -50,7 +57,13 @@ class Extension(omni.ext.IExt):
         self.ext_id = ext_id
         self._usd_context = omni.usd.get_context()
 
-        # Build Window
+        if is_headless():
+            main()
+            print("Headless mode detected. Running main() directly...")
+            return
+
+        print("GUI mode detected — setting up UI.")
+        # GUI Setup
         self._window = ScrollingWindow(
             title=EXTENSION_TITLE,
             width=600,
@@ -76,7 +89,7 @@ class Extension(omni.ext.IExt):
 
         add_menu_items(self._menu_items, EXTENSION_TITLE)
 
-        # Filled in with User Functions
+        # UI logic
         self.ui_builder = UIBuilder()
 
         # Events
@@ -87,6 +100,18 @@ class Extension(omni.ext.IExt):
         self._timeline = omni.timeline.get_timeline_interface()
 
     def on_shutdown(self):
+        if is_headless():
+            print("Headless shutdown")
+            try:
+                if hasattr(self, "ui_builder"):
+                    scenario = self.ui_builder._scenario
+                    if scenario is not None and hasattr(scenario, "udp"):
+                        print("Stopping UDP")
+                        scenario.udp.stop()
+            except Exception as e:
+                carb.log_warn(f"Shutdown in headless mode failed: {e}")
+            return
+
         scenario = self.ui_builder._scenario
 
         if scenario is not None and hasattr(scenario, "udp"):

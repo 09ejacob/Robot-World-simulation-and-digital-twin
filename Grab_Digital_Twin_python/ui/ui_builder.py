@@ -256,6 +256,9 @@ class UIBuilder:
         self._add_light_to_stage()
         setup_scene()
 
+        timeline_iface = omni.timeline.get_timeline_interface()
+        timeline_iface.set_auto_update(False)
+
         print("Scene setup complete.")
 
     def _setup_scenario(self):
