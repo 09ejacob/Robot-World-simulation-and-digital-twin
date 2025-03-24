@@ -126,18 +126,18 @@ class UDPScenario:
         row_y = {0: -0.2, 1: 0.2}
         base_z = 0.3
         z_inc = 0.2
-        
+
         for i in range(num_boxes):
             layer = i // 8
             index_in_layer = i % 8
             column = index_in_layer // 2
             row = index_in_layer % 2
-            
+
             x = start_x + column * x_inc
             y = row_y[row]
             z = base_z + layer * z_inc
-            
-            prim_path = f"/World/Environment/box{i+1}"
+
+            prim_path = f"/World/Environment/box{i + 1}"
             box = DynamicCuboid(
                 prim_path=prim_path,
                 position=np.array((x, y, z)),
@@ -146,7 +146,6 @@ class UDPScenario:
             )
             boxes.append(box)
         return boxes
-
 
     def setup(self):
         self._world = World()
@@ -159,7 +158,7 @@ class UDPScenario:
             color=np.array((0.2, 0.08, 0.05)),
         )
 
-        self.create_boxes(50)
+        self.create_boxes(1)
 
         self.start_udp_server()
 
