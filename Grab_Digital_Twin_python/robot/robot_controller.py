@@ -19,13 +19,25 @@ class RobotController:
 
     def open_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
+        if node is None:
+            print(f"[open_gripper] Node not found at: {GRIPPER_OPEN_PATH}")
+            return
         attr = node.get_attribute("state:enableImpulse")
+        if attr is None:
+            print(f"[open_gripper] Attribute 'state:enableImpulse' not found on node.")
+            return
         attr.set(1)
         node.request_compute()
 
     def close_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
+        if node is None:
+            print(f"[close_gripper] Node not found at: {GRIPPER_CLOSE_PATH}")
+            return
         attr = node.get_attribute("state:enableImpulse")
+        if attr is None:
+            print(f"[close_gripper] Attribute 'state:enableImpulse' not found on node.")
+            return
         attr.set(1)
         node.request_compute()
 

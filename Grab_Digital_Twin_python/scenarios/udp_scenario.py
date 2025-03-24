@@ -33,6 +33,8 @@ class UDPScenario:
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
+        self.last_box_print_time = time.time()
+
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
         self.command_queue.put(message)
@@ -47,6 +49,7 @@ class UDPScenario:
 
     def start_udp_server(self, host="0.0.0.0", port=9999):
         """Starts the UDP server if the port is not already in use."""
+
         if self.port_in_use(port):
             print(f"Port {port} is already in use. Skipping new server.")
             return
@@ -145,6 +148,10 @@ class UDPScenario:
                 color=self.random_color(),
             )
             boxes.append(box)
+
+        if boxes:
+            self.box = boxes[0]
+
         return boxes
 
     def setup(self):
@@ -178,6 +185,12 @@ class UDPScenario:
             self.udp_message_count = 0  # Reset counters
             self.executed_command_count = 0
             self.last_time_check = start_time  # Reset time tracking
+
+        # Print box position every second
+        if hasattr(self, "box") and (start_time - self.last_box_print_time >= 1.0):
+            pos, _ = self.box.get_world_pose()
+            print(f"Box position: {pos}")
+            self.last_box_print_time = start_time
 
 
 if __name__ == "__main__":
