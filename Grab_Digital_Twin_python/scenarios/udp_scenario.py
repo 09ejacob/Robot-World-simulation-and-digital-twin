@@ -63,58 +63,69 @@ class UDPScenario:
         return False
 
     def parse_and_execute_command(self, message):
-        """Processes and executes commands from the queue."""
-        self.executed_command_count += 1  #
+        self.executed_command_count += 1
 
-        if message.strip().lower() == "force_data":
+        message = message.rstrip(":").strip().lower()
+        parts = [p for p in message.split(":") if p != ""]
+        print("DEBUG: Parsed parts:", parts, "length:", len(parts))
+        
+        if parts and parts[0] == "tp_robot":
+            if len(parts) != 4:
+                print(f"[ERROR] Invalid teleport command format: {message}. Expects format like this: tp_robot:x:y:z")
+                return
+            try:
+                x = float(parts[1])
+                y = float(parts[2])
+                z = float(parts[3])
+            except ValueError:
+                print(f"[ERROR] Teleport must contain only numbers: {message}")
+                return
+            self._robot_controller.teleport_robot([x, y, z])
+            print(f"Teleported robot to: {[x, y, z]}")
+            return
+
+        if message == "force_data":
             print("Read force sensor value")
             self._robot_controller.read_force_sensor_value()
             return
 
-        if message.strip().lower() == "close_gripper":
+        if message == "close_gripper":
             print("Close gripper")
             self._robot_controller.close_gripper()
             return
 
-        if message.strip().lower() == "open_gripper":
+        if message == "open_gripper":
             print("Open gripper")
             self._robot_controller.open_gripper()
             return
 
-        parts = message.split(":")
-        if len(parts) != 3:
-            print("[ERROR] Invalid command format:", message)
+        # For the "axis" command, we expect exactly three parts.
+        if parts and parts[0] == "axis":
+            if len(parts) != 3:
+                print("[ERROR] Invalid command format:", message)
+                return
+            try:
+                axis_id = int(parts[1])
+                target_value = float(parts[2])
+            except ValueError:
+                print("[ERROR] Invalid axis id or target value:", message)
+                return
+
+            if axis_id == 1:
+                self._robot_controller.set_angular_drive_target(AXIS1_JOINT_PATH, target_value)
+                print(f"Set angular drive target for axis 1 to {target_value}")
+            elif axis_id == 2:
+                self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, target_value)
+                print(f"Set prismatic joint position for axis 2 to {target_value}")
+            elif axis_id == 3:
+                self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, target_value)
+                print(f"Set prismatic joint position for axis 3 to {target_value}")
+            else:
+                print("[ERROR] Axis id not recognized:", axis_id)
             return
 
-        command, axis_str, value_str = parts
-        if command.lower() != "axis":
-            print("[ERROR] Unknown command type:", command)
-            return
+        print("[ERROR] Command not recognized:", message)
 
-        try:
-            axis_id = int(axis_str)
-            target_value = float(value_str)
-        except ValueError:
-            print("[ERROR] Invalid axis id or target value:", message)
-            return
-
-        if axis_id == 1:
-            self._robot_controller.set_angular_drive_target(
-                AXIS1_JOINT_PATH, target_value
-            )
-            print(f"Set angular drive target for axis 1 to {target_value}")
-        elif axis_id == 2:
-            self._robot_controller.set_prismatic_joint_position(
-                AXIS2_JOINT_PATH, target_value
-            )
-            print(f"Set prismatic joint position for axis 2 to {target_value}")
-        elif axis_id == 3:
-            self._robot_controller.set_prismatic_joint_position(
-                AXIS3_JOINT_PATH, target_value
-            )
-            print(f"Set prismatic joint position for axis 3 to {target_value}")
-        else:
-            print("[ERROR] Axis id not recognized:", axis_id)
 
     def random_color(self):
         return np.random.rand(3)
