@@ -58,7 +58,7 @@ def setup_camera(
     camera.set_focal_length(focal_length/10)
     camera.set_clipping_range(clipping_range[0], clipping_range[1])
     camera.set_horizontal_aperture(horizontal_aperture/10) 
-    camera.add_motion_vectors_to_frame()
+    #camera.add_motion_vectors_to_frame()
 
    # Get a test frame to ensure the camera is working
     try:

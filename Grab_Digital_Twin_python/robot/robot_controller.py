@@ -13,6 +13,7 @@ from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
 class RobotController:
     def __init__(self):
+        self.camera_capture = CameraCapture() 
         self.stage = omni.usd.get_context().get_stage()
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
         self.articulation = self.dc_interface.get_articulation("/World/Robot")
@@ -158,18 +159,10 @@ class RobotController:
             str: Path to the saved image file, or None if capture failed
         """
         # Make sure timeline is playing to update frames
-        was_playing = self.timeline.is_playing()
-        if not was_playing:
-            self.timeline.play()
-            time.sleep(0.5)  # Allow time for frame update
         
         # Capture the image
         result = CameraCapture.capture_image(camera_id)
-        
-        # Restore previous timeline state
-        if not was_playing:
-            self.timeline.pause()
-            
+    
         return result
         
     def capture_from_all_cameras(self):
@@ -208,10 +201,7 @@ class RobotController:
         return CameraCapture.register_camera(camera_id, camera)
     
     def get_registered_cameras(self):
-        """
-        Get a list of all registered camera IDs
-        
-        Returns:
-            list: List of camera IDs
-        """
-        return list(CameraCapture.get_camera_registry().keys())
+        """Get list of registered camera IDs"""
+        print("Getting registered cameras")
+        print(f"Registered Cameras in camera Capture: {list(self.camera_capture.camera_registry.keys())}")
+        return self.camera_capture.camera_registry.keys()

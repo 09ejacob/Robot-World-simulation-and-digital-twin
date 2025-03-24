@@ -54,7 +54,6 @@ class CameraCapture:
         
         return camera_dir
     
-    
     def capture_image(self, camera_id, filename=None):
         """
         Capture an image from the specified camera with additional debugging.
@@ -73,21 +72,21 @@ class CameraCapture:
         print(f"🔄 Fetching latest frame from {camera_id}...")
         frame = camera.get_current_frame()
         print(f"✅ Latest frame fetched from {camera_id}. Frame info: {frame}")
-        
+
         # Check if frame has RGBA data
         if frame is None or 'rgba' not in frame:
             print(f"❌ Error: No valid frame data from camera {camera_id}")
             return None
-            
+
         # Extract RGB from RGBA
         rgba = frame['rgba']
         if rgba is None or rgba.size == 0:
             print(f"❌ Error: Empty RGBA data from camera {camera_id}")
             return None
-            
+
         # Get RGB by dropping alpha channel
-        rgb_img = rgba[:,:,:3]
-        
+        rgb_img = rgba[:, :, :3]
+
         if rgb_img is None or rgb_img.size == 0:
             print(f"❌ Error: Failed to extract RGB data from camera {camera_id}")
             return None
@@ -115,7 +114,7 @@ class CameraCapture:
         # Generate filename if not provided
         if filename is None:
             counter = self.capture_counters[camera_id]
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             filename = f"{camera_id}_{timestamp}_{counter:04d}.png"
             self.capture_counters[camera_id] += 1
 
@@ -137,22 +136,22 @@ class CameraCapture:
     def capture_timed(self, camera_id, interval_seconds=1.0):
         """
         Capture an image if enough time has passed since the last capture.
-        
+
         Args:
             camera_id (str): ID of the camera to capture from
             interval_seconds (float): Minimum time between captures
-            
+
         Returns:
             str: Path to the saved image file, or None if no capture was made
         """
         current_time = time.time()
         if camera_id not in self.last_capture_time:
             self.last_capture_time[camera_id] = 0
-            
+
         if current_time - self.last_capture_time[camera_id] >= interval_seconds:
             self.last_capture_time[camera_id] = current_time
             return self.capture_image(camera_id)
-        
+
         return None
 
     def capture_all_cameras(self):
@@ -184,6 +183,11 @@ class CameraCapture:
                 results[camera_id] = result
         return results
 
-    def get_camera_registry(self):
-        """Get the dictionary of registered cameras"""
-        return self.camera_registry
+    def camera_registry(self):
+        """Get the camera registry dictionary"""
+        return self._camera_registry
+        
+    def get_registered_cameras(self):
+        """Get list of registered camera IDs"""
+        print(f"Registered Cameras in camera Capture: {list(self.camera_registry.keys())}")
+        return list(self._camera_registry.keys())
