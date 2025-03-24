@@ -107,6 +107,7 @@ class UDPScenario:
             position=np.array((1.5, 0, 0.2)),
             scale=np.array((0.3, 0.3, 0.3)),
             color=np.array((0.1, 0.2, 0.9)),
+            mass=14.0,
         )
 
         self.start_udp_server()

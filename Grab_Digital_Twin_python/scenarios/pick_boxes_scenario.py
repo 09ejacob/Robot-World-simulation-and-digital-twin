@@ -40,6 +40,7 @@ class PickBoxesScenario:
             position=np.array((1.7, 0, 0.1)),
             scale=np.array((1.2, 0.8, 0.144)),
             color=np.array((0.2, 0.08, 0.05)),
+            mass=25.0,
         )
 
         pickBox1 = DynamicCuboid(
@@ -47,6 +48,7 @@ class PickBoxesScenario:
             position=np.array((1.25, -0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.05, 0.1, 0.08)),
+            mass=14.0,
         )
 
         pickBox2 = DynamicCuboid(
@@ -54,6 +56,7 @@ class PickBoxesScenario:
             position=np.array((1.25, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.1, 0.08, 0.05)),
+            mass=14.0,
         )
 
         pickBox3 = DynamicCuboid(
@@ -61,6 +64,7 @@ class PickBoxesScenario:
             position=np.array((1.55, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.08, 0.05, 0.1)),
+            mass=14.0,
         )
 
         self._scenario_generator = self._run_simulation()

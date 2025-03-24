@@ -99,16 +99,20 @@ class RobotController:
             5: "/World/Robot/Joints/RevoluteJointAxis4",
         }
         
-        # Loop through each DOF index in the mapping and print its effort (force reading) 
+        # Print efforts (force in Newtons) for each joint and also convert to kgf.
         for dof_idx, joint_path in dof_joint_mapping.items():
             force_val = dof_states["effort"][dof_idx]
-            print(f"DOF index {dof_idx} for joint {joint_path} has effort: {force_val}")
+            # Convert Newtons to kg-force (kgf) by dividing by 9.81 m/s²
+            mass_equiv = force_val / 9.81
+            print(f"DOF index {dof_idx} for joint {joint_path} has effort: {force_val:.3f} N ({mass_equiv:.3f} kgf)")
         
         # Read the force sensor reading from DOF index 4.
         sensor_dof_index = 4
         force_value = dof_states["effort"][sensor_dof_index]
-        print("Force sensor reading:", force_value)
-        return force_value
+        mass_equivalent = force_value / 9.81
+        print("Force sensor reading:", force_value, "N", f"({mass_equivalent:.10f} kgf)")
+        return mass_equivalent
+
 
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
