@@ -116,17 +116,50 @@ class UDPScenario:
         else:
             print("[ERROR] Axis id not recognized:", axis_id)
 
+    def random_color(self):
+        return np.random.rand(3)
+
+    def create_boxes(self, num_boxes: int):
+        boxes = []
+        start_x = 1.25
+        x_inc = 0.3
+        row_y = {0: -0.2, 1: 0.2}
+        base_z = 0.3
+        z_inc = 0.2
+        
+        for i in range(num_boxes):
+            layer = i // 8
+            index_in_layer = i % 8
+            column = index_in_layer // 2
+            row = index_in_layer % 2
+            
+            x = start_x + column * x_inc
+            y = row_y[row]
+            z = base_z + layer * z_inc
+            
+            prim_path = f"/World/Environment/box{i+1}"
+            box = DynamicCuboid(
+                prim_path=prim_path,
+                position=np.array((x, y, z)),
+                scale=np.array((0.3, 0.4, 0.2)),
+                color=self.random_color(),
+            )
+            boxes.append(box)
+        return boxes
+
+
     def setup(self):
-        """Initializes the world and starts the UDP server."""
         self._world = World()
         self._world.reset()
 
-        self.box1 = DynamicCuboid(
-            prim_path=f"/World/cube",
-            position=np.array((1.5, 0, 0.2)),
-            scale=np.array((0.3, 0.3, 0.3)),
-            color=np.array((0.1, 0.2, 0.9)),
+        self.pallet = DynamicCuboid(
+            prim_path=f"/World/Environment/pallet",
+            position=np.array((1.7, 0, 0.1)),
+            scale=np.array((1.2, 0.8, 0.144)),
+            color=np.array((0.2, 0.08, 0.05)),
         )
+
+        self.create_boxes(50)
 
         self.start_udp_server()
 
