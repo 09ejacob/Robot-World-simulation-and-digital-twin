@@ -167,6 +167,7 @@ class UDPScenario:
                 position=np.array((x, y, z)),
                 scale=np.array((0.3, 0.4, 0.2)),
                 color=self.random_color(),
+                mass=14.0,
             )
             boxes.append(box)
         return boxes
@@ -179,6 +180,7 @@ class UDPScenario:
             position=pallet_position,
             scale=np.array((1.2, 0.8, 0.144)),
             color=np.array((0.2, 0.08, 0.05)),
+            mass=25.0,
         )
 
         self.create_boxes(f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id)
