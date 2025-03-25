@@ -27,7 +27,7 @@ def create_joint(
 ):
     stage = get_current_stage()
 
-    if hinge_axis != None:
+    if hinge_axis is not None:
         create_prim(
             prim_path=joint_prim_path,
             prim_type=joint_type,
