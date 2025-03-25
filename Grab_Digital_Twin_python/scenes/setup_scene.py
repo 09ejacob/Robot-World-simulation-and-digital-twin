@@ -1,8 +1,8 @@
 import numpy as np
 from os.path import dirname, abspath, join
-from omni.isaac.core.objects.ground_plane import GroundPlane
-from omni.isaac.core.utils.prims import create_prim
-from omni.isaac.core.utils.stage import get_current_stage
+from isaacsim.core.api.objects.ground_plane import GroundPlane
+from isaacsim.core.utils.prims import create_prim
+from isaacsim.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf
 
