@@ -10,7 +10,7 @@ from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
-    PICK_BOX_1,
+    ENVIRONMENT_PATH,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
@@ -187,9 +187,9 @@ class UDPScenario:
         self._world = World()
         self._world.reset()
 
-        self.create_pick_stack("/World/Environment", pallet_position=(1.7, 0.0, 0.072), number_of_boxes=30, stack_id=1)
-        self.create_pick_stack("/World/Environment", pallet_position=(1.7, 1.0, 0.072), number_of_boxes=20, stack_id=2)
-        self.create_pick_stack("/World/Environment", pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
+        self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, 0.0, 0.072), number_of_boxes=15, stack_id=1)
+        #self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, 1.0, 0.072), number_of_boxes=20, stack_id=2)
+        #self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
 
         self.start_udp_server()
 
