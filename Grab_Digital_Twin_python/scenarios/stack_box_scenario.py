@@ -69,7 +69,7 @@ class StackBoxScenario:
 
     def _run_simulation(self):
         dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        articulation = dc_interface.get_articulation("/World/Robot")
+        articulation = dc_interface.get_articulation("/Robot")
 
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH

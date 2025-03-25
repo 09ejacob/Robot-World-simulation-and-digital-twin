@@ -12,10 +12,10 @@ class RobotController:
     def __init__(self):
         self.stage = omni.usd.get_context().get_stage()
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        self.articulation = self.dc_interface.get_articulation("/World/Robot")
+        self.articulation = self.dc_interface.get_articulation("/Robot")
 
     def refresh_handles(self):
-        self.articulation = self.dc_interface.get_articulation("/World/Robot")
+        self.articulation = self.dc_interface.get_articulation("/Robot")
 
     def open_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)

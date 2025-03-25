@@ -63,7 +63,7 @@ def load_grab_usd():
         join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
     )
 
-    add_reference_to_stage(usd_path=usd_path, prim_path="/World/Robot")
+    add_reference_to_stage(usd_path=usd_path, prim_path="/Robot")
 
 
 def setup_scene():
