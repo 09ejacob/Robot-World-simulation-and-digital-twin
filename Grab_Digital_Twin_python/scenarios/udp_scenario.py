@@ -141,12 +141,13 @@ class UDPScenario:
     def random_color(self):
         return np.random.rand(3)
 
-    def create_boxes(self, path, num_boxes: int, stack_id=1):
+    def create_boxes(self, path, num_boxes: int, position=(1, 1, 1), stack_id=1):
         boxes = []
-        start_x = 1.25
+        base_x_pos, base_y_pos, base_z_pos = position
+        start_x = base_x_pos - 0.45
         x_inc = 0.3
-        row_y = {0: -0.2, 1: 0.2}
-        base_z = 0.244
+        row_y = {0: base_y_pos - 0.2, 1: base_y_pos + 0.2}
+        base_z = base_z_pos + 0.072 + 0.1
         z_inc = 0.2
         max_col = 3
 
@@ -180,14 +181,15 @@ class UDPScenario:
             color=np.array((0.2, 0.08, 0.05)),
         )
 
-        self.create_boxes(f"{path}/stack{stack_id}", number_of_boxes, stack_id)
+        self.create_boxes(f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id)
 
     def setup(self):
         self._world = World()
         self._world.reset()
 
         self.create_pick_stack("/World/Environment", pallet_position=(1.7, 0.0, 0.072), number_of_boxes=30, stack_id=1)
-        #self.create_pick_stack("/World/Environment", pallet_position=(3.7, 0.0, 0.072), number_of_boxes=20, stack_id=2)
+        self.create_pick_stack("/World/Environment", pallet_position=(1.7, 1.0, 0.072), number_of_boxes=20, stack_id=2)
+        self.create_pick_stack("/World/Environment", pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
 
         self.start_udp_server()
 
