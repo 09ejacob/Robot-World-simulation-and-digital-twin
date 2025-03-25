@@ -4,6 +4,8 @@ from omni.isaac.core.utils.stage import get_current_stage
 import omni.graph as og2
 import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
+from pxr import UsdGeom
+from pxr import Gf
 
 from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
@@ -173,3 +175,17 @@ class RobotController:
                 break
 
             yield
+
+    def teleport_robot(self, position):
+        stage = omni.usd.get_context().get_stage()
+        robot_prim = stage.GetPrimAtPath("/World/Robot")
+        if not robot_prim.IsValid():
+            print("Robot prim not found at /World/Robot")
+            return
+
+        xformable = UsdGeom.Xformable(robot_prim)
+        xformable.ClearXformOpOrder()
+        translate_op = xformable.AddTranslateOp()
+        translate_op.Set(Gf.Vec3d(*position))
+        print(f"Teleported robot to position: {position}")
+

@@ -32,7 +32,7 @@ class UDPController:
                 try:
                     data, addr = udp_sock.recvfrom(1024)
                     message = data.decode("utf-8").strip()
-                    print(f"[UDP Controller] Received from {addr}: {message}")
+                    # print(f"[UDP Controller] Received from {addr}: {message}")
                     if self.callback:
                         self.callback(message)
                 except socket.timeout:

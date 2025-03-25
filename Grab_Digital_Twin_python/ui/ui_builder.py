@@ -9,13 +9,11 @@
 
 import omni.timeline
 import omni.ui as ui
-from isaacsim.core.api.world import World
 from isaacsim.core.prims import SingleXFormPrim
 from isaacsim.core.utils.stage import create_new_stage, get_current_stage
 from isaacsim.examples.extension.core_connectors import LoadButton, ResetButton
 from isaacsim.gui.components.element_wrappers import CollapsableFrame, StateButton
 from isaacsim.gui.components.ui_utils import get_style
-from omni.usd import StageEventType
 from pxr import Sdf, UsdLux
 from ..scenes.setup_scene import setup_scene
 from ..global_variables import (
@@ -42,11 +40,11 @@ class UIBuilder:
 
         self._robot_controller = RobotController()
         self._scenarios = {
+            "UDP": UDPScenario,
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
-            "UDP": UDPScenario,
         }
-        self._current_scenario_name = "Pick Boxes"  # Default scenario
+        self._current_scenario_name = "UDP"  # Default scenario
 
         self._scenario = None
 
@@ -209,7 +207,7 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._scenario = PickBoxesScenario(robot_controller=self._robot_controller)
+        self._scenario = UDPScenario(robot_controller=self._robot_controller)
 
     def _select_scenario(self):
         """
