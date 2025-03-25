@@ -7,10 +7,13 @@ import sys
 import omni.usd
 import time
 import carb
+from isaacsim.core.utils.stage import create_new_stage
 
 
 def main():
     print("Starting script.")
+
+    create_new_stage()
 
     world = World(
         physics_dt=1.0 / 60.0, rendering_dt=1.0 / 60.0, stage_units_in_meters=1.0
