@@ -172,18 +172,11 @@ class RobotController:
             dict: Map of camera IDs to saved image paths
         """
         # Make sure timeline is playing to update frames
-        was_playing = self.timeline.is_playing()
-        if not was_playing:
-            self.timeline.play()
-            time.sleep(0.5)  # Allow time for frame update
+      
         
         # Capture from all cameras
-        results = CameraCapture.capture_all_cameras()
+        results = self.camera_capture.capture_all_cameras()
         
-        # Restore previous timeline state
-        if not was_playing:
-            self.timeline.pause()
-            
         return results
     
     
