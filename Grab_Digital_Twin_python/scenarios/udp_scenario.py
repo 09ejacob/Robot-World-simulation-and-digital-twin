@@ -4,6 +4,7 @@ import threading
 import omni.usd
 import numpy as np
 import psutil
+from pxr import UsdGeom, UsdPhysics, Sdf, Gf
 from omni.isaac.core import World
 from ..global_variables import (
     AXIS1_JOINT_PATH,
@@ -36,7 +37,7 @@ class UDPScenario:
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
         self.command_queue.put(message)
-        self.udp_message_count += 1  #
+        self.udp_message_count += 1 
 
     def reset(self):
         """Resets the scenario and stops the UDP server."""
@@ -129,16 +130,25 @@ class UDPScenario:
         print("[ERROR] Command not recognized:", message)
 
 
+    def create_xform(self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
+        stage = omni.usd.get_context().get_stage()
+        xform = UsdGeom.Xform.Define(stage, path)
+
+        xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
+        xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
+        xform.AddScaleOp().Set(Gf.Vec3f(*scale))
+
     def random_color(self):
         return np.random.rand(3)
 
-    def create_boxes(self, num_boxes: int):
+    def create_boxes(self, path, num_boxes: int, stack_id=1):
         boxes = []
         start_x = 1.25
         x_inc = 0.3
         row_y = {0: -0.2, 1: 0.2}
-        base_z = 0.3
+        base_z = 0.244
         z_inc = 0.2
+        max_col = 3
 
         for i in range(num_boxes):
             layer = i // 8
@@ -146,11 +156,11 @@ class UDPScenario:
             column = index_in_layer // 2
             row = index_in_layer % 2
 
-            x = start_x + column * x_inc
+            x = start_x + (max_col - column) * x_inc
             y = row_y[row]
             z = base_z + layer * z_inc
 
-            prim_path = f"/World/Environment/box{i + 1}"
+            prim_path = f"{path}/box_{stack_id}_{i + 1}"
             box = DynamicCuboid(
                 prim_path=prim_path,
                 position=np.array((x, y, z)),
@@ -160,18 +170,24 @@ class UDPScenario:
             boxes.append(box)
         return boxes
 
-    def setup(self):
-        self._world = World()
-        self._world.reset()
+    def create_pick_stack(self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1):
+        self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
         self.pallet = DynamicCuboid(
-            prim_path=f"/World/Environment/pallet",
-            position=np.array((1.7, 0, 0.1)),
+            prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
+            position=pallet_position,
             scale=np.array((1.2, 0.8, 0.144)),
             color=np.array((0.2, 0.08, 0.05)),
         )
 
-        self.create_boxes(1)
+        self.create_boxes(f"{path}/stack{stack_id}", number_of_boxes, stack_id)
+
+    def setup(self):
+        self._world = World()
+        self._world.reset()
+
+        self.create_pick_stack("/World/Environment", pallet_position=(1.7, 0.0, 0.072), number_of_boxes=30, stack_id=1)
+        #self.create_pick_stack("/World/Environment", pallet_position=(3.7, 0.0, 0.072), number_of_boxes=20, stack_id=2)
 
         self.start_udp_server()
 
