@@ -5,10 +5,13 @@ import omni.usd
 import imageio  # For saving images
 import time 
 from pxr import UsdPhysics, PhysxSchema
+from ..camera_capture import CameraCapture
 from ..global_variables import (
     CAMERA_PATH,
 )
 initialized_cameras = {}
+camera_capture = CameraCapture()  # Global CameraCapture instance
+
 
 def setup_camera(
     prim_path="",
@@ -18,7 +21,6 @@ def setup_camera(
     focal_length=35,
     clipping_range=(1,10000), 
     horizontal_aperture= 20,
-    camera_capture=None
  
 ):
     
@@ -96,9 +98,9 @@ def setup_camera(
     #    print(f"Warning: Could not capture frame: {e}")
 
     # Register with camera capture system if provided
-    if camera_capture is not None:
-        camera_id = prim_path.split('/')[-1]  # Use the last part of the path as ID
-        camera_capture.register_camera(camera_id, camera)
+   
+    camera_id = prim_path.split('/')[-1]  # Use the last part of the path as ID
+    camera_capture.register_camera(camera_id, camera)
 
     print("✅ Registered cameras after setup:", camera_capture.get_registered_cameras())
 

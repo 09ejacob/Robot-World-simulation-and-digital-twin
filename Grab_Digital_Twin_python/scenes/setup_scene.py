@@ -58,13 +58,7 @@ def create_additional_joints():
         None,
     )
 
-def create_camera():
-   # Check if camera capture system is already initialized
-    if not hasattr(create_camera, "camera_capture"):
-        create_camera.camera_capture = CameraCapture()
-        print("📸 Camera Capture System Initialized")
-
-    
+def create_camera(): 
     setup_camera(
         prim_path="/World/TestCamera",
         position=np.array([0, 0, 2]),
@@ -73,26 +67,7 @@ def create_camera():
         focal_length=20,
         clipping_range=(1, 10000),
         horizontal_aperture=20,
-        camera_capture=create_camera.camera_capture,
     )
-
-    setup_camera(
-        prim_path="/World/TestCamera2",
-        position=np.array([0, 0, 2]),
-        euler_angles=np.array([0, 0, 0]),
-        resolution=(1920, 1080),
-        focal_length=20,
-        clipping_range=(1, 10000),
-        horizontal_aperture=20,
-        camera_capture=create_camera.camera_capture,
-    )
-
-
-    image_paths = create_camera.camera_capture.capture_all_cameras()
-    for camera_id, image_path in image_paths.items():
-        print(f"✅ Image saved from {camera_id} at: {image_path}")
-    print("✅ Registered cameras after setup:", create_camera.camera_capture.get_registered_cameras())
-
     
 
 def load_grab_usd():
