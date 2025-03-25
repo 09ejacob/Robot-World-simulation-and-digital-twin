@@ -9,27 +9,22 @@ class CameraCapture:
     A class to manage camera captures in Isaac Sim.
     Handles image capturing, storage, and scheduling for multiple cameras.
     """
-    
-    def __init__(self, base_save_dir="camera_captures"):
-        """
-        Initialize the camera capture system.
-        
-        Args:
-            base_save_dir (str): Base directory to store all camera captures
-        """
-        # Create base directory for all captures
-        self.base_save_dir = base_save_dir
-        if not os.path.exists(base_save_dir):
-            os.makedirs(base_save_dir)
-            print(f"Created base capture directory: {base_save_dir}")
-        
-        # Track capture statistics
-        self.capture_counters = {}
-        self.last_capture_time = {}
-        
-        # Keep track of registered cameras
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(CameraCapture, cls).__new__(cls)
+            cls._instance.initialize()
+        return cls._instance
+
+    def initialize(self):
+        self.base_save_dir = "camera_captures"
         self.camera_registry = {}
+        self.capture_counters = {}  # Initialize capture_counters
+        self.last_capture_time = {}
         print("Camera Capture System Initialized")
+
     
     def register_camera(self, camera_id, camera):
         """
@@ -64,7 +59,9 @@ class CameraCapture:
         if camera_id not in self.camera_registry:
             print(f"❌ Error: Camera with ID {camera_id} not registered.")
             return None
-        print(f"✅ Camera {camera_id} found in registry.")
+        print(f"✅ Camera {camera_id} found in registry.", list(self.camera_registry.keys()))
+        self.get_registered_cameras()
+        
 
         camera = self.camera_registry[camera_id]
 
@@ -130,6 +127,8 @@ class CameraCapture:
         except Exception as e:
             print(f"❌ Error saving image from {camera_id}: {e}")
             return None
+        
+        self.get_registered_cameras()
 
         return save_path
 
@@ -190,4 +189,4 @@ class CameraCapture:
     def get_registered_cameras(self):
         """Get list of registered camera IDs"""
         print(f"Registered Cameras in camera Capture: {list(self.camera_registry.keys())}")
-        return list(self._camera_registry.keys())
+        return list(self.camera_registry.keys())

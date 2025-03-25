@@ -205,19 +205,16 @@ class UIBuilder:
         camera_controls_frame = CollapsableFrame("Camera Controls", collapsed=False)
         with camera_controls_frame:
              with ui.VStack(style=get_style(), spacing=5, height=0):
-                # Dynamic dropdown for cameras
-                self._camera_dropdown = ui.ComboBox(0, "No cameras")
         
         # Button to refresh camera list
                 ui.Button("Refresh Camera List", clicked_fn=self._refresh_camera_list)
-        
 
-            
-                ui.Label("Available Cameras:")
+                ui.Label("Available Cameras:(After refresh) : ")
 
-                self._camera_buttons = []
-                self._update_camera_ui()
+                self._capture_button_container = ui.VStack()
                 
+                ui.Label("Capture from ALL Cameras:")
+
                 ui.Button(
                     "Capture from All Cameras",
                     clicked_fn=self._capture_from_all_cameras
@@ -380,62 +377,40 @@ class UIBuilder:
             print("Failed to capture images from all cameras.")
 
 
-    def _update_camera_ui(self):
-        """Dynamically update the UI with available camera buttons."""
     
-        camera_ids = self._robot_controller.get_registered_cameras()
-
-        print("🔍 Debug: Registered cameras:", camera_ids)  # Debugging output
-
-        if not camera_ids:
-            print("⚠️ No cameras found!")
-            return  # Don't proceed if no cameras exist
-
-        # Remove old buttons
-        for button in self._camera_buttons:
-            button.destroy()
-
-        self._camera_buttons.clear()
-
-        # Add new buttons
-        for camera_id in camera_ids:
-            button = ui.Button(
-                f"Capture from {camera_id}",
-                clicked_fn=lambda cam_id=camera_id: self._capture_from_camera(cam_id)
-            )
-            self._camera_buttons.append(button)
-
-
     def _refresh_camera_list(self):
-        """Update camera dropdown with the latest registered cameras."""
-        self._update_camera_ui()
+        """Update camera dropdown with the latest registered cameras and add capture button."""
         try:
             # Get the current list of registered cameras
             cameras = self._camera_capture.get_registered_cameras()
             print(f"Refresh found cameras: {cameras}")
+            
+            self._capture_button_container.clear()
 
-            # Access the ComboBox model
-            model = self._camera_dropdown.model
-
-            # Clear existing items
-            for item in model.get_item_children():
-                model.remove_item(item)
-
-            # Add new cameras to the dropdown
-            if cameras:
-                for cam in cameras:
-                    model.append_child_item(None, ui.SimpleStringModel(cam))
-                model.set_value(0)  # Select the first camera
-                self._camera_dropdown.enabled = True
-            else:
-                # Handle the case where no cameras are found
-                model.append_child_item(None, ui.SimpleStringModel("No cameras"))
-                model.set_value(0)
-                self._camera_dropdown.enabled = False
-
+            for camera_id in cameras:
+              self._add_capture_button(camera_id)
+                
         except Exception as e:
-            # Handle any errors that occur during the refresh
-            print(f"Error refreshing camera list: {str(e)}")
-            if hasattr(self, "_capture_result_label"):
-                self._capture_result_label.text = "Camera refresh failed"
+            print(f"Error refreshing camera list: {e}")
+
+  
+
+    def _add_capture_button(self, camera_id):
+        """Adds a capture button for the specified camera."""
+        with self._capture_button_container:
+            self._capture_button = ui.Button(
+                f"Capture from {camera_id}",
+                clicked_fn=lambda: self._capture_from_camera(camera_id)
+            )
+            print(f"Added button for camera: {camera_id}")
+
+
+    def _remove_capture_button(self):
+        """Removes the capture button if it exists."""
+        if hasattr(self, '_capture_button'):
+            self._capture_button.destroy()
+            del self._capture_button
+            print("Removed capture button")
+
+
 

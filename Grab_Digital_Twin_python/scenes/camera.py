@@ -99,5 +99,8 @@ def setup_camera(
     if camera_capture is not None:
         camera_id = prim_path.split('/')[-1]  # Use the last part of the path as ID
         camera_capture.register_camera(camera_id, camera)
+
+    print("✅ Registered cameras after setup:", camera_capture.get_registered_cameras())
+
     
     return camera

@@ -132,7 +132,7 @@ class RobotController:
             # if frames % 10 == 0:
             #     unit = "rad" if is_angular else "m"
             #     print(
-            #         f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
+            #         f"Frame {frames}: DOF {dof_index} position = {currenta_pos} {unit}, Target = {target_position} {unit}"
             #     )
 
             if is_angular:
@@ -161,8 +161,7 @@ class RobotController:
         # Make sure timeline is playing to update frames
         
         # Capture the image
-        result = CameraCapture.capture_image(camera_id)
-    
+        result = self.camera_capture.capture_image(camera_id)
         return result
         
     def capture_from_all_cameras(self):
@@ -187,21 +186,12 @@ class RobotController:
             
         return results
     
-    def register_camera(self, camera_id, camera):
-        """
-        Register a camera with the capture system
-        
-        Args:
-            camera_id (str): Unique identifier for the camera
-            camera (Camera): Camera object from Isaac Sim
-            
-        Returns:
-            str: Path to the camera's dedicated directory
-        """
-        return CameraCapture.register_camera(camera_id, camera)
     
     def get_registered_cameras(self):
-        """Get list of registered camera IDs"""
-        print("Getting registered cameras")
-        print(f"Registered Cameras in camera Capture: {list(self.camera_capture.camera_registry.keys())}")
-        return self.camera_capture.camera_registry.keys()
+        """
+        Get list of registered camera IDs
+        
+        Returns:
+            list: Camera IDs
+        """
+        return self.camera_capture.get_registered_cameras()
