@@ -71,14 +71,14 @@ class UDPScenario:
         
         if parts and parts[0] == "tp_robot":
             if len(parts) != 4:
-                print(f"[ERROR] Invalid teleport command format: {message}. Expects format like this: tp_robot:x:y:z")
+                print(f"[ERROR] Invalid teleport command format: {message}. Expects: tp_robot:x:y:z")
                 return
             try:
                 x = float(parts[1])
                 y = float(parts[2])
                 z = float(parts[3])
             except ValueError:
-                print(f"[ERROR] Teleport must contain only numbers: {message}")
+                print(f"[ERROR] Teleport command must contain only numbers: {message}")
                 return
             self._robot_controller.teleport_robot([x, y, z])
             print(f"Teleported robot to: {[x, y, z]}")
@@ -99,14 +99,13 @@ class UDPScenario:
             self._robot_controller.open_gripper()
             return
 
-        # For the "axis" command, we expect exactly three parts.
-        if parts and parts[0] == "axis":
-            if len(parts) != 3:
-                print("[ERROR] Invalid command format:", message)
+        if parts and parts[0].startswith("axis"):
+            if len(parts) != 2:
+                print("[ERROR] Invalid axis command format:", message, "Expected format: axisX:position")
                 return
             try:
-                axis_id = int(parts[1])
-                target_value = float(parts[2])
+                axis_id = int(parts[0].replace("axis", ""))
+                target_value = float(parts[1])
             except ValueError:
                 print("[ERROR] Invalid axis id or target value:", message)
                 return
@@ -120,6 +119,9 @@ class UDPScenario:
             elif axis_id == 3:
                 self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, target_value)
                 print(f"Set prismatic joint position for axis 3 to {target_value}")
+            # elif axis_id == 4:
+            #     self._robot_controller.set_angular_drive_target(AXIS4_JOINT_PATH, target_value)
+            #     print(f"Set angular drive target for axis 4 to {target_value}")
             else:
                 print("[ERROR] Axis id not recognized:", axis_id)
             return
