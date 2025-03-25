@@ -132,11 +132,19 @@ class UDPScenario:
 
     def create_xform(self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
         stage = omni.usd.get_context().get_stage()
-        xform = UsdGeom.Xform.Define(stage, path)
 
-        xform.AddTranslateOp().Set(Gf.Vec3d(*translate))
-        xform.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
-        xform.AddScaleOp().Set(Gf.Vec3f(*scale))
+        xform_prim = stage.GetPrimAtPath(path)
+        if not xform_prim.IsValid():
+            xform = UsdGeom.Xform.Define(stage, path)
+        else:
+            xform = UsdGeom.Xform(xform_prim)
+
+        xformable = UsdGeom.Xformable(xform.GetPrim())
+        xformable.ClearXformOpOrder()
+
+        xformable.AddTranslateOp().Set(Gf.Vec3d(*translate))
+        xformable.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
+        xformable.AddScaleOp().Set(Gf.Vec3f(*scale))
 
     def random_color(self):
         return np.random.rand(3)
