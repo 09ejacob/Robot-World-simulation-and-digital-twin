@@ -16,11 +16,10 @@ from omni.isaac.core.objects import DynamicCuboid
 
 
 class UDPScenario:
-    def __init__(self, robot_controller, enable_stats=False):
+    def __init__(self, robot_controller, world=None, enable_stats=False):
         self._robot_controller = robot_controller
-        self._world = None
+        self._world = world  # use world passed in (from headless_runner)
         self._did_run = False
-
         self.command_queue = queue.Queue()
 
         # Performance tracking
@@ -155,13 +154,14 @@ class UDPScenario:
         return boxes
 
     def setup(self):
-        self._world = World()
+        # Use existing world or create if not passed in (fallback for GUI/debug)
+        if self._world is None:
+            self._world = World()
         self._world.reset()
 
-        # ✅ Refresh articulation after world reset
         self._robot_controller.refresh_handles()
 
-        # ✅ Cache DOF indices
+        # Cache DOF indices
         self.axis1_dof = self._robot_controller.get_dof_index_for_joint(
             AXIS1_JOINT_PATH
         )
@@ -172,6 +172,7 @@ class UDPScenario:
             AXIS3_JOINT_PATH
         )
 
+        # Environment objects
         self.pallet = DynamicCuboid(
             prim_path=f"/World/Environment/pallet",
             position=np.array((1.7, 0, 0.1)),

@@ -53,13 +53,27 @@ def is_headless():
 class Extension(omni.ext.IExt):
     def on_startup(self, ext_id: str):
         """Initialize extension and UI elements"""
-
         self.ext_id = ext_id
         self._usd_context = omni.usd.get_context()
 
         if is_headless():
-            main()
-            print("Headless mode detected. Running main() directly...")
+            print(
+                "Headless mode detected. Waiting for valid stage before running main()."
+            )
+
+            update_stream = omni.kit.app.get_app().get_update_event_stream()
+
+            def on_update(dt):
+                stage = omni.usd.get_context().get_stage()
+                if stage is None or stage.GetRootLayer() is None:
+                    print("Waiting for stage to become valid...")
+                    return
+
+                print("Stage is valid. Starting main()...")
+                subscription.unsubscribe()  #
+                main()
+
+            subscription = update_stream.create_subscription_to_pop(on_update)
             return
 
         print("GUI mode detected — setting up UI.")
