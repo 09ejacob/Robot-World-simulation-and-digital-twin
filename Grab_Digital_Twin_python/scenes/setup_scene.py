@@ -6,6 +6,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf
 from .camera import setup_camera
+from .camera import register_existing_camera
 from ..camera_capture import CameraCapture
 
 from ..global_variables import (
@@ -14,6 +15,8 @@ from ..global_variables import (
     PHYSICS_SCENE_PATH,
     ROBOT_BASE_CUBE_PATH,
     BASE_CAMERA_PATH,
+    BOX_CAMERA_1,
+    BOX_CAMERA_2,
 )
 
 
@@ -59,15 +62,9 @@ def create_additional_joints():
     )
 
 def create_camera(): 
-    setup_camera(
-        prim_path="/World/TestCamera",
-        position=np.array([0, 0, 2]),
-        euler_angles=np.array([0, 0, 0]),
-        resolution=(1920, 1080),
-        focal_length=20,
-        clipping_range=(1, 10000),
-        horizontal_aperture=20,
-    )
+    register_existing_camera(BASE_CAMERA_PATH)
+    register_existing_camera(BOX_CAMERA_1)
+    register_existing_camera(BOX_CAMERA_2)
     
 
 def load_grab_usd():

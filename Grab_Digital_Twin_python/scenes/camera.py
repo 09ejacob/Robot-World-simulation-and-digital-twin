@@ -7,10 +7,8 @@ import time
 from pxr import UsdPhysics, PhysxSchema
 from ..camera_capture import CameraCapture
 from ..global_variables import (
-    BASE_CAMERA_PATH,
     CAMERA_PATH,
-    BOX_CAMERA_1,
-    BOX_CAMERA_2,
+   
 )
 initialized_cameras = {}
 camera_capture = CameraCapture()  # Global CameraCapture instance
@@ -65,19 +63,12 @@ def setup_camera(
     camera.set_horizontal_aperture(horizontal_aperture/10) 
     #camera.add_motion_vectors_to_frame()
 
-# Explicitly register camera
-    try:
-        # Try to register both base camera and new camera
-        register_existing_camera(BASE_CAMERA_PATH)
-        register_existing_camera(BOX_CAMERA_1)
-        register_existing_camera(BOX_CAMERA_2)
+   # Explicitly register camera
+  
+    camera_id = prim_path.split('/')[-1]
+    camera_capture.register_camera(camera_id, camera)
         
-        camera_id = prim_path.split('/')[-1]
-        camera_capture.register_camera(camera_id, camera)
-        
-        print("✅ Registered cameras:", camera_capture.get_registered_cameras())
-    except Exception as e:
-        print(f"Camera registration error: {e}")
+    print("✅ Registered cameras:", camera_capture.get_registered_cameras())
 
     initialized_cameras[prim_path] = camera
     return camera

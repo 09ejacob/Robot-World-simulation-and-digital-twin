@@ -60,9 +60,7 @@ class CameraCapture:
             print(f"❌ Error: Camera with ID {camera_id} not registered.")
             return None
         print(f"✅ Camera {camera_id} found in registry.", list(self.camera_registry.keys()))
-        self.get_registered_cameras()
         
-
         camera = self.camera_registry[camera_id]
 
         # Ensure we have the latest frame
@@ -127,8 +125,6 @@ class CameraCapture:
         except Exception as e:
             print(f"❌ Error saving image from {camera_id}: {e}")
             return None
-        
-        self.get_registered_cameras()
 
         return save_path
 
