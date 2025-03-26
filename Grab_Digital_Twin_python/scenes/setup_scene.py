@@ -7,6 +7,8 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf
 from .camera import setup_camera
 from ..camera_capture import CameraCapture
+from pxr import UsdLux
+from isaacsim.core.prims import SingleXFormPrim
 
 from ..global_variables import (
     FIXED_JOINT_BASE_GROUND,
@@ -81,6 +83,15 @@ def load_grab_usd():
     add_reference_to_stage(usd_path=usd_path, prim_path="/Robot")
 
 
+def _add_light():
+    sphereLight = UsdLux.SphereLight.Define(
+        get_current_stage(), Sdf.Path("/World/SphereLight")
+    )
+    sphereLight.CreateRadiusAttr(2)
+    sphereLight.CreateIntensityAttr(100000)
+    SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
+
+
 def setup_scene():
     stage = get_current_stage()
     UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
@@ -90,3 +101,4 @@ def setup_scene():
     load_grab_usd()
     create_camera()
     create_additional_joints()
+    _add_light()
