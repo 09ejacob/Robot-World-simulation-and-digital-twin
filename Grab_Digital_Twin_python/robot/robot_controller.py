@@ -4,12 +4,16 @@ from omni.isaac.core.utils.stage import get_current_stage
 import omni.graph as og2
 import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
+from ..camera_capture import CameraCapture
+import time
+
 
 from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
 
 class RobotController:
     def __init__(self):
+        self.camera_capture = CameraCapture()
         self.stage = omni.usd.get_context().get_stage()
 
         if self.stage is None:
@@ -159,7 +163,7 @@ class RobotController:
             # if frames % 10 == 0:
             #     unit = "rad" if is_angular else "m"
             #     print(
-            #         f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
+            #         f"Frame {frames}: DOF {dof_index} position = {currenta_pos} {unit}, Target = {target_position} {unit}"
             #     )
 
             if is_angular:
@@ -174,6 +178,45 @@ class RobotController:
                 break
 
             yield
+
+    def capture_from_camera(self, camera_id):
+        """
+        Capture an image from a specific camera
+
+        Args:
+            camera_id (str): ID of the camera to capture from
+
+        Returns:
+            str: Path to the saved image file, or None if capture failed
+        """
+        # Make sure timeline is playing to update frames
+
+        # Capture the image
+        result = self.camera_capture.capture_image(camera_id)
+        return result
+
+    def capture_from_all_cameras(self):
+        """
+        Capture images from all registered cameras
+
+        Returns:
+            dict: Map of camera IDs to saved image paths
+        """
+        # Make sure timeline is playing to update frames
+
+        # Capture from all cameras
+        results = self.camera_capture.capture_all_cameras()
+
+        return results
+
+    def get_registered_cameras(self):
+        """
+        Get list of registered camera IDs
+
+        Returns:
+            list: Camera IDs
+        """
+        return self.camera_capture.get_registered_cameras()
 
     def print_joint_position_by_index(self, dof_index, is_angular=False):
         if not self.articulation:
