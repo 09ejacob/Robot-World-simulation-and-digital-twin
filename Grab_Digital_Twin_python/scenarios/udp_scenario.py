@@ -10,6 +10,7 @@ from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
+    AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
 )
 from ..networking.udp_controller import UDPController
@@ -120,9 +121,9 @@ class UDPScenario:
             elif axis_id == 3:
                 self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, target_value)
                 print(f"Set prismatic joint position for axis 3 to {target_value}")
-            # elif axis_id == 4:
-            #     self._robot_controller.set_angular_drive_target(AXIS4_JOINT_PATH, target_value)
-            #     print(f"Set angular drive target for axis 4 to {target_value}")
+            elif axis_id == 4:
+                self._robot_controller.set_angular_drive_target(AXIS4_JOINT_PATH, target_value)
+                print(f"Set angular drive target for axis 4 to {target_value}")
             else:
                 print("[ERROR] Axis id not recognized:", axis_id)
             return
