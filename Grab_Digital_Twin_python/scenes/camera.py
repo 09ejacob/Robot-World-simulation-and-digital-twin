@@ -7,7 +7,10 @@ import time
 from pxr import UsdPhysics, PhysxSchema
 from ..camera_capture import CameraCapture
 from ..global_variables import (
+    BASE_CAMERA_PATH,
     CAMERA_PATH,
+    BOX_CAMERA_1,
+    BOX_CAMERA_2,
 )
 initialized_cameras = {}
 camera_capture = CameraCapture()  # Global CameraCapture instance
@@ -62,47 +65,56 @@ def setup_camera(
     camera.set_horizontal_aperture(horizontal_aperture/10) 
     #camera.add_motion_vectors_to_frame()
 
-   # Get a test frame to ensure the camera is working
+# Explicitly register camera
     try:
-        frame = camera.get_current_frame()
-        print(f"Camera initialized with frame data available: {frame is not None}")
+        # Try to register both base camera and new camera
+        register_existing_camera(BASE_CAMERA_PATH)
+        register_existing_camera(BOX_CAMERA_1)
+        register_existing_camera(BOX_CAMERA_2)
         
-        # Try to get RGBA data to verify camera is working
-        if frame is not None:
-            if isinstance(frame, dict) and 'rgba' in frame:
-                rgba = frame['rgba']
-                print(f"RGBA shape: {rgba.shape if rgba is not None else 'None'}")
-            else:
-                print(f"Frame type: {type(frame)}")
-        else:
-            print("No frame data available yet")
+        camera_id = prim_path.split('/')[-1]
+        camera_capture.register_camera(camera_id, camera)
+        
+        print("✅ Registered cameras:", camera_capture.get_registered_cameras())
     except Exception as e:
-        print(f"Warning: Could not get test frame: {e}")
+        print(f"Camera registration error: {e}")
 
-    #import time
-    #time.sleep(0.5)
-      # Capture a frame and save it
-    #try:
-    #    frame = camera.get_current_frame()
-    #    if frame and "rgba" in frame:
-    #        rgba = frame["rgba"]  # Extract RGBA data
-    #        if rgba is not None:
-    #            image_filename = f"captured_frame_{int(time.time())}.png"
-    #            imageio.imwrite(image_filename, rgba)  # Save image
-    #            print(f"Frame saved as {image_filename}")
-    #        else:
-    #            print("RGBA frame data is None")
-    #    else:
-    #        print("Frame capture failed or RGBA key missing")
-    #except Exception as e:
-    #    print(f"Warning: Could not capture frame: {e}")
-
-    # Register with camera capture system if provided
-   
-    camera_id = prim_path.split('/')[-1]  # Use the last part of the path as ID
-    camera_capture.register_camera(camera_id, camera)
-
-    print("✅ Registered cameras after setup:", camera_capture.get_registered_cameras())
-
-    
+    initialized_cameras[prim_path] = camera
     return camera
+
+
+def register_existing_camera(prim_path):
+    """
+    Register an existing camera from its prim path with the camera capture system
+    
+    Args:
+        prim_path (str): Full USD prim path of the existing camera
+    
+    Returns:
+        Camera object or None if camera cannot be created
+    """
+    # Get the current stage
+    stage = omni.usd.get_context().get_stage()
+    
+    # Check if the prim exists
+    prim = stage.GetPrimAtPath(prim_path)
+    if not prim or not prim.IsValid():
+        print(f"No valid prim found at path: {prim_path}")
+        return None
+    
+    try:
+        # Create Camera object from existing prim
+        camera = Camera(prim_path=prim_path)
+        camera.initialize()
+        
+        # Register with camera capture system
+        camera_id = prim_path.split('/')[-1]
+        camera_capture.register_camera(camera_id, camera)
+        
+        print(f"Successfully registered camera: {camera_id}")
+        return camera
+    
+    except Exception as e:
+        print(f"Error registering camera at {prim_path}: {e}")
+        return None
+    
