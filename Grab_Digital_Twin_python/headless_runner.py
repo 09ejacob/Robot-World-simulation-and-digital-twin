@@ -68,6 +68,7 @@ def main():
     robot_controller = RobotController()
     scenario = UDPScenario(robot_controller, world=world)
     scenario.setup()
+    robot_controller.capture_from_all_cameras()
 
     try:
         while True:

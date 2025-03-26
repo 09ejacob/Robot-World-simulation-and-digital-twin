@@ -58,7 +58,8 @@ def create_additional_joints():
         None,
     )
 
-def create_camera(): 
+
+def create_camera():
     setup_camera(
         prim_path="/World/TestCamera",
         position=np.array([0, 0, 2]),
@@ -68,7 +69,7 @@ def create_camera():
         clipping_range=(1, 10000),
         horizontal_aperture=20,
     )
-    
+
 
 def load_grab_usd():
     # Isaac Sim needs the absolute path

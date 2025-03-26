@@ -83,6 +83,13 @@ class UDPScenario:
             self._robot_controller.open_gripper()
             return
 
+        if message.strip().lower() == "capture":
+            print("[UDP] Capturing images from all cameras...")
+            result = self._robot_controller.capture_from_all_cameras()
+            for cam_id, path in result.items():
+                print(f"Captured from {cam_id}: {path}")
+            return
+
         parts = message.split(":")
         if len(parts) != 3:
             print("[ERROR] Invalid command format:", message)
