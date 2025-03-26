@@ -11,8 +11,27 @@ from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 class RobotController:
     def __init__(self):
         self.stage = omni.usd.get_context().get_stage()
+
+        if self.stage is None:
+            print("[RobotController] WARNING: Stage is None")
+        else:
+            print(
+                f"[RobotController] Stage Root Layer: {self.stage.GetRootLayer().identifier}"
+            )
+
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        self.articulation = self.dc_interface.get_articulation("/Robot")
+
+        if self.dc_interface is None:
+            print(
+                "[RobotController] ERROR: Failed to acquire Dynamic Control interface"
+            )
+
+        try:
+            self.articulation = self.dc_interface.get_articulation("/Robot")
+            if self.articulation is None:
+                print("[RobotController] WARNING: Initial articulation handle is None")
+        except Exception as e:
+            print(f"[RobotController] Exception getting articulation: {e}")
 
     def refresh_handles(self):
         self.articulation = self.dc_interface.get_articulation("/Robot")

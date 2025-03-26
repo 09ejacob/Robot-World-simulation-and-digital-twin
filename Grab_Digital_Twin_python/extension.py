@@ -22,7 +22,7 @@ from isaacsim.gui.components.element_wrappers import ScrollingWindow
 from isaacsim.gui.components.menu import MenuItemDescription
 from omni.kit.menu.utils import add_menu_items, remove_menu_items
 from omni.usd import StageEventType
-
+from omni.isaac.dynamic_control import _dynamic_control
 from .global_variables import EXTENSION_DESCRIPTION, EXTENSION_TITLE
 from .ui.ui_builder import UIBuilder
 from .headless_runner import main
@@ -64,13 +64,15 @@ class Extension(omni.ext.IExt):
             update_stream = omni.kit.app.get_app().get_update_event_stream()
 
             def on_update(dt):
-                stage = omni.usd.get_context().get_stage()
-                if stage is None or stage.GetRootLayer() is None:
-                    print("Waiting for stage to become valid...")
+                context = omni.usd.get_context()
+                stage = context.get_stage()
+
+                if not stage or not stage.GetRootLayer():
+                    print("Waiting for stage to have a root layer...")
                     return
 
-                print("Stage is valid. Starting main()...")
-                subscription.unsubscribe()  #
+                print("Stage has root layer. Starting main()...")
+                subscription.unsubscribe()
                 main()
 
             subscription = update_stream.create_subscription_to_pop(on_update)
