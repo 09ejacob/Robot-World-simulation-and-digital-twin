@@ -66,12 +66,15 @@ class UDPScenario:
 
     def parse_and_execute_command(self, message):
         self.executed_command_count += 1
-
-        message = message.rstrip(":").strip().lower()
+        message = message.rstrip(":").strip()
         parts = [p for p in message.split(":") if p != ""]
-        print("DEBUG: Parsed parts:", parts, "length:", len(parts))
-        
-        if parts and parts[0] == "tp_robot":
+        if not parts:
+            print("[ERROR] Empty command.")
+            return
+
+        command_keyword = parts[0].lower()
+
+        if command_keyword == "tp_robot":
             if len(parts) != 4:
                 print(f"[ERROR] Invalid teleport command format: {message}. Expects: tp_robot:x:y:z")
                 return
@@ -86,27 +89,43 @@ class UDPScenario:
             print(f"Teleported robot to: {[x, y, z]}")
             return
 
-        if message == "force_data":
+        if command_keyword == "nudge_box":
+            if len(parts) != 5:
+                print(f"[ERROR] Invalid nudge_box command format: {message}. Expects: nudge_box:/path/to/box:x:y:z")
+                return
+            prim_path = parts[1]
+            try:
+                dx = float(parts[2])
+                dy = float(parts[3])
+                dz = float(parts[4])
+            except ValueError:
+                print(f"[ERROR] nudge_box command must contain only numbers: {message}")
+                return
+            self.nudge_box(prim_path, (dx, dy, dz))
+            print(f"Nudged box at {prim_path} by offset: {[dx, dy, dz]}")
+            return
+
+        if command_keyword == "force_data":
             print("Read force sensor value")
             self._robot_controller.read_force_sensor_value()
             return
 
-        if message == "close_gripper":
+        if message.lower() == "close_gripper":
             print("Close gripper")
             self._robot_controller.close_gripper()
             return
 
-        if message == "open_gripper":
+        if message.lower() == "open_gripper":
             print("Open gripper")
             self._robot_controller.open_gripper()
             return
 
-        if parts and parts[0].startswith("axis"):
+        if command_keyword.startswith("axis"):
             if len(parts) != 2:
                 print("[ERROR] Invalid axis command format:", message, "Expected format: axisX:position")
                 return
             try:
-                axis_id = int(parts[0].replace("axis", ""))
+                axis_id = int(command_keyword.replace("axis", ""))
                 target_value = float(parts[1])
             except ValueError:
                 print("[ERROR] Invalid axis id or target value:", message)
@@ -130,6 +149,24 @@ class UDPScenario:
 
         print("[ERROR] Command not recognized:", message)
 
+    def nudge_box(self, prim_path, offset):
+        stage = omni.usd.get_context().get_stage()
+        box_prim = stage.GetPrimAtPath(prim_path)
+        if not box_prim.IsValid():
+            print(f"Box prim not found at {prim_path}")
+            return
+        xformable = UsdGeom.Xformable(box_prim)
+        translate_op = None
+        for op in xformable.GetOrderedXformOps():
+            if "translate" in op.GetOpName():
+                translate_op = op
+                break
+        if translate_op is None:
+            translate_op = xformable.AddTranslateOp()
+        current_translation = translate_op.Get()
+        new_translation = current_translation + Gf.Vec3d(*offset)
+        translate_op.Set(new_translation)
+        print(f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}")
 
     def create_xform(self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
         stage = omni.usd.get_context().get_stage()
@@ -199,7 +236,7 @@ class UDPScenario:
         self._world.reset()
 
         self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, 0.0, 0.072), number_of_boxes=15, stack_id=1)
-        #self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, 1.0, 0.072), number_of_boxes=20, stack_id=2)
+        self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=20, stack_id=2)
         #self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
 
         self.start_udp_server()
