@@ -4,6 +4,7 @@ from pxr import UsdPhysics
 from omni.isaac.core import World
 from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
 from omni.usd import get_context
+from omni.isaac.core.simulation_context import SimulationContext
 
 from .scenes.setup_scene import setup_scene
 from .robot.robot_controller import RobotController
@@ -23,13 +24,23 @@ def main():
     setup_scene()
 
     stage = get_current_stage()
-
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
-        UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
+        print("[MAIN] Physics scene not found in stage")
+        return
 
     world = World(
         physics_dt=1.0 / 60.0, rendering_dt=1.0 / 60.0, stage_units_in_meters=1.0
     )
+
+    print("[MAIN] Waiting for physics context to initialize...")
+    for _ in range(200):
+        if world._physics_context is not None:
+            print("[MAIN] Physics context is initialized.")
+            break
+        time.sleep(0.05)
+    else:
+        print("[MAIN] Physics context did not initialize.")
+        return
 
     timeline_iface = omni.timeline.get_timeline_interface()
     timeline_iface.set_auto_update(False)
@@ -48,7 +59,7 @@ def main():
     timeline_iface.play()
 
     for _ in range(10):
-        world.step(render=False)
+        world.step(render=True)
         time.sleep(0.1)
 
     robot_controller = RobotController()
