@@ -6,6 +6,7 @@ import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
 from pxr import UsdGeom
 from pxr import Gf
+from omni.isaac.sensor import ContactSensor
 
 from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
@@ -78,39 +79,14 @@ class RobotController:
         clamped_position = max(lower_limit, min(position, upper_limit))
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
-    # For information:
-    # DOF index 0 belongs to joint: /World/Robot/Joints/RevoluteJointAxis1
-    # DOF index 1 belongs to joint: /World/Robot/Joints/PrismaticJointAxis2
-    # DOF index 2 belongs to joint: /World/Robot/Joints/PrismaticJointAxis3
-    # DOF index 3 belongs to joint: /World/Robot/Joints/RevoluteJointRobotBase
-    # DOF index 4 belongs to joint: /World/Robot/Joints/PrismaticJointForceSensor
-    # DOF index 5 belongs to joint: /World/Robot/Joints/RevoluteJointAxis4
-    def read_force_sensor_value(self):
-        self.refresh_handles()
-        dof_states = self.dc_interface.get_articulation_dof_states(self.articulation, _dynamic_control.STATE_ALL)
-        if dof_states is None:
-            print("Error: Invalid or expired articulation handle")
-            return None
+    def print_contact_force(self):
+        sensor = ContactSensor(
+            prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
+            name="Contact_Sensor"
+        )
 
-        dof_joint_mapping = {
-            0: "/World/Robot/Joints/RevoluteJointAxis1",
-            1: "/World/Robot/Joints/PrismaticJointAxis2",
-            2: "/World/Robot/Joints/PrismaticJointAxis3",
-            3: "/World/Robot/Joints/RevoluteJointRobotBase",
-            4: "/World/Robot/Joints/PrismaticJointForceSensor",
-            5: "/World/Robot/Joints/RevoluteJointAxis4",
-        }
-        
-        for dof_idx, joint_path in dof_joint_mapping.items():
-            force_val = dof_states["effort"][dof_idx]
-            mass_equiv = force_val / 9.81
-            print(f"DOF index {dof_idx} for joint {joint_path} has effort: {force_val:.3f} N ({mass_equiv:.3f} kgf)")
-        
-        sensor_dof_index = 4
-        force_value = dof_states["effort"][sensor_dof_index]
-        mass_equivalent = force_value / 9.81
-        print("Force sensor reading:", force_value, "N", f"({mass_equivalent:.10f} kgf)")
-        return mass_equivalent
+        reading = sensor.get_current_frame()
+        print("Force:", reading.get("force"))
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)

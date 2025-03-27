@@ -85,8 +85,8 @@ class UDPScenario:
             return
 
         if message == "force_data":
-            print("Read force sensor value")
-            self._robot_controller.read_force_sensor_value()
+            print("Read contact sensor value")
+            self._robot_controller.print_contact_force()
             return
 
         if message == "close_gripper":
