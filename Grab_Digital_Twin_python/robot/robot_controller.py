@@ -86,12 +86,12 @@ class RobotController:
     # DOF index 4 belongs to joint: /World/Robot/Joints/PrismaticJointForceSensor
     # DOF index 5 belongs to joint: /World/Robot/Joints/RevoluteJointAxis4
     def read_force_sensor_value(self):
-        # Get all DOF states for the articulation.
-        dof_states = self.dc_interface.get_articulation_dof_states(
-            self.articulation, _dynamic_control.STATE_ALL
-        )
-        
-        # Hard-coded mapping of DOF indexes to joint paths (based on your documentation)
+        self.refresh_handles()
+        dof_states = self.dc_interface.get_articulation_dof_states(self.articulation, _dynamic_control.STATE_ALL)
+        if dof_states is None:
+            print("Error: Invalid or expired articulation handle")
+            return None
+
         dof_joint_mapping = {
             0: "/World/Robot/Joints/RevoluteJointAxis1",
             1: "/World/Robot/Joints/PrismaticJointAxis2",
@@ -101,21 +101,16 @@ class RobotController:
             5: "/World/Robot/Joints/RevoluteJointAxis4",
         }
         
-        # Print efforts (force in Newtons) for each joint and also convert to kgf.
         for dof_idx, joint_path in dof_joint_mapping.items():
             force_val = dof_states["effort"][dof_idx]
-            # Convert Newtons to kg-force (kgf) by dividing by 9.81 m/s²
             mass_equiv = force_val / 9.81
             print(f"DOF index {dof_idx} for joint {joint_path} has effort: {force_val:.3f} N ({mass_equiv:.3f} kgf)")
         
-        # Read the force sensor reading from DOF index 4.
         sensor_dof_index = 4
         force_value = dof_states["effort"][sensor_dof_index]
         mass_equivalent = force_value / 9.81
         print("Force sensor reading:", force_value, "N", f"({mass_equivalent:.10f} kgf)")
         return mass_equivalent
-
-
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
