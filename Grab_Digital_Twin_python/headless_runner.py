@@ -1,27 +1,41 @@
-from omni.isaac.core import World
-from omni.isaac.dynamic_control import _dynamic_control
-from .scenarios.udp_scenario import UDPScenario
-from .robot.robot_controller import RobotController
-from .scenes.setup_scene import setup_scene
-
 import time
 import omni.timeline
+from pxr import UsdPhysics
+from omni.isaac.core import World
+from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
+from omni.usd import get_context
+
+from .scenes.setup_scene import setup_scene
+from .robot.robot_controller import RobotController
+from .scenarios.udp_scenario import UDPScenario
+
+from .global_variables import (
+    PHYSICS_SCENE_PATH,
+    ROBOT_PATH,
+)
 
 
 def main():
-    print("Starting script.")
+    print("Starting UDP scenario in headless mode.")
+
+    create_new_stage()
+
+    setup_scene()
+
+    stage = get_current_stage()
+
+    if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
+        UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
     world = World(
         physics_dt=1.0 / 60.0, rendering_dt=1.0 / 60.0, stage_units_in_meters=1.0
     )
 
-    setup_scene()
+    timeline_iface = omni.timeline.get_timeline_interface()
+    timeline_iface.set_auto_update(False)
 
-    from omni.isaac.core.utils.stage import get_current_stage
-
-    stage = get_current_stage()
     for _ in range(200):
-        robot_prim = stage.GetPrimAtPath("/Robot")
+        robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
         if robot_prim.IsValid():
             print("[MAIN] /Robot loaded.")
             break
@@ -31,48 +45,28 @@ def main():
         print("[MAIN] /Robot never appeared — aborting.")
         return
 
-    # Start timeline and step world multiple times for more initialization time
-    timeline = omni.timeline.get_timeline_interface()
-    timeline.play()
+    timeline_iface.play()
 
     for _ in range(10):
         world.step(render=False)
         time.sleep(0.1)
 
-    dc = _dynamic_control.acquire_dynamic_control_interface()
+    robot_controller = RobotController()
+    robot_controller.refresh_handles()
 
-    articulation = None
-    max_attempts = 20
-    for attempt in range(max_attempts):
-        articulation = dc.get_articulation("/Robot")
-
-        if articulation is not None:
-            print(f"[MAIN] Articulation handle acquired on attempt {attempt + 1}")
-            break
-
-        print(
-            f"[MAIN] Attempt {attempt + 1}: Articulation not yet registered — retrying..."
-        )
-        time.sleep(0.5)
-        world.step(render=False)
-
-    if articulation is None:
-        print(
-            f"[MAIN] Failed to get articulation handle after {max_attempts} attempts. Aborting."
-        )
+    if not robot_controller.articulation:
+        print("[MAIN] Articulation handle is STILL invalid. Something is wrong.")
         return
 
-    print("[MAIN] Articulation handle is valid. Proceeding with scenario.")
-
-    # Set up and run scenario
-    robot_controller = RobotController()
-    scenario = UDPScenario(robot_controller, world=world)
+    scenario = UDPScenario(robot_controller=robot_controller, world=world)
     scenario.setup()
-    robot_controller.capture_from_all_cameras()
+
+    print("[MAIN] Scenario is set up. Entering main loop...")
 
     try:
         while True:
             scenario.update(1.0 / 60.0)
             world.step(render=False)
+            time.sleep(0.01)
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")

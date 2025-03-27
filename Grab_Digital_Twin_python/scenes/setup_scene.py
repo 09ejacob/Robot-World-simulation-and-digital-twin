@@ -94,7 +94,8 @@ def _add_light():
 
 def setup_scene():
     stage = get_current_stage()
-    UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
+    if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
+        UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
     create_ground_plane(GROUND_PLANE_PATH)
 
