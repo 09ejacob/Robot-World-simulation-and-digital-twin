@@ -5,6 +5,7 @@ from omni.isaac.core import World
 from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
 from omni.usd import get_context
 from omni.isaac.core.simulation_context import SimulationContext
+import omni.physx as _physx
 
 from .scenes.setup_scene import setup_scene
 from .robot.robot_controller import RobotController
@@ -19,28 +20,40 @@ from .global_variables import (
 def main():
     print("Starting UDP scenario in headless mode.")
 
+    print("Creating stage...")
     create_new_stage()
 
+    print("Setting up Scene...")
     setup_scene()
+
+    print("[MAIN] Forcing update loop to finalize stage...")
+    for _ in range(10):
+        omni.kit.app.get_app().update()
+        time.sleep(0.05)
 
     stage = get_current_stage()
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
         print("[MAIN] Physics scene not found in stage")
         return
 
-    world = World(
-        physics_dt=1.0 / 60.0, rendering_dt=1.0 / 60.0, stage_units_in_meters=1.0
-    )
-
-    print("[MAIN] Waiting for physics context to initialize...")
-    for _ in range(200):
-        if world._physics_context is not None:
-            print("[MAIN] Physics context is initialized.")
-            break
+    print("[MAIN] Giving physics a moment to settle...")
+    for _ in range(20):
+        omni.kit.app.get_app().update()
         time.sleep(0.05)
-    else:
-        print("[MAIN] Physics context did not initialize.")
-        return
+
+    physx_iface = _physx.acquire_physx_interface()
+    print(f"[DEBUG] PhysX interface acquired: {physx_iface is not None}")
+
+    print("Creating SimulationContext...")
+    simulation_context = SimulationContext(physics_dt=1 / 60.0, rendering_dt=1 / 60.0)
+    simulation_context.initialize_physics()
+    simulation_context.play()
+
+    for _ in range(5):
+        simulation_context.step(render=False)
+        time.sleep(0.1)  # optional, to give things a little breathing room
+
+    print("[MAIN] Physics context initialized.")
 
     timeline_iface = omni.timeline.get_timeline_interface()
     timeline_iface.set_auto_update(False)
@@ -59,7 +72,7 @@ def main():
     timeline_iface.play()
 
     for _ in range(10):
-        world.step(render=True)
+        simulation_context.step(render=False)
         time.sleep(0.1)
 
     robot_controller = RobotController()
@@ -69,7 +82,7 @@ def main():
         print("[MAIN] Articulation handle is STILL invalid. Something is wrong.")
         return
 
-    scenario = UDPScenario(robot_controller=robot_controller, world=world)
+    scenario = UDPScenario(robot_controller=robot_controller, world=simulation_context)
     scenario.setup()
 
     print("[MAIN] Scenario is set up. Entering main loop...")
@@ -77,7 +90,7 @@ def main():
     try:
         while True:
             scenario.update(1.0 / 60.0)
-            world.step(render=False)
+            simulation_context.step(render=False)
             time.sleep(0.01)
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")

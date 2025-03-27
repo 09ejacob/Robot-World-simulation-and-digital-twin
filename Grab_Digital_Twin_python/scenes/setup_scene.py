@@ -4,10 +4,8 @@ from omni.isaac.core.objects.ground_plane import GroundPlane
 from omni.isaac.core.utils.prims import create_prim
 from omni.isaac.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
-from pxr import UsdPhysics, Sdf
+from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from .camera import setup_camera
-from ..camera_capture import CameraCapture
-from pxr import UsdLux
 from isaacsim.core.prims import SingleXFormPrim
 
 from ..global_variables import (
@@ -94,11 +92,21 @@ def _add_light():
 
 def setup_scene():
     stage = get_current_stage()
+
+    # Define PhysicsScene if it doesn't exist
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
+        print(f"[setup_scene] Defining physics scene at: {PHYSICS_SCENE_PATH}")
         UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
-    create_ground_plane(GROUND_PLANE_PATH)
+    # Apply PhysxSceneAPI to the PhysicsScene prim
+    physics_scene_prim = stage.GetPrimAtPath(PHYSICS_SCENE_PATH)
+    if not physics_scene_prim.HasAPI(PhysxSchema.PhysxSceneAPI):
+        PhysxSchema.PhysxSceneAPI.Apply(physics_scene_prim)
+        print("[setup_scene] Applied PhysxSceneAPI to PhysicsScene prim")
+    else:
+        print("[setup_scene] PhysxSceneAPI already present")
 
+    create_ground_plane(GROUND_PLANE_PATH)
     load_grab_usd()
     create_camera()
     create_additional_joints()
