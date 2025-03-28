@@ -156,6 +156,7 @@ class UDPScenario:
                 position=np.array((x, y, z)),
                 scale=np.array((0.3, 0.4, 0.2)),
                 color=self.random_color(),
+                mass=14.0,
             )
             boxes.append(box)
         return boxes

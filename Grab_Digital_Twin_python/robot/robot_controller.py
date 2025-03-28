@@ -86,7 +86,12 @@ class RobotController:
         )
 
         reading = sensor.get_current_frame()
-        print("Force:", reading.get("force"))
+        
+        force_n = reading.get("force", 0)
+        force_kgf = force_n / 9.81
+
+        print("Force: {} N ({} kgf)".format(force_n, force_kgf))
+
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
