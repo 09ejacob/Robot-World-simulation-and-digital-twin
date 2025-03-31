@@ -296,6 +296,9 @@ class UDPScenario:
         self.axis3_dof = self._robot_controller.get_dof_index_for_joint(
             AXIS3_JOINT_PATH
         )
+        self.axis4_dof = self._robot_controller.get_dof_index_for_joint(
+            AXIS4_JOINT_PATH
+        )
 
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -323,10 +326,21 @@ class UDPScenario:
 
         if not self.broadcast_stop_event.is_set():
             data = []
-            for i in range(4):
-                pos = self._robot_controller.get_joint_position_by_index(i)
+
+            axis_dofs = [
+                ("axis1", self.axis1_dof, True),
+                ("axis2", self.axis2_dof, False),
+                ("axis3", self.axis3_dof, False),
+                ("axis4", self.axis4_dof, True),
+            ]
+
+            for name, dof_index, is_angular in axis_dofs:
+                pos = self._robot_controller.get_joint_position_by_index(
+                    dof_index, is_angular
+                )
                 if pos is not None:
-                    data.append(f"axis{i + 1}:{pos:.4f}")
+                    data.append(f"{name}:{pos:.4f}")
+
             message = ";".join(data)
             self.udp.send(
                 message, self.broadcast_target_host, self.broadcast_target_port
@@ -354,6 +368,9 @@ class UDPScenario:
             )
             self._robot_controller.print_joint_position_by_index(
                 self.axis3_dof, is_angular=False
+            )
+            self._robot_controller.print_joint_position_by_index(
+                self.axis4_dof, is_angular=True
             )
 
             self.last_box_print_time = start_time
