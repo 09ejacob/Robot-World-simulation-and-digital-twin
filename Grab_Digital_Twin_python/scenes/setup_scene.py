@@ -14,6 +14,7 @@ from ..global_variables import (
     PHYSICS_SCENE_PATH,
     ROBOT_BASE_CUBE_PATH,
     BASE_CAMERA_PATH,
+    ROBOT_PATH,
 )
 
 
@@ -78,7 +79,7 @@ def load_grab_usd():
         join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
     )
 
-    add_reference_to_stage(usd_path=usd_path, prim_path="/Robot")
+    add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
 
 
 def _add_light():

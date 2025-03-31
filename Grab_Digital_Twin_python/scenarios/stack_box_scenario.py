@@ -8,6 +8,7 @@ from ..global_variables import (
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
     PICK_BOX_1,
+    ROBOT_PATH,
 )
 
 
@@ -69,7 +70,7 @@ class StackBoxScenario:
 
     def _run_simulation(self):
         dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        articulation = dc_interface.get_articulation("/Robot")
+        articulation = dc_interface.get_articulation(ROBOT_PATH)
 
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH

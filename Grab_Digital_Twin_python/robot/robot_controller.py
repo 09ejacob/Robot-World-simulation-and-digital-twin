@@ -8,7 +8,7 @@ from ..camera_capture import CameraCapture
 import time
 
 
-from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
+from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH, ROBOT_PATH
 
 
 class RobotController:
@@ -31,14 +31,14 @@ class RobotController:
             )
 
         try:
-            self.articulation = self.dc_interface.get_articulation("/Robot")
+            self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
             if self.articulation is None:
                 print("[RobotController] WARNING: Initial articulation handle is None")
         except Exception as e:
             print(f"[RobotController] Exception getting articulation: {e}")
 
     def refresh_handles(self):
-        self.articulation = self.dc_interface.get_articulation("/Robot")
+        self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
     def open_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
