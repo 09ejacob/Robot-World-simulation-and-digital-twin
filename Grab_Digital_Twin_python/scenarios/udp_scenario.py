@@ -42,6 +42,8 @@ class UDPScenario:
         self.broadcast_target_host = "127.0.0.1"
         self.broadcast_target_port = 9998
 
+        self.last_box_print_time = time.time()
+
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
         self.command_queue.put(message)
@@ -274,6 +276,19 @@ class UDPScenario:
         self._world = World()
         self._world.reset()
 
+        self._robot_controller.refresh_handles()
+
+        # Cache DOF indices
+        self.axis1_dof = self._robot_controller.get_dof_index_for_joint(
+            AXIS1_JOINT_PATH
+        )
+        self.axis2_dof = self._robot_controller.get_dof_index_for_joint(
+            AXIS2_JOINT_PATH
+        )
+        self.axis3_dof = self._robot_controller.get_dof_index_for_joint(
+            AXIS3_JOINT_PATH
+        )
+
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(1.7, 0.0, 0.072),
@@ -287,8 +302,6 @@ class UDPScenario:
             stack_id=2,
         )
         # self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
-
-        self._robot_controller.refresh_handles()
 
         self.start_udp_server()
 
@@ -319,6 +332,21 @@ class UDPScenario:
             self.udp_message_count = 0  # Reset counters
             self.executed_command_count = 0
             self.last_time_check = start_time  # Reset time tracking
+
+        # Print DOF positions every 1 second
+        if start_time - self.last_box_print_time >= 1.0:
+            print("---------------------------------------")
+            self._robot_controller.print_joint_position_by_index(
+                self.axis1_dof, is_angular=True
+            )
+            self._robot_controller.print_joint_position_by_index(
+                self.axis2_dof, is_angular=False
+            )
+            self._robot_controller.print_joint_position_by_index(
+                self.axis3_dof, is_angular=False
+            )
+
+            self.last_box_print_time = start_time
 
 
 if __name__ == "__main__":
