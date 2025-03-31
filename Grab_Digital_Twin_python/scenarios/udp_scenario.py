@@ -21,7 +21,7 @@ class UDPScenario:
     def __init__(
         self,
         robot_controller,
-        print_positions=True,
+        print_positions=False,
         print_performance_stats=False,
     ):
         self._robot_controller = robot_controller
