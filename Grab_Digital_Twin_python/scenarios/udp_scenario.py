@@ -18,10 +18,15 @@ from omni.isaac.core.objects import DynamicCuboid
 
 
 class UDPScenario:
+    BROADCAST_RATE = 0.05  # 0.05s = 20 Hz
+    DEFAULT_PORT = 9999
+    TARGET_PORT = 9998
+    BROADCAST_HOST = "127.0.0.1"
+
     def __init__(
         self,
         robot_controller,
-        print_positions=False,
+        print_positions=True,
         print_performance_stats=False,
     ):
         self._robot_controller = robot_controller
@@ -46,11 +51,18 @@ class UDPScenario:
         # Broadcast config
         self.broadcast_thread = None
         self.broadcast_stop_event = threading.Event()
-        self.broadcast_rate = 0.05  # 0.05 = (20 Hz)
-        self.broadcast_target_host = "127.0.0.1"
-        self.broadcast_target_port = 9998
+        self.broadcast_rate = self.BROADCAST_RATE
+        self.broadcast_target_host = self.BROADCAST_HOST
+        self.broadcast_target_port = self.TARGET_PORT
+        self.last_position_print_time = time.time()
 
-        self.last_box_print_time = time.time()
+        self.axis_config = [
+            ("axis1", AXIS1_JOINT_PATH, True),
+            ("axis2", AXIS2_JOINT_PATH, False),
+            ("axis3", AXIS3_JOINT_PATH, False),
+            ("axis4", AXIS4_JOINT_PATH, True),
+        ]
+        self.axis_dofs = []
 
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
@@ -283,22 +295,13 @@ class UDPScenario:
     def setup(self):
         self._world = World()
         self._world.reset()
-
         self._robot_controller.refresh_handles()
 
         # Cache DOF indices
-        self.axis1_dof = self._robot_controller.get_dof_index_for_joint(
-            AXIS1_JOINT_PATH
-        )
-        self.axis2_dof = self._robot_controller.get_dof_index_for_joint(
-            AXIS2_JOINT_PATH
-        )
-        self.axis3_dof = self._robot_controller.get_dof_index_for_joint(
-            AXIS3_JOINT_PATH
-        )
-        self.axis4_dof = self._robot_controller.get_dof_index_for_joint(
-            AXIS4_JOINT_PATH
-        )
+        self.axis_dofs = [
+            (name, self._robot_controller.get_dof_index_for_joint(path), is_angular)
+            for name, path, is_angular in self.axis_config
+        ]
 
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -326,24 +329,14 @@ class UDPScenario:
 
         if not self.broadcast_stop_event.is_set():
             data = []
-
-            axis_dofs = [
-                ("axis1", self.axis1_dof, True),
-                ("axis2", self.axis2_dof, False),
-                ("axis3", self.axis3_dof, False),
-                ("axis4", self.axis4_dof, True),
-            ]
-
-            for name, dof_index, is_angular in axis_dofs:
+            for name, dof_index, is_angular in self.axis_dofs:
                 pos = self._robot_controller.get_joint_position_by_index(
                     dof_index, is_angular
                 )
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
-
-            message = ";".join(data)
             self.udp.send(
-                message, self.broadcast_target_host, self.broadcast_target_port
+                ";".join(data), self.broadcast_target_host, self.broadcast_target_port
             )
 
         # Print performance stats every 1 second
@@ -351,27 +344,18 @@ class UDPScenario:
             print(
                 f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
             )
-            self.udp_message_count = 0  # Reset counters
+            self.udp_message_count = 0
             self.executed_command_count = 0
-            self.last_time_check = start_time  # Reset time tracking
+            self.last_time_check = start_time
 
         # Print DOF positions every 1 second
-        if self.print_positions and (start_time - self.last_box_print_time >= 1.0):
+        if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
             print("---------------------------------------")
-            self._robot_controller.print_joint_position_by_index(
-                self.axis1_dof, is_angular=True
-            )
-            self._robot_controller.print_joint_position_by_index(
-                self.axis2_dof, is_angular=False
-            )
-            self._robot_controller.print_joint_position_by_index(
-                self.axis3_dof, is_angular=False
-            )
-            self._robot_controller.print_joint_position_by_index(
-                self.axis4_dof, is_angular=True
-            )
-
-            self.last_box_print_time = start_time
+            for name, dof_index, is_angular in self.axis_dofs:
+                self._robot_controller.print_joint_position_by_index(
+                    dof_index, is_angular
+                )
+            self.last_position_print_time = start_time
 
 
 if __name__ == "__main__":
