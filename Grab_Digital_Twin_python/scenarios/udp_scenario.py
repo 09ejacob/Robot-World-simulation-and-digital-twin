@@ -19,14 +19,17 @@ from omni.isaac.core.objects import DynamicCuboid
 
 class UDPScenario:
     BROADCAST_RATE = 0.05  # 0.05s = 20 Hz
-    DEFAULT_PORT = 9999
-    TARGET_PORT = 9998
-    BROADCAST_HOST = "127.0.0.1"
+
+    LISTEN_HOST = "127.0.0.1"
+    LISTEN_PORT = 9999
+
+    SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
+    SEND_PORT = 9998
 
     def __init__(
         self,
         robot_controller,
-        print_positions=True,
+        print_positions=False,
         print_performance_stats=False,
     ):
         self._robot_controller = robot_controller
@@ -52,8 +55,8 @@ class UDPScenario:
         self.broadcast_thread = None
         self.broadcast_stop_event = threading.Event()
         self.broadcast_rate = self.BROADCAST_RATE
-        self.broadcast_target_host = self.BROADCAST_HOST
-        self.broadcast_target_port = self.TARGET_PORT
+        self.broadcast_target_host = self.SEND_HOST
+        self.broadcast_target_port = self.SEND_PORT
         self.last_position_print_time = time.time()
 
         self.axis_config = [
@@ -77,7 +80,7 @@ class UDPScenario:
         if self._world is not None:
             self._world.reset()
 
-    def start_udp_server(self, host="0.0.0.0", port=9999):
+    def start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
         """Starts the UDP server if the port is not already in use."""
         if self.port_in_use(port):
             print(f"Port {port} is already in use. Skipping new server.")
@@ -97,103 +100,84 @@ class UDPScenario:
     def parse_and_execute_command(self, message):
         self.executed_command_count += 1
         message = message.rstrip(":").strip()
-        parts = [p for p in message.split(":") if p != ""]
+        parts = [p for p in message.split(":") if p]
+
         if not parts:
             print("[ERROR] Empty command.")
             return
 
-        command_keyword = parts[0].lower()
+        command = parts[0].lower()
 
-        if command_keyword == "tp_robot":
-            if len(parts) != 4:
-                print(
-                    f"[ERROR] Invalid teleport command format: {message}. Expects: tp_robot:x:y:z"
-                )
-                return
-            try:
-                x = float(parts[1])
-                y = float(parts[2])
-                z = float(parts[3])
-            except ValueError:
-                print(f"[ERROR] Teleport command must contain only numbers: {message}")
-                return
-            self._robot_controller.teleport_robot([x, y, z])
-            print(f"Teleported robot to: {[x, y, z]}")
+        handlers = {
+            "tp_robot": self._handle_tp_robot,
+            "nudge_box": self._handle_nudge_box,
+            "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
+            "close_gripper": lambda p: self._robot_controller.close_gripper(),
+            "open_gripper": lambda p: self._robot_controller.open_gripper(),
+        }
+
+        if command in handlers:
+            handlers[command](parts)
+        elif command.startswith("axis"):
+            self._handle_axis_command(parts)
+        else:
+            print("[ERROR] Command not recognized:", message)
+
+    def _handle_tp_robot(self, parts):
+        if len(parts) != 4:
+            print("[ERROR] Invalid tp_robot format. Use: tp_robot:x:y:z")
+            return
+        try:
+            pos = list(map(float, parts[1:4]))
+            self._robot_controller.teleport_robot(pos)
+            print(f"Teleported robot to: {pos}")
+        except ValueError:
+            print("[ERROR] tp_robot values must be floats.")
+
+    def _handle_nudge_box(self, parts):
+        if len(parts) != 5:
+            print("[ERROR] Invalid nudge_box format. Use: nudge_box:/path:x:y:z")
+            return
+        prim_path = parts[1]
+        try:
+            offset = tuple(map(float, parts[2:5]))
+            self.nudge_box(prim_path, offset)
+            print(f"Nudged box at {prim_path} by {offset}")
+        except ValueError:
+            print("[ERROR] nudge_box values must be floats.")
+
+    def _handle_axis_command(self, parts):
+        if len(parts) != 2:
+            print("[ERROR] axis format must be: axisX:value")
+            return
+        try:
+            axis_id = int(parts[0].replace("axis", ""))
+            value = float(parts[1])
+        except ValueError:
+            print("[ERROR] Invalid axis id or value")
             return
 
-        if command_keyword == "nudge_box":
-            if len(parts) != 5:
-                print(
-                    f"[ERROR] Invalid nudge_box command format: {message}. Expects: nudge_box:/path/to/box:x:y:z"
-                )
-                return
-            prim_path = parts[1]
-            try:
-                dx = float(parts[2])
-                dy = float(parts[3])
-                dz = float(parts[4])
-            except ValueError:
-                print(f"[ERROR] nudge_box command must contain only numbers: {message}")
-                return
-            self.nudge_box(prim_path, (dx, dy, dz))
-            print(f"Nudged box at {prim_path} by offset: {[dx, dy, dz]}")
-            return
+        axis_map = {
+            1: lambda v: self._robot_controller.set_angular_drive_target(
+                AXIS1_JOINT_PATH, v
+            ),
+            2: lambda v: self._robot_controller.set_prismatic_joint_position(
+                AXIS2_JOINT_PATH, v
+            ),
+            3: lambda v: self._robot_controller.set_prismatic_joint_position(
+                AXIS3_JOINT_PATH, v
+            ),
+            4: lambda v: self._robot_controller.set_angular_drive_target(
+                AXIS4_JOINT_PATH, v
+            ),
+        }
 
-        if command_keyword == "force_data":
-            print("Read force sensor value")
-            self._robot_controller.read_force_sensor_value()
-            return
-
-        if message.lower() == "close_gripper":
-            print("Close gripper")
-            self._robot_controller.close_gripper()
-            return
-
-        if message.lower() == "open_gripper":
-            print("Open gripper")
-            self._robot_controller.open_gripper()
-            return
-
-        if command_keyword.startswith("axis"):
-            if len(parts) != 2:
-                print(
-                    "[ERROR] Invalid axis command format:",
-                    message,
-                    "Expected format: axisX:position",
-                )
-                return
-            try:
-                axis_id = int(command_keyword.replace("axis", ""))
-                target_value = float(parts[1])
-            except ValueError:
-                print("[ERROR] Invalid axis id or target value:", message)
-                return
-
-            if axis_id == 1:
-                self._robot_controller.set_angular_drive_target(
-                    AXIS1_JOINT_PATH, target_value
-                )
-                print(f"Set angular drive target for axis 1 to {target_value}")
-            elif axis_id == 2:
-                self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, target_value
-                )
-                print(f"Set prismatic joint position for axis 2 to {target_value}")
-            elif axis_id == 3:
-                self._robot_controller.set_prismatic_joint_position(
-                    AXIS3_JOINT_PATH, target_value
-                )
-                print(f"Set prismatic joint position for axis 3 to {target_value}")
-            elif axis_id == 4:
-                self._robot_controller.set_angular_drive_target(
-                    AXIS4_JOINT_PATH, target_value
-                )
-                print(f"Set angular drive target for axis 4 to {target_value}")
-            else:
-                print("[ERROR] Axis id not recognized:", axis_id)
-            return
-
-        print("[ERROR] Command not recognized:", message)
+        handler = axis_map.get(axis_id)
+        if handler:
+            handler(value)
+            print(f"Set axis{axis_id} to {value}")
+        else:
+            print(f"[ERROR] Axis {axis_id} not supported.")
 
     def nudge_box(self, prim_path, offset):
         stage = omni.usd.get_context().get_stage()
@@ -297,11 +281,13 @@ class UDPScenario:
         self._world.reset()
         self._robot_controller.refresh_handles()
 
-        # Cache DOF indices
-        self.axis_dofs = [
-            (name, self._robot_controller.get_dof_index_for_joint(path), is_angular)
-            for name, path, is_angular in self.axis_config
-        ]
+        self.axis_dofs = []
+        for name, path, is_angular in self.axis_config:
+            dof_index = self._robot_controller.get_dof_index_for_joint(path)
+            if dof_index == -1:
+                print(f"[ERROR] Could not resolve DOF index for {name} ({path})")
+            else:
+                self.axis_dofs.append((name, dof_index, is_angular))
 
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -335,9 +321,14 @@ class UDPScenario:
                 )
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
-            self.udp.send(
-                ";".join(data), self.broadcast_target_host, self.broadcast_target_port
-            )
+            if data:
+                self.udp.send(
+                    ";".join(data),
+                    self.broadcast_target_host,
+                    self.broadcast_target_port,
+                )
+            else:
+                print("[WARN] No joint data to broadcast.")
 
         # Print performance stats every 1 second
         if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
@@ -368,4 +359,5 @@ if __name__ == "__main__":
             scenario.update()
     except KeyboardInterrupt:
         scenario.stop_broadcasting()
+        scenario.udp.stop()
         print("Exiting UDP scenario.")
