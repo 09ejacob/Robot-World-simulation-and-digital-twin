@@ -124,24 +124,16 @@ class RobotController:
         return current_pos
 
     def print_joint_position_by_index(self, dof_index, is_angular=False):
-        if not self.articulation:
-            print("Articulation handle is invalid.")
+        pos = self.get_joint_position_by_index(dof_index, is_angular)
+
+        if pos is None:
+            print(f"Invalid or unavailable DOF index: {dof_index}")
             return
 
-        dof_states = self.dc_interface.get_articulation_dof_states(
-            self.articulation, _dynamic_control.STATE_POS
-        )
-
-        if dof_index < 0 or dof_index >= len(dof_states["pos"]):
-            print(f"Invalid DOF index: {dof_index}")
-            return
-
-        current_pos = dof_states["pos"][dof_index]
         if is_angular:
-            current_pos_deg = np.rad2deg(current_pos)
-            print(f"[DOF {dof_index}] Angular Position: {current_pos_deg:.3f} degrees")
+            print(f"[DOF {dof_index}] Angular Position: {pos:.3f} degrees")
         else:
-            print(f"[DOF {dof_index}] Linear Position: {current_pos:.4f} meters")
+            print(f"[DOF {dof_index}] Linear Position: {pos:.4f} meters")
 
     def wait_for_joint_position(
         self,

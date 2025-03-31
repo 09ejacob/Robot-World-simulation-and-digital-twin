@@ -21,8 +21,8 @@ class UDPScenario:
     def __init__(
         self,
         robot_controller,
-        enable_positions_stats=False,
-        enable_performance_stats=False,
+        print_positions=True,
+        print_performance_stats=False,
     ):
         self._robot_controller = robot_controller
         self._world = None
@@ -31,13 +31,13 @@ class UDPScenario:
         self.command_queue = queue.Queue()
 
         # Performance tracking
-        self.enable_performance_stats = enable_performance_stats
+        self.print_performance_stats = print_performance_stats
         self.udp_message_count = 0
         self.executed_command_count = 0
         self.last_time_check = time.time()
 
         # Print DOF positions
-        self.enable_positions_stats = enable_positions_stats
+        self.print_positions = print_positions
 
         # Initialize the UDP server
         self.udp = UDPController()
@@ -347,7 +347,7 @@ class UDPScenario:
             )
 
         # Print performance stats every 1 second
-        if self.enable_performance_stats and (start_time - self.last_time_check >= 1.0):
+        if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
             print(
                 f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
             )
@@ -356,9 +356,7 @@ class UDPScenario:
             self.last_time_check = start_time  # Reset time tracking
 
         # Print DOF positions every 1 second
-        if self.enable_positions_stats and (
-            start_time - self.last_box_print_time >= 1.0
-        ):
+        if self.print_positions and (start_time - self.last_box_print_time >= 1.0):
             print("---------------------------------------")
             self._robot_controller.print_joint_position_by_index(
                 self.axis1_dof, is_angular=True
