@@ -107,6 +107,22 @@ class RobotController:
                         return dof_index
         return -1
 
+    def get_joint_position_by_index(self, dof_index, is_angular=False):
+        if not self.articulation:
+            return None
+
+        dof_states = self.dc_interface.get_articulation_dof_states(
+            self.articulation, _dynamic_control.STATE_POS
+        )
+
+        if dof_index < 0 or dof_index >= len(dof_states["pos"]):
+            return None
+
+        current_pos = dof_states["pos"][dof_index]
+        if is_angular:
+            return np.rad2deg(current_pos)
+        return current_pos
+
     def wait_for_joint_position(
         self,
         dof_index,
@@ -158,4 +174,3 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
         print(f"Teleported robot to position: {position}")
-

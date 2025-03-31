@@ -4,7 +4,7 @@ import threading
 import omni.usd
 import numpy as np
 import psutil
-from pxr import UsdGeom, UsdPhysics, Sdf, Gf
+from pxr import UsdGeom, Gf
 from omni.isaac.core import World
 from ..global_variables import (
     AXIS1_JOINT_PATH,
@@ -35,15 +35,23 @@ class UDPScenario:
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
+        # Broadcast config
+        self.broadcast_thread = None
+        self.broadcast_stop_event = threading.Event()
+        self.broadcast_rate = 0.05  # 0.05 = (20 Hz)
+        self.broadcast_target_host = "127.0.0.1"
+        self.broadcast_target_port = 9998
+
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
         self.command_queue.put(message)
-        self.udp_message_count += 1 
+        self.udp_message_count += 1
 
     def reset(self):
         """Resets the scenario and stops the UDP server."""
         self._did_run = False
         self.udp.stop()
+        self.stop_broadcasting()
         if self._world is not None:
             self._world.reset()
 
@@ -76,7 +84,9 @@ class UDPScenario:
 
         if command_keyword == "tp_robot":
             if len(parts) != 4:
-                print(f"[ERROR] Invalid teleport command format: {message}. Expects: tp_robot:x:y:z")
+                print(
+                    f"[ERROR] Invalid teleport command format: {message}. Expects: tp_robot:x:y:z"
+                )
                 return
             try:
                 x = float(parts[1])
@@ -91,7 +101,9 @@ class UDPScenario:
 
         if command_keyword == "nudge_box":
             if len(parts) != 5:
-                print(f"[ERROR] Invalid nudge_box command format: {message}. Expects: nudge_box:/path/to/box:x:y:z")
+                print(
+                    f"[ERROR] Invalid nudge_box command format: {message}. Expects: nudge_box:/path/to/box:x:y:z"
+                )
                 return
             prim_path = parts[1]
             try:
@@ -122,7 +134,11 @@ class UDPScenario:
 
         if command_keyword.startswith("axis"):
             if len(parts) != 2:
-                print("[ERROR] Invalid axis command format:", message, "Expected format: axisX:position")
+                print(
+                    "[ERROR] Invalid axis command format:",
+                    message,
+                    "Expected format: axisX:position",
+                )
                 return
             try:
                 axis_id = int(command_keyword.replace("axis", ""))
@@ -132,16 +148,24 @@ class UDPScenario:
                 return
 
             if axis_id == 1:
-                self._robot_controller.set_angular_drive_target(AXIS1_JOINT_PATH, target_value)
+                self._robot_controller.set_angular_drive_target(
+                    AXIS1_JOINT_PATH, target_value
+                )
                 print(f"Set angular drive target for axis 1 to {target_value}")
             elif axis_id == 2:
-                self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, target_value)
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, target_value
+                )
                 print(f"Set prismatic joint position for axis 2 to {target_value}")
             elif axis_id == 3:
-                self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, target_value)
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS3_JOINT_PATH, target_value
+                )
                 print(f"Set prismatic joint position for axis 3 to {target_value}")
             elif axis_id == 4:
-                self._robot_controller.set_angular_drive_target(AXIS4_JOINT_PATH, target_value)
+                self._robot_controller.set_angular_drive_target(
+                    AXIS4_JOINT_PATH, target_value
+                )
                 print(f"Set angular drive target for axis 4 to {target_value}")
             else:
                 print("[ERROR] Axis id not recognized:", axis_id)
@@ -166,9 +190,20 @@ class UDPScenario:
         current_translation = translate_op.Get()
         new_translation = current_translation + Gf.Vec3d(*offset)
         translate_op.Set(new_translation)
-        print(f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}")
+        print(
+            f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}"
+        )
 
-    def create_xform(self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
+    def stop_broadcasting(self):
+        self.broadcast_stop_event.set()
+        if self.broadcast_thread:
+            self.broadcast_thread.join()
+            self.broadcast_thread = None
+        print("[UDPScenario] Broadcast thread stopped.")
+
+    def create_xform(
+        self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
+    ):
         stage = omni.usd.get_context().get_stage()
 
         xform_prim = stage.GetPrimAtPath(path)
@@ -218,7 +253,9 @@ class UDPScenario:
             boxes.append(box)
         return boxes
 
-    def create_pick_stack(self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1):
+    def create_pick_stack(
+        self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1
+    ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
         self.pallet = DynamicCuboid(
@@ -229,15 +266,29 @@ class UDPScenario:
             mass=25.0,
         )
 
-        self.create_boxes(f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id)
+        self.create_boxes(
+            f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id
+        )
 
     def setup(self):
         self._world = World()
         self._world.reset()
 
-        self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, 0.0, 0.072), number_of_boxes=15, stack_id=1)
-        self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=20, stack_id=2)
-        #self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(1.7, 0.0, 0.072),
+            number_of_boxes=15,
+            stack_id=1,
+        )
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(1.7, -1.0, 0.072),
+            number_of_boxes=20,
+            stack_id=2,
+        )
+        # self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
+
+        self._robot_controller.refresh_handles()
 
         self.start_udp_server()
 
@@ -248,6 +299,17 @@ class UDPScenario:
         while not self.command_queue.empty():
             message = self.command_queue.get()
             self.parse_and_execute_command(message)
+
+        if not self.broadcast_stop_event.is_set():
+            data = []
+            for i in range(4):
+                pos = self._robot_controller.get_joint_position_by_index(i)
+                if pos is not None:
+                    data.append(f"axis{i + 1}:{pos:.4f}")
+            message = ";".join(data)
+            self.udp.send(
+                message, self.broadcast_target_host, self.broadcast_target_port
+            )
 
         # Print performance stats every 1 second
         if self.enable_stats and (start_time - self.last_time_check >= 1.0):
@@ -268,4 +330,5 @@ if __name__ == "__main__":
         while True:
             scenario.update()
     except KeyboardInterrupt:
+        scenario.stop_broadcasting()
         print("Exiting UDP scenario.")
