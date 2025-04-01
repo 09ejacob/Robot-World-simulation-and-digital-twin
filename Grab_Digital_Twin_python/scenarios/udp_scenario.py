@@ -5,6 +5,9 @@ import omni.usd
 import numpy as np
 import psutil
 from omni.isaac.core import World
+from omni.isaac.core.objects import DynamicCuboid
+from omni.isaac.core.utils.stage import create_new_stage
+
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
@@ -12,13 +15,12 @@ from ..global_variables import (
     PICK_BOX_1,
 )
 from ..networking.udp_controller import UDPController
-from omni.isaac.core.objects import DynamicCuboid
 
 
 class UDPScenario:
     def __init__(self, robot_controller, world=None, enable_stats=False):
         self._robot_controller = robot_controller
-        self._world = world  # use world passed in (from headless_runner)
+        self._world = world
         self._did_run = False
         self.command_queue = queue.Queue()
 
@@ -37,18 +39,22 @@ class UDPScenario:
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
         self.command_queue.put(message)
-        self.udp_message_count += 1  #
+        self.udp_message_count += 1
 
     def reset(self):
         """Resets the scenario and stops the UDP server."""
         self._did_run = False
         self.udp.stop()
         if self._world is not None:
-            self._world.reset()
+            try:
+                self._world.reset()
+            except AttributeError:
+                print("World.reset() failed. In GUI mode, reinitializing stage.")
+                create_new_stage()
+                self._world = World()
 
     def start_udp_server(self, host="0.0.0.0", port=9999):
         """Starts the UDP server if the port is not already in use."""
-
         if self.port_in_use(port):
             print(f"Port {port} is already in use. Skipping new server.")
             return
@@ -66,7 +72,7 @@ class UDPScenario:
 
     def parse_and_execute_command(self, message):
         """Processes and executes commands from the queue."""
-        self.executed_command_count += 1  #
+        self.executed_command_count += 1
 
         if message.strip().lower() == "force_data":
             print("Read force sensor value")
@@ -161,14 +167,24 @@ class UDPScenario:
         return boxes
 
     def setup(self):
-        # Use existing world or create if not passed in (fallback for GUI/debug)
         if self._world is None:
-            self._world = World()
-        self._world.reset()
+            try:
+                self._world = World()
+                self._world.reset()
+            except AttributeError:
+                print("World.reset() failed. Recreating stage in GUI mode.")
+                create_new_stage()
+                self._world = World()
+        else:
+            try:
+                self._world.reset()
+            except AttributeError:
+                print("World.reset() failed on provided world. Recreating stage.")
+                create_new_stage()
+                self._world = World()
 
         self._robot_controller.refresh_handles()
 
-        # Cache DOF indices
         self.axis1_dof = self._robot_controller.get_dof_index_for_joint(
             AXIS1_JOINT_PATH
         )
@@ -178,10 +194,9 @@ class UDPScenario:
         self.axis3_dof = self._robot_controller.get_dof_index_for_joint(
             AXIS3_JOINT_PATH
         )
-
-        # Environment objects
+        
         self.pallet = DynamicCuboid(
-            prim_path=f"/World/Environment/pallet",
+            prim_path="/World/Environment/pallet",
             position=np.array((1.7, 0, 0.1)),
             scale=np.array((1.2, 0.8, 0.144)),
             color=np.array((0.2, 0.08, 0.05)),
@@ -225,7 +240,7 @@ class UDPScenario:
 
 
 if __name__ == "__main__":
-    robot_controller = ...
+    robot_controller = ...  # Replace with your actual robot controller instance
     scenario = UDPScenario(robot_controller)
     scenario.setup()
 
