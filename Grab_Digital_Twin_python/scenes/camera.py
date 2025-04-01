@@ -8,7 +8,7 @@ from pxr import UsdPhysics, PhysxSchema
 from ..camera_capture import CameraCapture
 from ..global_variables import (
     CAMERA_PATH,
-   
+    BOX_CAMERA_1
 )
 initialized_cameras = {}
 camera_capture = CameraCapture()  # Global CameraCapture instance
@@ -48,7 +48,7 @@ def setup_camera(
     )
   # Initialize the camera to ensure product_render_path is set
     camera.initialize()
-
+    
     camera.set_world_pose(position, quat_xyzw, camera_axes="usd")
 
     # Apply physics properties
@@ -61,10 +61,9 @@ def setup_camera(
     camera.set_focal_length(focal_length/10)
     camera.set_clipping_range(clipping_range[0], clipping_range[1])
     camera.set_horizontal_aperture(horizontal_aperture/10) 
-    #camera.add_motion_vectors_to_frame()
+    camera.add_motion_vectors_to_frame()
 
-   # Explicitly register camera
-  
+   # Explicitly register camera with camera capture system  
     camera_id = prim_path.split('/')[-1]
     camera_capture.register_camera(camera_id, camera)
         
@@ -74,7 +73,7 @@ def setup_camera(
     return camera
 
 
-def register_existing_camera(prim_path):
+def register_existing_camera(prim_path, resolution=None):
     """
     Register an existing camera from its prim path with the camera capture system
     
@@ -84,6 +83,13 @@ def register_existing_camera(prim_path):
     Returns:
         Camera object or None if camera cannot be created
     """
+    camera_id = prim_path.split('/')[-1]
+
+    # Check if camera is already registered
+    if camera_id in camera_capture.camera_registry:
+        print(f"✅ Camera '{camera_id}' is already registered.")
+        return camera_capture.camera_registry[camera_id]  # Return existing camera
+
     # Get the current stage
     stage = omni.usd.get_context().get_stage()
     
@@ -97,13 +103,19 @@ def register_existing_camera(prim_path):
         # Create Camera object from existing prim
         camera = Camera(prim_path=prim_path)
         camera.initialize()
-        
+        print(f"Camera initialized at {prim_path}") 
+
+        if resolution is not None:
+          camera.set_resolution(resolution)
+        print(f"Camera resolution updated to {resolution}")
+
         # Register with camera capture system
         camera_id = prim_path.split('/')[-1]
         camera_capture.register_camera(camera_id, camera)
         
         print(f"Successfully registered camera: {camera_id}")
         return camera
+        
     
     except Exception as e:
         print(f"Error registering camera at {prim_path}: {e}")

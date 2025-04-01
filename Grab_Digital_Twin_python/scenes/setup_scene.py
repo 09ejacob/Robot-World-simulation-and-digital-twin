@@ -9,6 +9,7 @@ from .camera import setup_camera
 from .camera import register_existing_camera
 from ..camera_capture import CameraCapture
 
+
 from ..global_variables import (
     FIXED_JOINT_BASE_GROUND,
     GROUND_PLANE_PATH,
@@ -61,11 +62,19 @@ def create_additional_joints():
         None,
     )
 
-def create_camera(): 
-    register_existing_camera(BASE_CAMERA_PATH)
-    register_existing_camera(BOX_CAMERA_1)
-    register_existing_camera(BOX_CAMERA_2)
+def create_camera(resolutions=None): 
+    # If resolutions is None, initialize with empty dictionary
+    if resolutions is None:
+        resolutions = {}
     
+    # Register cameras with optional resolution changes
+    register_existing_camera(BASE_CAMERA_PATH, 
+                            resolution=resolutions.get(BASE_CAMERA_PATH))
+    register_existing_camera(BOX_CAMERA_1, 
+                            resolution=resolutions.get(BOX_CAMERA_1))
+    register_existing_camera(BOX_CAMERA_2, 
+                            resolution=resolutions.get(BOX_CAMERA_2))
+
 
 def load_grab_usd():
     # Isaac Sim needs the absolute path
@@ -82,7 +91,11 @@ def setup_scene():
     UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
     create_ground_plane(GROUND_PLANE_PATH)
-
+    
     load_grab_usd()
-    create_camera()
+
+    custom_resolutions = {
+    BOX_CAMERA_1: (1280, 720),
+    }
+    create_camera(resolutions=custom_resolutions)
     create_additional_joints()

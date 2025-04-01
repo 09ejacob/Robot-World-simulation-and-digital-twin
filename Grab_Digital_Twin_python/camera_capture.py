@@ -94,10 +94,6 @@ class CameraCapture:
             print(f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}")
             return None
 
-        # Convert Float Image to Uint8 Format
-        if rgb_img.dtype in [np.float32, np.float64]:
-            print(f"🔄 Converting float image to uint8 for {camera_id}...")
-            rgb_img = (rgb_img * 255).clip(0, 255).astype(np.uint8)
 
         # Ensure image is in "RGB" format
         try:
