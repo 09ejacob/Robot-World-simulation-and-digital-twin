@@ -1,4 +1,8 @@
 import time
+from omni.isaac.kit import SimulationApp
+
+simulation_app = SimulationApp({"headless": True})
+
 import omni.timeline
 import omni.physx as _physx
 from pxr import UsdPhysics
@@ -6,10 +10,10 @@ from pxr import UsdPhysics
 from omni.isaac.core import World
 from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
 
-from .scenes.setup_scene import setup_scene
-from .robot.robot_controller import RobotController
-from .scenarios.udp_scenario import UDPScenario
-from .global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
+from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
+from Grab_Digital_Twin_python.robot.robot_controller import RobotController
+from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
+from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
 
 
 def main():
@@ -23,7 +27,7 @@ def main():
 
     print("[MAIN] Forcing update loop to finalize stage...")
     for _ in range(30):
-        omni.kit.app.get_app().update()
+        simulation_app.update()
         time.sleep(0.05)
 
     stage = get_current_stage()
@@ -33,7 +37,7 @@ def main():
 
     print("[MAIN] Giving physics a moment to settle...")
     for _ in range(20):
-        omni.kit.app.get_app().update()
+        simulation_app.update()
         time.sleep(0.05)
 
     physx_iface = _physx.acquire_physx_interface()
@@ -52,12 +56,18 @@ def main():
     timeline_iface = omni.timeline.get_timeline_interface()
     timeline_iface.set_auto_update(False)
 
-    for _ in range(200):
+    root = stage.GetPseudoRoot()
+    print("[DEBUG] Stage children:")
+    for child in root.GetChildren():
+        print(f" - {child.GetPath()}")
+
+    for i in range(200):
         robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
         if robot_prim.IsValid():
             print("[MAIN] /Robot loaded.")
             break
-        print("[MAIN] Waiting for /Robot to appear in the stage...")
+        if i % 10 == 0:
+            print(f"[MAIN] Waiting for /Robot to appear... (attempt {i})")
         time.sleep(0.05)
     else:
         print("[MAIN] /Robot never appeared — aborting.")
@@ -65,7 +75,7 @@ def main():
 
     timeline_iface.play()
 
-    for _ in range(10):
+    for _ in range(50):
         world.step(render=False)
         time.sleep(0.1)
 
@@ -87,8 +97,15 @@ def main():
 
     try:
         while True:
+            #print("[LOOP] Simulation loop is running...")
             scenario.update(1.0 / 60.0)
             world.step(render=False)
             time.sleep(0.01)
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")
+
+    simulation_app.close()
+
+
+if __name__ == "__main__":
+    main()
