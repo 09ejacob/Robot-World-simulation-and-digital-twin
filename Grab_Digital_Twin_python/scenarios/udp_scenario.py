@@ -107,6 +107,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
+            "capture": lambda p: self._robot_controller.capture_from_all_cameras()
         }
 
         if command in handlers:
@@ -305,42 +306,50 @@ class UDPScenario:
             message = self.command_queue.get()
             self.parse_and_execute_command(message)
 
-        # Broadcast joint positions if not stopped
         if not self.broadcast_stop_event.is_set():
             data = []
             for name, dof_index, is_angular in self.axis_dofs:
-                pos = self._robot_controller.get_joint_position_by_index(
-                    dof_index, is_angular
-                )
+                pos = self._robot_controller.get_joint_position_by_index(dof_index, is_angular)
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
             if data:
-                self.udp.send(
-                    ";".join(data),
-                    self.broadcast_target_host,
-                    self.broadcast_target_port,
-                )
+                self.udp.send(";".join(data), self.broadcast_target_host, self.broadcast_target_port)
             else:
                 print("[WARN] No joint data to broadcast.")
 
-        # Print performance stats every 1 second
         if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
-            print(
-                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
-            )
+            print(f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec")
             self.udp_message_count = 0
             self.executed_command_count = 0
             self.last_time_check = start_time
 
-        # Print DOF positions every 1 second if enabled
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
-            print("---------------------------------------")
+            print("-----------------------------------------------------------------")
             for name, dof_index, is_angular in self.axis_dofs:
-                # This method prints the joint position; ensure your RobotController implements it.
                 self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
+            
+            self.print_box_position("/World/Environment/box_1")
+            
             self.last_position_print_time = start_time
 
+            self.last_position_print_time = start_time
 
+    def print_box_position(self, box_path):
+        stage = omni.usd.get_context().get_stage()
+        box_prim = stage.GetPrimAtPath(box_path)
+        if not box_prim.IsValid():
+            print(f"Box prim not found at {box_path}")
+            return
+
+        xformable = UsdGeom.Xformable(box_prim)
+
+        for op in xformable.GetOrderedXformOps():
+            if "translate" in op.GetOpName():
+                pos = op.Get()
+                print(f"Box position for {box_path}: {pos}")
+                return
+
+        print(f"No translation op found for box at {box_path}")
 
 if __name__ == "__main__":
     # Initialize your RobotController here.

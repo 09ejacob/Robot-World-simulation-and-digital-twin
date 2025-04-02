@@ -6,18 +6,20 @@ import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
 from pxr import UsdGeom
 from pxr import Gf
+from ..camera_capture import CameraCapture
 
-from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
+from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH, ROBOT_PATH
 
 
 class RobotController:
     def __init__(self):
         self.stage = omni.usd.get_context().get_stage()
+        self.camera_capture = CameraCapture()
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        self.articulation = self.dc_interface.get_articulation("/World/Robot")
+        self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
     def refresh_handles(self):
-        self.articulation = self.dc_interface.get_articulation("/World/Robot")
+        self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
     def open_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
@@ -183,7 +185,7 @@ class RobotController:
 
     def teleport_robot(self, position):
         stage = omni.usd.get_context().get_stage()
-        robot_prim = stage.GetPrimAtPath("/World/Robot")
+        robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
         if not robot_prim.IsValid():
             print("Robot prim not found at /World/Robot")
             return
@@ -193,3 +195,42 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
         print(f"Teleported robot to position: {position}")
+
+    def capture_from_camera(self, camera_id):
+        """
+        Capture an image from a specific camera
+
+        Args:
+            camera_id (str): ID of the camera to capture from
+
+        Returns:
+            str: Path to the saved image file, or None if capture failed
+        """
+        # Make sure timeline is playing to update frames
+
+        # Capture the image
+        result = self.camera_capture.capture_image(camera_id)
+        return result
+
+    def capture_from_all_cameras(self):
+        """
+        Capture images from all registered cameras
+
+        Returns:
+            dict: Map of camera IDs to saved image paths
+        """
+        # Make sure timeline is playing to update frames
+
+        # Capture from all cameras
+        results = self.camera_capture.capture_all_cameras()
+
+        return results
+
+    def get_registered_cameras(self):
+        """
+        Get list of registered camera IDs
+
+        Returns:
+            list: Camera IDs
+        """
+        return self.camera_capture.get_registered_cameras()
