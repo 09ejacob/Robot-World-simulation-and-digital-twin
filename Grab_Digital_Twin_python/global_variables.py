@@ -14,6 +14,7 @@ EXTENSION_DESCRIPTION = "solwr.grab.digital.twin"
 WORLD_PATH = "/World"
 GROUND_PLANE_PATH = f"{WORLD_PATH}/groundPlane"
 PHYSICS_SCENE_PATH = f"{WORLD_PATH}/PhysicsScene"
+ENVIRONMENT_PATH = f"{WORLD_PATH}/Environment"
 
 PALLET_PATH = f"{WORLD_PATH}/Environment/pallet"
 PICK_BOX_1 = f"{WORLD_PATH}/Environment/pickBox1"
@@ -21,7 +22,7 @@ PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 
 # Robot paths (NOTE: Robot is directly under root, not under /World)
-ROBOT_PATH = "/Robot"
+ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
 CAMERA_PATH = f"{ROBOT_PATH}/BoxCamera"
 BASE_CAMERA_XFORM_PATH = f"{ROBOT_PATH}/BaseCamera"

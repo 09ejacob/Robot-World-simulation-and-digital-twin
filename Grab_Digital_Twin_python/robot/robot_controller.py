@@ -4,63 +4,30 @@ from omni.isaac.core.utils.stage import get_current_stage
 import omni.graph as og2
 import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
-from ..camera_capture import CameraCapture
-import time
+from pxr import UsdGeom
+from pxr import Gf
 
-
-from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH, ROBOT_PATH
+from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH
 
 
 class RobotController:
     def __init__(self):
-        self.camera_capture = CameraCapture()
         self.stage = omni.usd.get_context().get_stage()
-
-        if self.stage is None:
-            print("[RobotController] WARNING: Stage is None")
-        else:
-            print(
-                f"[RobotController] Stage Root Layer: {self.stage.GetRootLayer().identifier}"
-            )
-
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-
-        if self.dc_interface is None:
-            print(
-                "[RobotController] ERROR: Failed to acquire Dynamic Control interface"
-            )
-
-        try:
-            self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
-            if self.articulation is None:
-                print("[RobotController] WARNING: Initial articulation handle is None")
-        except Exception as e:
-            print(f"[RobotController] Exception getting articulation: {e}")
+        self.articulation = self.dc_interface.get_articulation("/World/Robot")
 
     def refresh_handles(self):
-        self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
+        self.articulation = self.dc_interface.get_articulation("/World/Robot")
 
     def open_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
-        if node is None:
-            print(f"[open_gripper] Node not found at: {GRIPPER_OPEN_PATH}")
-            return
         attr = node.get_attribute("state:enableImpulse")
-        if attr is None:
-            print(f"[open_gripper] Attribute 'state:enableImpulse' not found on node.")
-            return
         attr.set(1)
         node.request_compute()
 
     def close_gripper(self):
         node = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
-        if node is None:
-            print(f"[close_gripper] Node not found at: {GRIPPER_CLOSE_PATH}")
-            return
         attr = node.get_attribute("state:enableImpulse")
-        if attr is None:
-            print(f"[close_gripper] Attribute 'state:enableImpulse' not found on node.")
-            return
         attr.set(1)
         node.request_compute()
 
@@ -140,6 +107,34 @@ class RobotController:
                         return dof_index
         return -1
 
+    def get_joint_position_by_index(self, dof_index, is_angular=False):
+        if not self.articulation:
+            return None
+
+        dof_states = self.dc_interface.get_articulation_dof_states(
+            self.articulation, _dynamic_control.STATE_POS
+        )
+
+        if dof_index < 0 or dof_index >= len(dof_states["pos"]):
+            return None
+
+        current_pos = dof_states["pos"][dof_index]
+        if is_angular:
+            return np.rad2deg(current_pos)
+        return current_pos
+
+    def print_joint_position_by_index(self, dof_index, is_angular=False):
+        pos = self.get_joint_position_by_index(dof_index, is_angular)
+
+        if pos is None:
+            print(f"Invalid or unavailable DOF index: {dof_index}")
+            return
+
+        if is_angular:
+            print(f"[DOF {dof_index}] Angular Position: {pos:.3f} degrees")
+        else:
+            print(f"[DOF {dof_index}] Linear Position: {pos:.4f} meters")
+
     def wait_for_joint_position(
         self,
         dof_index,
@@ -163,7 +158,7 @@ class RobotController:
             # if frames % 10 == 0:
             #     unit = "rad" if is_angular else "m"
             #     print(
-            #         f"Frame {frames}: DOF {dof_index} position = {currenta_pos} {unit}, Target = {target_position} {unit}"
+            #         f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
             #     )
 
             if is_angular:
@@ -179,61 +174,15 @@ class RobotController:
 
             yield
 
-    def capture_from_camera(self, camera_id):
-        """
-        Capture an image from a specific camera
-
-        Args:
-            camera_id (str): ID of the camera to capture from
-
-        Returns:
-            str: Path to the saved image file, or None if capture failed
-        """
-        # Make sure timeline is playing to update frames
-
-        # Capture the image
-        result = self.camera_capture.capture_image(camera_id)
-        return result
-
-    def capture_from_all_cameras(self):
-        """
-        Capture images from all registered cameras
-
-        Returns:
-            dict: Map of camera IDs to saved image paths
-        """
-        # Make sure timeline is playing to update frames
-
-        # Capture from all cameras
-        results = self.camera_capture.capture_all_cameras()
-
-        return results
-
-    def get_registered_cameras(self):
-        """
-        Get list of registered camera IDs
-
-        Returns:
-            list: Camera IDs
-        """
-        return self.camera_capture.get_registered_cameras()
-
-    def print_joint_position_by_index(self, dof_index, is_angular=False):
-        if not self.articulation:
-            print("Articulation handle is invalid.")
+    def teleport_robot(self, position):
+        stage = omni.usd.get_context().get_stage()
+        robot_prim = stage.GetPrimAtPath("/World/Robot")
+        if not robot_prim.IsValid():
+            print("Robot prim not found at /World/Robot")
             return
 
-        dof_states = self.dc_interface.get_articulation_dof_states(
-            self.articulation, _dynamic_control.STATE_POS
-        )
-
-        if dof_index < 0 or dof_index >= len(dof_states["pos"]):
-            print(f"Invalid DOF index: {dof_index}")
-            return
-
-        current_pos = dof_states["pos"][dof_index]
-        if is_angular:
-            current_pos_deg = np.rad2deg(current_pos)
-            print(f"[DOF {dof_index}] Angular Position: {current_pos_deg:.3f} degrees")
-        else:
-            print(f"[DOF {dof_index}] Linear Position: {current_pos:.4f} meters")
+        xformable = UsdGeom.Xformable(robot_prim)
+        xformable.ClearXformOpOrder()
+        translate_op = xformable.AddTranslateOp()
+        translate_op.Set(Gf.Vec3d(*position))
+        print(f"Teleported robot to position: {position}")

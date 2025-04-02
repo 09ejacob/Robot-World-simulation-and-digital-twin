@@ -9,6 +9,13 @@ class UDPController:
         self.callback = None
         self._thread = None
         self._stop_event = threading.Event()
+        self._send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def send(self, message, target_host, target_port):
+        try:
+            self._send_sock.sendto(message.encode("utf-8"), (target_host, target_port))
+        except Exception as e:
+            print(f"[UDP Controller] Send error: {e}")
 
     def start(self):
         if self._thread is not None and self._thread.is_alive():
