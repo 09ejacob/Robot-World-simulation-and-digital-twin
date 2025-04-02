@@ -33,20 +33,16 @@ class UDPScenario:
 
         self.command_queue = queue.Queue()
 
-        # Performance tracking
         self.print_performance_stats = print_performance_stats
         self.udp_message_count = 0
         self.executed_command_count = 0
         self.last_time_check = time.time()
 
-        # Print DOF positions
         self.print_positions = print_positions
 
-        # Initialize the UDP server
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
-        # Broadcast config
         self.broadcast_thread = None
         self.broadcast_stop_event = threading.Event()
         self.broadcast_rate = self.BROADCAST_RATE
@@ -61,6 +57,7 @@ class UDPScenario:
             ("axis4", AXIS4_JOINT_PATH, True),
         ]
         self.axis_dofs = []
+
 
 
     def _udp_callback(self, message):
@@ -297,9 +294,8 @@ class UDPScenario:
             number_of_boxes=20,
             stack_id=2,
         )
-        # self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
-
         self.start_udp_server()
+
 
     def update(self, step: float = 0.1):
         """Runs in the Isaac Sim main thread and processes queued UDP commands."""
@@ -309,6 +305,7 @@ class UDPScenario:
             message = self.command_queue.get()
             self.parse_and_execute_command(message)
 
+        # Broadcast joint positions if not stopped
         if not self.broadcast_stop_event.is_set():
             data = []
             for name, dof_index, is_angular in self.axis_dofs:
@@ -335,25 +332,29 @@ class UDPScenario:
             self.executed_command_count = 0
             self.last_time_check = start_time
 
-        # Print DOF positions every 1 second
+        # Print DOF positions every 1 second if enabled
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
             print("---------------------------------------")
             for name, dof_index, is_angular in self.axis_dofs:
-                self._robot_controller.print_joint_position_by_index(
-                    dof_index, is_angular
-                )
+                # This method prints the joint position; ensure your RobotController implements it.
+                self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
             self.last_position_print_time = start_time
 
 
+
 if __name__ == "__main__":
-    robot_controller = ...
-    scenario = UDPScenario(robot_controller)
+    # Initialize your RobotController here.
+    robot_controller = ...  
+    # Enable printing of positions and performance stats.
+    scenario = UDPScenario(robot_controller, print_positions=True, print_performance_stats=True)
     scenario.setup()
 
     try:
         while True:
             scenario.update()
+            time.sleep(0.1)  # This helps to slow the loop so that the 1-second interval is met.
     except KeyboardInterrupt:
         scenario.stop_broadcasting()
         scenario.udp.stop()
         print("Exiting UDP scenario.")
+

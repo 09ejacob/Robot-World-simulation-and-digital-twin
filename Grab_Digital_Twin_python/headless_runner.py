@@ -86,8 +86,9 @@ def main():
         print("[MAIN] Articulation handle is STILL invalid. Something is wrong.")
         return
 
-    scenario = UDPScenario(robot_controller=robot_controller, world=world)
+    scenario = UDPScenario(robot_controller=robot_controller, world=world, print_positions=True, print_performance_stats=True)
     scenario.setup()
+
 
     for _ in range(10):
         world.step(render=False)
