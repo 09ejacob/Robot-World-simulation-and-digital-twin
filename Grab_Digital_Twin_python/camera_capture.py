@@ -60,9 +60,7 @@ class CameraCapture:
             print(f"❌ Error: Camera with ID {camera_id} not registered.")
             return None
         print(f"✅ Camera {camera_id} found in registry.", list(self.camera_registry.keys()))
-        self.get_registered_cameras()
         
-
         camera = self.camera_registry[camera_id]
 
         # Ensure we have the latest frame
@@ -96,10 +94,6 @@ class CameraCapture:
             print(f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}")
             return None
 
-        # Convert Float Image to Uint8 Format
-        if rgb_img.dtype in [np.float32, np.float64]:
-            print(f"🔄 Converting float image to uint8 for {camera_id}...")
-            rgb_img = (rgb_img * 255).clip(0, 255).astype(np.uint8)
 
         # Ensure image is in "RGB" format
         try:
@@ -127,8 +121,6 @@ class CameraCapture:
         except Exception as e:
             print(f"❌ Error saving image from {camera_id}: {e}")
             return None
-        
-        self.get_registered_cameras()
 
         return save_path
 

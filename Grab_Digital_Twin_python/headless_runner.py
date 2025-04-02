@@ -100,7 +100,7 @@ def main():
         while True:
             #print("[LOOP] Simulation loop is running...")
             scenario.update(1.0 / 60.0)
-            world.step(render=False)
+            world.step(render=True)
             time.sleep(0.01)
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")
