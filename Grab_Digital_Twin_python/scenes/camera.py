@@ -45,9 +45,14 @@ def setup_camera(
         resolution=resolution,
         position=position,
         orientation=quat_xyzw,
+        frequency=30,
     )
-  # Initialize the camera to ensure product_render_path is set
+  
     camera.initialize()
+
+    print(camera.get_frequency())
+    print("the render path is", camera.get_render_product_path())
+
     
     camera.set_world_pose(position, quat_xyzw, camera_axes="usd")
 
@@ -104,6 +109,9 @@ def register_existing_camera(prim_path, resolution=None):
         camera = Camera(prim_path=prim_path)
         camera.initialize()
         print(f"Camera initialized at {prim_path}") 
+        camera.set_frequency(30)
+        print(camera.get_frequency())
+
 
         if resolution is not None:
           camera.set_resolution(resolution)
