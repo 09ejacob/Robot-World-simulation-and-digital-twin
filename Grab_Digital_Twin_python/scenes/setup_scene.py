@@ -20,7 +20,7 @@ from ..global_variables import (
     ROBOT_PATH,
     BOX_CAMERA_1,
     BOX_CAMERA_2,
-)
+    )
 
 
 def create_ground_plane(path):
@@ -69,15 +69,13 @@ def create_additional_joints():
 def create_camera():
     # TODO: Create the camera in the USD file instead
     setup_camera(
-        prim_path="/World/TestCamera",
-        position=np.array([0, 0, 2]),
-        euler_angles=np.array([0, 0, 0]),
+        BASE_CAMERA_PATH,
+        position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
+        euler_angles=np.array([-180, 0, 0]),
         resolution=(1920, 1080),
-        focal_length=20,
-        clipping_range=(1, 10000),
-        horizontal_aperture=20,
+        focal_length=13,
     )
-
+    
 # def create_camera(resolutions=None): 
 #     # If resolutions is None, initialize with empty dictionary
 #     if resolutions is None:
@@ -134,7 +132,7 @@ def setup_scene():
     
     load_grab_usd()
 
-    create_camera()
+    #create_camera()
     #custom_resolutions = {
     #BOX_CAMERA_1: (1280, 720),
     #}
