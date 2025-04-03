@@ -181,7 +181,7 @@ class UIBuilder:
                 ui.Label("Set Axis3 position:")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
-                    "Set position (-2.0, 0)",
+                    "Set position (0, 2.0)",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
