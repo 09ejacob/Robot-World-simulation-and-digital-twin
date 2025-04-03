@@ -134,7 +134,7 @@ def setup_scene():
     
     load_grab_usd()
 
-    #create_camera()
+    create_camera()
     #custom_resolutions = {
     #BOX_CAMERA_1: (1280, 720),
     #}
