@@ -3,7 +3,8 @@ reloadable = true
 order = 0
 
 [package]
-version = "1.0.1"
+name = "GrabExtension"  
+version = "0.1.0"
 category = "Simulation"
 title = "Grab Digital Twin"
 description = "solwr.grab.digital.twin"
