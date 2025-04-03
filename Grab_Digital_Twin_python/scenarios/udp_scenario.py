@@ -349,8 +349,6 @@ class UDPScenario:
             
             self.last_position_print_time = start_time
 
-            self.last_position_print_time = start_time
-
     def print_box_position(self, box_path):
         stage = omni.usd.get_context().get_stage()
         box_prim = stage.GetPrimAtPath(box_path)

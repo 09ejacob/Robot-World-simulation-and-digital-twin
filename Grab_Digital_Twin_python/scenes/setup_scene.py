@@ -66,7 +66,7 @@ def create_additional_joints():
 
 
 # TODO: Remove duplicate function
-def create_camera2():
+def create_camera():
     # TODO: Create the camera in the USD file instead
     setup_camera(
         prim_path="/World/TestCamera",
@@ -91,7 +91,7 @@ def create_camera2():
 #     register_existing_camera(BOX_CAMERA_2, 
 #                             resolution=resolutions.get(BOX_CAMERA_2))
 
-def create_camera():
+def create_camera2():
     register_existing_camera(BASE_CAMERA_PATH)
 
 
