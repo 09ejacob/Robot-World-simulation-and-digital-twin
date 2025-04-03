@@ -5,11 +5,14 @@ import omni.usd
 import numpy as np
 import psutil
 from pxr import UsdGeom, Gf
+from pxr import UsdGeom, Gf
 from omni.isaac.core import World
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
+    AXIS4_JOINT_PATH,
+    ENVIRONMENT_PATH,
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
 )
@@ -26,14 +29,9 @@ class UDPScenario:
     SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
     SEND_PORT = 9998
 
-    def __init__(
-        self,
-        robot_controller,
-        print_positions=False,
-        print_performance_stats=False,
-    ):
+    def __init__(self, robot_controller, world=None, print_positions=False, print_performance_stats=False):
         self._robot_controller = robot_controller
-        self._world = None
+        self._world = world
         self._did_run = False
 
         self.command_queue = queue.Queue()
@@ -51,7 +49,6 @@ class UDPScenario:
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
-        # Broadcast config
         self.broadcast_thread = None
         self.broadcast_stop_event = threading.Event()
         self.broadcast_rate = self.BROADCAST_RATE
@@ -66,6 +63,8 @@ class UDPScenario:
             ("axis4", AXIS4_JOINT_PATH, True),
         ]
         self.axis_dofs = []
+
+
 
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
@@ -114,6 +113,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
+            "capture": lambda p: self._robot_controller.capture_from_all_cameras()
         }
 
         if command in handlers:
@@ -305,6 +305,7 @@ class UDPScenario:
 
         self.start_udp_server()
 
+
     def update(self, step: float = 0.1):
         """Runs in the Isaac Sim main thread and processes queued UDP commands."""
         start_time = time.time()
@@ -339,25 +340,47 @@ class UDPScenario:
             self.executed_command_count = 0
             self.last_time_check = start_time
 
-        # Print DOF positions every 1 second
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
-            print("---------------------------------------")
+            print("-----------------------------------------------------------------")
             for name, dof_index, is_angular in self.axis_dofs:
-                self._robot_controller.print_joint_position_by_index(
-                    dof_index, is_angular
-                )
+                self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
+            
+            self.print_box_position("/World/Environment/box_1")
+            
             self.last_position_print_time = start_time
 
+            self.last_position_print_time = start_time
+
+    def print_box_position(self, box_path):
+        stage = omni.usd.get_context().get_stage()
+        box_prim = stage.GetPrimAtPath(box_path)
+        if not box_prim.IsValid():
+            print(f"Box prim not found at {box_path}")
+            return
+
+        xformable = UsdGeom.Xformable(box_prim)
+
+        for op in xformable.GetOrderedXformOps():
+            if "translate" in op.GetOpName():
+                pos = op.Get()
+                print(f"Box position for {box_path}: {pos}")
+                return
+
+        print(f"No translation op found for box at {box_path}")
 
 if __name__ == "__main__":
-    robot_controller = ...
-    scenario = UDPScenario(robot_controller)
+    # Initialize your RobotController here.
+    robot_controller = ...  
+    # Enable printing of positions and performance stats.
+    scenario = UDPScenario(robot_controller, print_positions=True, print_performance_stats=True)
     scenario.setup()
 
     try:
         while True:
             scenario.update()
+            time.sleep(0.1)  # This helps to slow the loop so that the 1-second interval is met.
     except KeyboardInterrupt:
         scenario.stop_broadcasting()
         scenario.udp.stop()
         print("Exiting UDP scenario.")
+

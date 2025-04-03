@@ -5,7 +5,6 @@
 # and any modifications thereto. Any use, reproduction, disclosure or
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
-#
 
 # Extension Info
 EXTENSION_TITLE = "Grab Digital Twin"
@@ -15,17 +14,18 @@ EXTENSION_DESCRIPTION = "solwr.grab.digital.twin"
 WORLD_PATH = "/World"
 GROUND_PLANE_PATH = f"{WORLD_PATH}/groundPlane"
 PHYSICS_SCENE_PATH = f"{WORLD_PATH}/PhysicsScene"
-ENVIRONMENT_PATH = "/World/Environment"
+ENVIRONMENT_PATH = f"{WORLD_PATH}/Environment"
 
 PALLET_PATH = f"{WORLD_PATH}/Environment/pallet"
 PICK_BOX_1 = f"{WORLD_PATH}/Environment/pickBox1"
 PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 
-# Robot paths
+# Robot paths (NOTE: Robot is directly under root, not under /World)
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
 CAMERA_PATH = f"{ROBOT_PATH}/BoxCamera"
+BASE_CAMERA_XFORM_PATH = f"{ROBOT_PATH}/BaseCamera"
 AXIS2_PATH = f"{TOWER_PATH}/Axis2"
 GRIPPER_PATH = f"{AXIS2_PATH}/gripper"
 
@@ -36,14 +36,15 @@ SNAKE_BASE_PATH = f"{AXIS2_PATH}/snakeBase"
 ROBOT_BASE_GROUP_PATH = f"{ROBOT_PATH}/Base"
 ROBOT_BASE_CUBE_PATH = f"{ROBOT_PATH}/Base/base"
 ROBOT_BASE_PATH = f"{AXIS2_PATH}/robot_base"
-AXIS2_TOWER_PATH=f"{TOWER_PATH}/tower"
-PALLET_BASE_PATH=f"{ROBOT_BASE_GROUP_PATH}/pallet_base"
-CABINET_PATH=f"{ROBOT_BASE_GROUP_PATH}/cabinet"
+AXIS2_TOWER_PATH = f"{TOWER_PATH}/tower"
+PALLET_BASE_PATH = f"{ROBOT_BASE_GROUP_PATH}/pallet_base"
+CABINET_PATH = f"{ROBOT_BASE_GROUP_PATH}/cabinet"
 
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
 BOX_CAMERA_1 = f"{CAMERA_PATH}/boxCamera1"
 BOX_CAMERA_2 = f"{CAMERA_PATH}/boxCamera2"
+BASE_CAMERA_PATH = f"{BASE_CAMERA_XFORM_PATH}/baseCamera"
 
 # Joints
 JOINTS_PATH = f"{ROBOT_PATH}/Joints"
@@ -53,6 +54,7 @@ AXIS3_JOINT_PATH = f"{JOINTS_PATH}/PrismaticJointAxis3"
 AXIS4_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointAxis4"
 BOX_CAMERA_1_SNAKE_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointSnakeBaseBoxCamera1"
 BOX_CAMERA_2_SNAKE_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointSnakeBaseBoxCamera2"
+BASE_CAMERA_BASE_JOINT_PATH = f"{JOINTS_PATH}/FixedJointBaseCamera"
 FIXED_JOINT_BASE_GROUND = f"{JOINTS_PATH}/FixedJointBaseGround"
 PRISMATIC_JOINT_FORCE_SENSOR = f"{JOINTS_PATH}/PrismaticJointForceSensor"
 ROBOT_BASE_JOINT_PATH = f"{JOINTS_PATH}/RevoluteJointRobotBase"
