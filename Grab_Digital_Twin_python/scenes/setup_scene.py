@@ -7,6 +7,9 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from .camera import setup_camera
 from isaacsim.core.prims import SingleXFormPrim
+from .camera import register_existing_camera
+from ..camera_capture import CameraCapture
+
 
 from ..global_variables import (
     FIXED_JOINT_BASE_GROUND,
@@ -15,6 +18,8 @@ from ..global_variables import (
     ROBOT_BASE_CUBE_PATH,
     BASE_CAMERA_PATH,
     ROBOT_PATH,
+    BOX_CAMERA_1,
+    BOX_CAMERA_2,
 )
 
 
@@ -60,7 +65,9 @@ def create_additional_joints():
     )
 
 
-def create_camera():
+# TODO: Remove duplicate function
+def create_camera2():
+    # TODO: Create the camera in the USD file instead
     setup_camera(
         prim_path="/World/TestCamera",
         position=np.array([0, 0, 2]),
@@ -70,6 +77,22 @@ def create_camera():
         clipping_range=(1, 10000),
         horizontal_aperture=20,
     )
+
+# def create_camera(resolutions=None): 
+#     # If resolutions is None, initialize with empty dictionary
+#     if resolutions is None:
+#         resolutions = {}
+    
+#     # Register cameras with optional resolution changes
+#     register_existing_camera(BASE_CAMERA_PATH, 
+#                             resolution=resolutions.get(BASE_CAMERA_PATH))
+#     register_existing_camera(BOX_CAMERA_1, 
+#                             resolution=resolutions.get(BOX_CAMERA_1))
+#     register_existing_camera(BOX_CAMERA_2, 
+#                             resolution=resolutions.get(BOX_CAMERA_2))
+
+def create_camera():
+    register_existing_camera(BASE_CAMERA_PATH)
 
 
 def load_grab_usd():
@@ -108,7 +131,13 @@ def setup_scene():
         print("[setup_scene] PhysxSceneAPI already present")
 
     create_ground_plane(GROUND_PLANE_PATH)
+    
     load_grab_usd()
-    create_camera()
+
+    #create_camera()
+    #custom_resolutions = {
+    #BOX_CAMERA_1: (1280, 720),
+    #}
+    #create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
