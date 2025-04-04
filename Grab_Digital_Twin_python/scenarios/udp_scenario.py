@@ -339,6 +339,28 @@ class UDPScenario:
             stack_id=3,
             reverse=True,
             )
+        
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, 0.0, 1.872),
+            number_of_boxes=30,
+            stack_id=4,
+            reverse=True,
+        )
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, -0.9, 1.872),
+            number_of_boxes=27,
+            stack_id=5,
+            reverse=True,
+        )
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, 0.9, 1.872),
+            number_of_boxes=12,
+            stack_id=6,
+            reverse=True,
+        )
 
         self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
 
