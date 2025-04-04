@@ -231,7 +231,7 @@ class UDPScenario:
     def random_color(self):
         return np.random.rand(3)
 
-    def create_boxes(self, path, num_boxes: int, position=(1, 1, 1), stack_id=1):
+    def create_boxes(self, path, num_boxes: int, position=(1, 1, 1), stack_id=1, reverse=False):
         boxes = []
         base_x_pos, base_y_pos, base_z_pos = position
         start_x = base_x_pos - 0.45
@@ -247,7 +247,11 @@ class UDPScenario:
             column = index_in_layer // 2
             row = index_in_layer % 2
 
-            x = start_x + (max_col - column) * x_inc
+            if reverse:
+                x = start_x + column * x_inc
+            else:
+                x = start_x + (max_col - column) * x_inc
+
             y = row_y[row]
             z = base_z + layer * z_inc
 
@@ -262,8 +266,9 @@ class UDPScenario:
             boxes.append(box)
         return boxes
 
+
     def create_pick_stack(
-        self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1
+        self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1, reverse=False
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
@@ -276,7 +281,7 @@ class UDPScenario:
         )
 
         self.create_boxes(
-            f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id
+            f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id, reverse
         )
 
     def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
@@ -315,19 +320,27 @@ class UDPScenario:
 
         self.create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(1.7, 0.0, 0.072),
-            number_of_boxes=15,
+            pallet_position=(-1.4, 0.0, 0.072),
+            number_of_boxes=19,
             stack_id=1,
+            reverse=True,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(1.7, -1.0, 0.072),
+            pallet_position=(-1.4, -0.9, 0.072),
             number_of_boxes=20,
             stack_id=2,
+            reverse=True,
         )
-        # self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, 0.9, 0.072),
+            number_of_boxes=35,
+            stack_id=3,
+            reverse=True,
+            )
 
-        self.load_shelf_usd(position=(-1.3, -1.5, 0), scale=(1, 0.8, 1))
+        self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
 
         self.start_udp_server()
 
