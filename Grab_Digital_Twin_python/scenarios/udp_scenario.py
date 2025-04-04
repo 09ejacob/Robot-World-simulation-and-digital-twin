@@ -4,6 +4,7 @@ import threading
 import omni.usd
 import numpy as np
 import psutil
+from os.path import dirname, abspath, join
 from pxr import UsdGeom, Gf
 from pxr import UsdGeom, Gf
 from omni.isaac.core import World
@@ -15,9 +16,11 @@ from ..global_variables import (
     ENVIRONMENT_PATH,
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
+    SHELF_PATH,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
+from isaacsim.core.utils.stage import add_reference_to_stage
 
 
 class UDPScenario:
@@ -276,6 +279,27 @@ class UDPScenario:
             f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id
         )
 
+    def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
+        current_dir = dirname(abspath(__file__))
+        usd_path = abspath(
+            join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "shelf.usd")
+        )
+        add_reference_to_stage(usd_path=usd_path, prim_path=SHELF_PATH)
+        
+        stage = omni.usd.get_context().get_stage()
+        shelf_prim = stage.GetPrimAtPath(SHELF_PATH)
+        
+        if shelf_prim.IsValid():
+            xformable = UsdGeom.Xformable(shelf_prim)
+            xformable.ClearXformOpOrder()
+            xformable.AddTranslateOp().Set(Gf.Vec3d(*position))
+            xformable.AddScaleOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(*scale))
+
+            print(f"Shelf loaded at position: {position}")
+
+        else:
+            print(f"Failed to load shelf at prim path: {SHELF_PATH}")
+
     def setup(self):
         self._world = World()
         self._world.reset()
@@ -302,6 +326,8 @@ class UDPScenario:
             stack_id=2,
         )
         # self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
+
+        self.load_shelf_usd(position=(-1.3, -1.5, 0), scale=(1, 0.8, 1))
 
         self.start_udp_server()
 

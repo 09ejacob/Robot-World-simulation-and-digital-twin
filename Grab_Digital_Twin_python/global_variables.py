@@ -20,6 +20,7 @@ PALLET_PATH = f"{WORLD_PATH}/Environment/pallet"
 PICK_BOX_1 = f"{WORLD_PATH}/Environment/pickBox1"
 PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
+SHELF_PATH = f"{ENVIRONMENT_PATH}/Shelf"
 
 # Robot paths (NOTE: Robot is directly under root, not under /World)
 ROBOT_PATH = f"{WORLD_PATH}/Robot"

@@ -94,14 +94,12 @@ def create_camera2():
 
 
 def load_grab_usd():
-    # Isaac Sim needs the absolute path
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
         join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
     )
 
     add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
-
 
 def _add_light():
     sphereLight = UsdLux.SphereLight.Define(
