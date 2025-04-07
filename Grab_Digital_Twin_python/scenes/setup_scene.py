@@ -20,6 +20,7 @@ from ..global_variables import (
     ROBOT_PATH,
     BOX_CAMERA_1,
     BOX_CAMERA_2,
+    OVERVIEW_CAMERA,
     )
 
 
@@ -88,9 +89,11 @@ def create_camera(resolutions=None):
                             resolution=resolutions.get(BOX_CAMERA_1))
     register_existing_camera(BOX_CAMERA_2, 
                             resolution=resolutions.get(BOX_CAMERA_2))
+    register_existing_camera(OVERVIEW_CAMERA,
+                             resolution=resolutions.get(OVERVIEW_CAMERA))
 
-def create_camera2():
-    register_existing_camera(BASE_CAMERA_PATH)
+# def create_camera2():
+#     register_existing_camera(BASE_CAMERA_PATH)
 
 
 def load_grab_usd():
@@ -133,6 +136,7 @@ def setup_scene():
     #create_camera()
     custom_resolutions = {
     BOX_CAMERA_1: (1280, 720),
+    OVERVIEW_CAMERA: (1280, 820)
     }
     create_camera(custom_resolutions)
     create_additional_joints()

@@ -111,7 +111,7 @@ class UIBuilder:
                     setup_post_load_fn=self._setup_scenario,
                 )
                 self._load_btn.set_world_settings(
-                    physics_dt=1 / 60.0, rendering_dt=1 / 20.0
+                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
                 )
                 self.wrapped_ui_elements.append(self._load_btn)
 

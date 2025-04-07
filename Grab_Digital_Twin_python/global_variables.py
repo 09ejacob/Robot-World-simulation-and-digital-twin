@@ -46,6 +46,7 @@ FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
 BOX_CAMERA_1 = f"{CAMERA_PATH}/boxCamera1"
 BOX_CAMERA_2 = f"{CAMERA_PATH}/boxCamera2"
 BASE_CAMERA_PATH = f"{BASE_CAMERA_XFORM_PATH}/baseCamera"
+OVERVIEW_CAMERA = f"{ROBOT_PATH}/OverviewCamera"
 
 # Joints
 JOINTS_PATH = f"{ROBOT_PATH}/Joints"
