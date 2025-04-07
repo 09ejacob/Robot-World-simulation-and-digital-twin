@@ -1,19 +1,13 @@
-# Copyright (c) 2022-2024, NVIDIA CORPORATION. All rights reserved.
-#
-# NVIDIA CORPORATION and its licensors retain all intellectual property
-# and proprietary rights in and to this software, related documentation
-# and any modifications thereto. Any use, reproduction, disclosure or
-# distribution of this software and related documentation without an express
-# license agreement from NVIDIA CORPORATION is strictly prohibited.
-#
-
+import sys
 import asyncio
 import gc
+import carb
 
 import omni
 import omni.kit.commands
 import omni.physx as _physx
 import omni.timeline
+import omni.kit.actions.core as actions
 import omni.ui as ui
 import omni.usd
 from isaacsim.gui.components.element_wrappers import ScrollingWindow
@@ -22,35 +16,43 @@ from omni.kit.menu.utils import add_menu_items, remove_menu_items
 from omni.usd import StageEventType
 
 from .global_variables import EXTENSION_TITLE
+from omni.isaac.dynamic_control import _dynamic_control
+from .global_variables import EXTENSION_DESCRIPTION, EXTENSION_TITLE
 from .ui.ui_builder import UIBuilder
 
-"""
-This file serves as a basic template for the standard boilerplate operations
-that make a UI-based extension appear on the toolbar.
-
-This implementation is meant to cover most use-cases without modification.
-Various callbacks are hooked up to a seperate class UIBuilder in .ui_builder.py
-Most users will be able to make their desired UI extension by interacting solely with
-UIBuilder.
-
-This class sets up standard useful callback functions in UIBuilder:
-    on_menu_callback: Called when extension is opened
-    on_timeline_event: Called when timeline is stopped, paused, or played
-    on_physics_step: Called on every physics step
-    on_stage_event: Called when stage is opened or closed
-    cleanup: Called when resources such as physics subscriptions should be cleaned up
-    build_ui: User function that creates the UI they want.
-"""
-
+def is_headless():
+    return "--no-window" in sys.argv or "--headless" in sys.argv
 
 class Extension(omni.ext.IExt):
     def on_startup(self, ext_id: str):
         """Initialize extension and UI elements"""
-
         self.ext_id = ext_id
         self._usd_context = omni.usd.get_context()
 
-        # Build Window
+        if is_headless():
+            print("Headless mode detected. Waiting for valid stage before running main().")
+            # Import headless_runner only when needed
+            from .headless_runner import main
+
+            update_stream = omni.kit.app.get_app().get_update_event_stream()
+
+            def on_update(dt):
+                context = omni.usd.get_context()
+                stage = context.get_stage()
+
+                if not stage or not stage.GetRootLayer():
+                    print("Waiting for stage to have a root layer...")
+                    return
+
+                print("Stage has root layer. Starting main()...")
+                subscription.unsubscribe()
+                main()
+
+            subscription = update_stream.create_subscription_to_pop(on_update)
+            return
+
+        print("GUI mode detected — setting up UI.")
+        # GUI Setup
         self._window = ScrollingWindow(
             title=EXTENSION_TITLE,
             width=600,
@@ -76,7 +78,7 @@ class Extension(omni.ext.IExt):
 
         add_menu_items(self._menu_items, EXTENSION_TITLE)
 
-        # Filled in with User Functions
+        # UI logic
         self.ui_builder = UIBuilder()
 
         # Events
@@ -87,6 +89,18 @@ class Extension(omni.ext.IExt):
         self._timeline = omni.timeline.get_timeline_interface()
 
     def on_shutdown(self):
+        if is_headless():
+            print("Headless shutdown")
+            try:
+                if hasattr(self, "ui_builder"):
+                    scenario = self.ui_builder._scenario
+                    if scenario is not None and hasattr(scenario, "udp"):
+                        print("Stopping UDP")
+                        scenario.udp.stop()
+            except Exception as e:
+                carb.log_warn(f"Shutdown in headless mode failed: {e}")
+            return
+
         scenario = self.ui_builder._scenario
 
         if scenario is not None and hasattr(scenario, "udp"):

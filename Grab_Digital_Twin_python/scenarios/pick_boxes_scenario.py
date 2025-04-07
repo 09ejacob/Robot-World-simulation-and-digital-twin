@@ -12,6 +12,7 @@ from ..global_variables import (
     PICK_BOX_1,
     PICK_BOX_2,
     PICK_BOX_3,
+    ROBOT_PATH,
 )
 
 
@@ -90,7 +91,7 @@ class PickBoxesScenario:
 
     def _run_simulation(self):
         dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        articulation = dc_interface.get_articulation("/World/Robot")
+        articulation = dc_interface.get_articulation(ROBOT_PATH)
 
         # Find which DOF index corresponds to prismatic or revolute joint
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(

@@ -26,6 +26,7 @@ from ..scenarios.pick_boxes_scenario import PickBoxesScenario
 from ..scenarios.stack_box_scenario import StackBoxScenario
 from ..scenarios.udp_scenario import UDPScenario
 from ..robot.robot_controller import RobotController
+from ..camera_capture import CameraCapture
 
 
 class UIBuilder:
@@ -39,6 +40,7 @@ class UIBuilder:
         self._timeline = omni.timeline.get_timeline_interface()
 
         self._robot_controller = RobotController()
+        self._camera_capture = CameraCapture()
         self._scenarios = {
             "UDP": UDPScenario,
             "Pick Boxes": PickBoxesScenario,
@@ -171,7 +173,7 @@ class UIBuilder:
                 ui.Label("Set Axis2 position:")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
-                    "Set position (0, 1.6)",
+                    "Set position (0, 3.0)",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
@@ -181,7 +183,7 @@ class UIBuilder:
                 ui.Label("Set Axis3 position:")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
-                    "Set position (-2.0, 0)",
+                    "Set position (0, 2.0)",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
@@ -198,6 +200,24 @@ class UIBuilder:
                     ),
                 )
 
+        camera_controls_frame = CollapsableFrame("Camera Controls", collapsed=False)
+        with camera_controls_frame:
+            with ui.VStack(style=get_style(), spacing=5, height=0):
+                # Button to refresh camera list
+                ui.Button("Refresh Camera List", clicked_fn=self._refresh_camera_list)
+
+                ui.Label("Available Cameras:(After refresh) : ")
+
+                self._capture_button_container = ui.VStack()
+
+                ui.Label("Capture from ALL Cameras:")
+
+                ui.Button(
+                    "Capture from All Cameras",
+                    clicked_fn=self._capture_from_all_cameras,
+                )
+
+        self.frames.append(camera_controls_frame)
         self.frames.append(world_controls_frame)
         self.frames.append(scenario_frame)
         self.frames.append(robot_controls_frame)
@@ -233,17 +253,6 @@ class UIBuilder:
         self._scenario = scenario_cls(robot_controller=self._robot_controller)
         self._setup_scenario()
 
-    def _add_light_to_stage(self):
-        """
-        A new stage does not have a light by default.  This function creates a spherical light
-        """
-        sphereLight = UsdLux.SphereLight.Define(
-            get_current_stage(), Sdf.Path("/World/SphereLight")
-        )
-        sphereLight.CreateRadiusAttr(2)
-        sphereLight.CreateIntensityAttr(100000)
-        SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
-
     def _setup_scene(self):
         """
         This function is attached to the Load Button as the setup_scene_fn callback.
@@ -251,8 +260,10 @@ class UIBuilder:
         The user should now load their assets onto the stage and add them to the World Scene.
         """
         create_new_stage()
-        self._add_light_to_stage()
         setup_scene()
+
+        timeline_iface = omni.timeline.get_timeline_interface()
+        timeline_iface.set_auto_update(False)
 
         print("Scene setup complete.")
 
@@ -330,3 +341,52 @@ class UIBuilder:
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = False
         self._reset_btn.enabled = False
+
+    def _capture_from_camera(self, camera_id):
+        """Capture an image from the specified camera."""
+        image_path = self._robot_controller.capture_from_camera(camera_id)
+        print(f"Captured image from {camera_id}: {image_path}")
+
+    def _capture_from_all_cameras(self):
+        """Capture images from all registered cameras."""
+        image_paths = self._robot_controller.capture_from_all_cameras()
+        print(f"Captured images: {image_paths}")
+
+    def _capture_all_images(self):
+        """Capture images from all registered cameras."""
+        image_paths = self._robot_controller.capture_from_all_cameras()
+        if image_paths:
+            print("Captured images from all cameras:", image_paths)
+        else:
+            print("Failed to capture images from all cameras.")
+
+    def _refresh_camera_list(self):
+        """Update camera dropdown with the latest registered cameras and add capture button."""
+        try:
+            # Get the current list of registered cameras
+            cameras = self._camera_capture.get_registered_cameras()
+            print(f"Refresh found cameras: {cameras}")
+
+            self._capture_button_container.clear()
+
+            for camera_id in cameras:
+                self._add_capture_button(camera_id)
+
+        except Exception as e:
+            print(f"Error refreshing camera list: {e}")
+
+    def _add_capture_button(self, camera_id):
+        """Adds a capture button for the specified camera."""
+        with self._capture_button_container:
+            self._capture_button = ui.Button(
+                f"Capture from {camera_id}",
+                clicked_fn=lambda: self._capture_from_camera(camera_id),
+            )
+            print(f"Added button for camera: {camera_id}")
+
+    def _remove_capture_button(self):
+        """Removes the capture button if it exists."""
+        if hasattr(self, "_capture_button"):
+            self._capture_button.destroy()
+            del self._capture_button
+            print("Removed capture button")
