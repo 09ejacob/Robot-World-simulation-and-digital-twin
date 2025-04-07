@@ -32,7 +32,7 @@ class UDPScenario:
     SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
     SEND_PORT = 9998
 
-    def __init__(self, robot_controller, world=None, print_positions=False, print_performance_stats=False):
+    def __init__(self, robot_controller, world=None, print_positions=True, print_performance_stats=False):
         self._robot_controller = robot_controller
         self._world = world
         self._did_run = False
@@ -178,7 +178,7 @@ class UDPScenario:
         handler = axis_map.get(axis_id)
         if handler:
             handler(value)
-            print(f"Set axis{axis_id} to {value}")
+            #print(f"Set axis{axis_id} to {value}")
         else:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
@@ -394,19 +394,21 @@ class UDPScenario:
 
         # Print performance stats every 1 second
         if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
-            print(
-                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
-            )
+            # print(
+            #     f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
+            # )
             self.udp_message_count = 0
             self.executed_command_count = 0
             self.last_time_check = start_time
 
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
             print("-----------------------------------------------------------------")
-            for name, dof_index, is_angular in self.axis_dofs:
-                self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
+            # for name, dof_index, is_angular in self.axis_dofs:
+            #     self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
             
-            self.print_box_position("/World/Environment/box_1")
+            self.print_box_position("/World/Environment/stack1/box_1_19")
+            self.print_box_position("/World/Environment/stack4/box_4_30")
+            self.print_box_position("/World/Environment/stack2/box_2_19")
             
             self.last_position_print_time = start_time
 
@@ -437,7 +439,7 @@ if __name__ == "__main__":
     try:
         while True:
             scenario.update()
-            time.sleep(0.1)  # This helps to slow the loop so that the 1-second interval is met.
+            time.sleep(0.1)
     except KeyboardInterrupt:
         scenario.stop_broadcasting()
         scenario.udp.stop()

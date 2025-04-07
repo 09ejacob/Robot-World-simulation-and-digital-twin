@@ -83,7 +83,7 @@ def main():
     robot_controller.refresh_handles()
 
     if not robot_controller.articulation:
-        print("[MAIN] Articulation handle is STILL invalid. Something is wrong.")
+        print("[MAIN] Articulation handle is still invalid. Something is wrong.")
         return
 
     scenario = UDPScenario(robot_controller=robot_controller, world=world, print_positions=True, print_performance_stats=True)
@@ -99,7 +99,7 @@ def main():
     try:
         while True:
             #print("[LOOP] Simulation loop is running...")
-            scenario.update(1.0 / 60.0)
+            scenario.update()
             world.step(render=True)
             time.sleep(0.01)
     except KeyboardInterrupt:

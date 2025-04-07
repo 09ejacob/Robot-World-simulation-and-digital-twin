@@ -65,29 +65,29 @@ def create_additional_joints():
     )
 
 
-# TODO: Remove duplicate function
-def create_camera():
-    # TODO: Create the camera in the USD file instead
-    setup_camera(
-        BASE_CAMERA_PATH,
-        position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
-        euler_angles=np.array([-180, 0, 0]),
-        resolution=(1920, 1080),
-        focal_length=13,
-    )
+# # TODO: Remove duplicate function
+# def create_camera():
+#     # TODO: Create the camera in the USD file instead
+#     setup_camera(
+#         BASE_CAMERA_PATH,
+#         position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
+#         euler_angles=np.array([-180, 0, 0]),
+#         resolution=(1920, 1080),
+#         focal_length=13,
+#     )
     
-# def create_camera(resolutions=None): 
-#     # If resolutions is None, initialize with empty dictionary
-#     if resolutions is None:
-#         resolutions = {}
+def create_camera(resolutions=None): 
+    # If resolutions is None, initialize with empty dictionary
+    if resolutions is None:
+        resolutions = {}
     
-#     # Register cameras with optional resolution changes
-#     register_existing_camera(BASE_CAMERA_PATH, 
-#                             resolution=resolutions.get(BASE_CAMERA_PATH))
-#     register_existing_camera(BOX_CAMERA_1, 
-#                             resolution=resolutions.get(BOX_CAMERA_1))
-#     register_existing_camera(BOX_CAMERA_2, 
-#                             resolution=resolutions.get(BOX_CAMERA_2))
+    # Register cameras with optional resolution changes
+    register_existing_camera(BASE_CAMERA_PATH, 
+                            resolution=resolutions.get(BASE_CAMERA_PATH))
+    register_existing_camera(BOX_CAMERA_1, 
+                            resolution=resolutions.get(BOX_CAMERA_1))
+    register_existing_camera(BOX_CAMERA_2, 
+                            resolution=resolutions.get(BOX_CAMERA_2))
 
 def create_camera2():
     register_existing_camera(BASE_CAMERA_PATH)
@@ -131,9 +131,9 @@ def setup_scene():
     load_grab_usd()
 
     #create_camera()
-    #custom_resolutions = {
-    #BOX_CAMERA_1: (1280, 720),
-    #}
-    #create_camera(custom_resolutions)
+    custom_resolutions = {
+    BOX_CAMERA_1: (1280, 720),
+    }
+    create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
