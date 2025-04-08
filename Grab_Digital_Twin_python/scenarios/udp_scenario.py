@@ -6,14 +6,11 @@ import numpy as np
 import psutil
 from os.path import dirname, abspath, join
 from pxr import UsdGeom, Gf
-from pxr import UsdGeom, Gf
 from omni.isaac.core import World
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
-    AXIS4_JOINT_PATH,
-    ENVIRONMENT_PATH,
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
     SHELF_PATH,
