@@ -21,3 +21,7 @@ NOTE: ***Make sure that the folder for the extension does not contain any triple
     - Under *Robot Controls* it should be possible to control various links and joints of the robot manually.
         - Pressing the `Open Gripper` and `Close Gripper` buttons will make the end effector of the robot grab onto and release an object respectively.
         - To change the robot's positioning configuration, set a value for one of the joints and then press the `Set position` button underneath to make it move to the specified value.
+    - Under *Camera Controls* are controls for the cameras.
+        - Pressing the `Refresh Camera List` fetches the cameras that are loaded into the scene. After doing so, and the cameras are successfully fetched, buttons for capturing the individual cameras should show up under.
+            - Pressing the `Capture from` buttons for the individual cameras will make the corresponding camera capture a picture.
+        - Pressing the `Capture from All Cameras` button will make all the cameras capture a picture.  
