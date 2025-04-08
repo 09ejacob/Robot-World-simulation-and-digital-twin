@@ -75,7 +75,7 @@ def setup_camera(
     return camera
 
 
-def register_existing_camera(prim_path, resolution=None):
+def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     """
     Register an existing camera from its prim path with the camera capture system
 
@@ -84,7 +84,9 @@ def register_existing_camera(prim_path, resolution=None):
 
     Returns:
         Camera object or None if camera cannot be created
+
     """
+   
     camera_id = prim_path.split("/")[-1]
 
     # Check if camera is already registered
@@ -106,10 +108,9 @@ def register_existing_camera(prim_path, resolution=None):
         camera = Camera(prim_path=prim_path)
         # camera.set_frequency(30)
         camera.initialize()
-        camera.add_distance_to_image_plane_to_frame()
-        pointcloud_annotator = rep.annotators.get("pointcloud")
-        pointcloud_annotator.attach(camera.get_render_product_path())
-        camera.add_pointcloud_to_frame(include_unlabelled=True)
+        if add_3d_features:
+            camera.add_distance_to_image_plane_to_frame()
+            camera.add_pointcloud_to_frame(include_unlabelled=True)
 
         print(f"Camera initialized at {prim_path}")
 

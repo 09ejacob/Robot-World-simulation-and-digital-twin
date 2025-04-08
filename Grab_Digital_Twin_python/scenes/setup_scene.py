@@ -85,11 +85,11 @@ def create_camera3(resolutions=None):
     
     # Register cameras with optional resolution changes
     register_existing_camera(BASE_CAMERA_PATH, 
-                            resolution=resolutions.get(BASE_CAMERA_PATH))
+                            resolutions.get(BASE_CAMERA_PATH))
     register_existing_camera(BOX_CAMERA_1, 
-                            resolution=resolutions.get(BOX_CAMERA_1))
+                            resolutions.get(BOX_CAMERA_1),add_3d_features=True)
     register_existing_camera(BOX_CAMERA_2, 
-                            resolution=resolutions.get(BOX_CAMERA_2))
+                            resolutions.get(BOX_CAMERA_2))
 
 def create_camera2():
     register_existing_camera(BASE_CAMERA_PATH)
@@ -161,8 +161,6 @@ def setup_scene():
 
     # Add sensor cameras
     #hawk_sensor_path = add_sensor_asset('hawk_stereo', parent_prim_path=ROBOT_PATH, sensor_name="Hawk_Stereo")
-    
-
     
 
     #create_camera2()

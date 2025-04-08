@@ -106,7 +106,7 @@ class CameraCapture:
         except Exception as e:
             print(f"❌ Error converting image to PIL format: {e}")
             return None
-
+        
         # Generate filename if not provided
         if filename is None:
             counter = self.capture_counters[camera_id]
