@@ -33,7 +33,13 @@ class UDPScenario:
     SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
     SEND_PORT = 9998
 
-    def __init__(self, robot_controller, world=None, print_positions=True, print_performance_stats=False):
+    def __init__(
+        self,
+        robot_controller,
+        world=None,
+        print_positions=True,
+        print_performance_stats=False,
+    ):
         self._robot_controller = robot_controller
         self._world = world
         self._did_run = False
@@ -128,7 +134,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
-            "capture": lambda p: self._robot_controller.capture_from_all_cameras()
+            "capture": lambda p: self._robot_controller.capture_from_all_cameras(),
         }
 
         if command in handlers:
@@ -190,7 +196,7 @@ class UDPScenario:
         handler = axis_map.get(axis_id)
         if handler:
             handler(value)
-            #print(f"Set axis{axis_id} to {value}")
+            # print(f"Set axis{axis_id} to {value}")
         else:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
@@ -243,7 +249,9 @@ class UDPScenario:
     def random_color(self):
         return np.random.rand(3)
 
-    def create_boxes(self, path, num_boxes: int, position=(1, 1, 1), stack_id=1, reverse=False):
+    def create_boxes(
+        self, path, num_boxes: int, position=(1, 1, 1), stack_id=1, reverse=False
+    ):
         boxes = []
         base_x_pos, base_y_pos, base_z_pos = position
         start_x = base_x_pos - 0.45
@@ -278,9 +286,13 @@ class UDPScenario:
             boxes.append(box)
         return boxes
 
-
     def create_pick_stack(
-        self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1, reverse=False
+        self,
+        path,
+        pallet_position=(0, 0, 0),
+        number_of_boxes=1,
+        stack_id=1,
+        reverse=False,
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
@@ -293,24 +305,32 @@ class UDPScenario:
         )
 
         self.create_boxes(
-            f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id, reverse
+            f"{path}/stack{stack_id}",
+            number_of_boxes,
+            pallet_position,
+            stack_id,
+            reverse,
         )
 
     def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
         current_dir = dirname(abspath(__file__))
         usd_path = abspath(
-            join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "shelf.usd")
+            join(
+                current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "shelf.usd"
+            )
         )
         add_reference_to_stage(usd_path=usd_path, prim_path=SHELF_PATH)
-        
+
         stage = omni.usd.get_context().get_stage()
         shelf_prim = stage.GetPrimAtPath(SHELF_PATH)
-        
+
         if shelf_prim.IsValid():
             xformable = UsdGeom.Xformable(shelf_prim)
             xformable.ClearXformOpOrder()
             xformable.AddTranslateOp().Set(Gf.Vec3d(*position))
-            xformable.AddScaleOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(*scale))
+            xformable.AddScaleOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(
+                Gf.Vec3d(*scale)
+            )
 
             print(f"Shelf loaded at position: {position}")
 
@@ -350,8 +370,8 @@ class UDPScenario:
             number_of_boxes=35,
             stack_id=3,
             reverse=True,
-            )
-        
+        )
+
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 1.872),
@@ -377,7 +397,6 @@ class UDPScenario:
         self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
 
         self.start_udp_server()
-
 
     def update(self, step: float = 0.1):
         """Runs in the Isaac Sim main thread and processes queued UDP commands."""
@@ -417,16 +436,21 @@ class UDPScenario:
             print("-----------------------------------------------------------------")
             # for name, dof_index, is_angular in self.axis_dofs:
             #     self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
-            
+
             self.print_box_position("/World/Environment/stack1/box_1_19")
             self.print_box_position("/World/Environment/stack4/box_4_30")
             self.print_box_position("/World/Environment/stack2/box_2_19")
-            
+
             self.last_position_print_time = start_time
 
         if self.overview_camera_active:
-            if start_time - self.last_overview_capture_time >= self.overview_capture_interval:
-                result = self._robot_controller.camera_capture.capture_image("OverviewCamera")
+            if (
+                start_time - self.last_overview_capture_time
+                >= self.overview_capture_interval
+            ):
+                result = self._robot_controller.camera_capture.capture_image(
+                    "OverviewCamera"
+                )
                 if result:
                     print("Overview camera captured image:", result)
                 self.last_overview_capture_time = start_time
@@ -448,11 +472,14 @@ class UDPScenario:
 
         print(f"No translation op found for box at {box_path}")
 
+
 if __name__ == "__main__":
     # Initialize your RobotController here.
-    robot_controller = ...  
+    robot_controller = ...
     # Enable printing of positions and performance stats.
-    scenario = UDPScenario(robot_controller, print_positions=True, print_performance_stats=True)
+    scenario = UDPScenario(
+        robot_controller, print_positions=True, print_performance_stats=True
+    )
     scenario.setup()
 
     try:
@@ -463,4 +490,3 @@ if __name__ == "__main__":
         scenario.stop_broadcasting()
         scenario.udp.stop()
         print("Exiting UDP scenario.")
-

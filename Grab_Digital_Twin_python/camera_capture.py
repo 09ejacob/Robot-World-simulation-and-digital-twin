@@ -4,6 +4,7 @@ from datetime import datetime
 from PIL import Image
 import numpy as np
 
+
 class CameraCapture:
     """
     A class to manage camera captures in Isaac Sim.
@@ -25,30 +26,29 @@ class CameraCapture:
         self.last_capture_time = {}
         print("Camera Capture System Initialized")
 
-    
     def register_camera(self, camera_id, camera):
         """
         Register a camera for capturing.
-        
+
         Args:
             camera_id (str): Unique identifier for the camera
             camera (Camera): Camera object from Isaac Sim
-            
+
         Returns:
             str: Path to the camera's dedicated directory
         """
         self.camera_registry[camera_id] = camera
         self.capture_counters[camera_id] = 0
         self.last_capture_time[camera_id] = 0
-        
+
         # Create camera-specific directory
         camera_dir = os.path.join(self.base_save_dir, camera_id)
         if not os.path.exists(camera_dir):
             os.makedirs(camera_dir)
             print(f"Created directory for camera {camera_id}: {camera_dir}")
-        
+
         return camera_dir
-    
+
     def capture_image(self, camera_id, filename=None):
         """
         Capture an image from the specified camera with additional debugging.
@@ -59,8 +59,11 @@ class CameraCapture:
         if camera_id not in self.camera_registry:
             print(f"❌ Error: Camera with ID {camera_id} not registered.")
             return None
-        print(f"✅ Camera {camera_id} found in registry.", list(self.camera_registry.keys()))
-        
+        print(
+            f"✅ Camera {camera_id} found in registry.",
+            list(self.camera_registry.keys()),
+        )
+
         camera = self.camera_registry[camera_id]
 
         # Ensure we have the latest frame
@@ -69,12 +72,12 @@ class CameraCapture:
         print(f"✅ Latest frame fetched from {camera_id}. Frame info: {frame}")
 
         # Check if frame has RGBA data
-        if frame is None or 'rgba' not in frame:
+        if frame is None or "rgba" not in frame:
             print(f"❌ Error: No valid frame data from camera {camera_id}")
             return None
 
         # Extract RGB from RGBA
-        rgba = frame['rgba']
+        rgba = frame["rgba"]
         if rgba is None or rgba.size == 0:
             print(f"❌ Error: Empty RGBA data from camera {camera_id}")
             return None
@@ -87,13 +90,16 @@ class CameraCapture:
             return None
 
         # Log image shape and type
-        print(f"✅ Captured image from {camera_id} with shape: {rgb_img.shape}, dtype: {rgb_img.dtype}")
+        print(
+            f"✅ Captured image from {camera_id} with shape: {rgb_img.shape}, dtype: {rgb_img.dtype}"
+        )
 
         # Ensure the image has 3 dimensions (H, W, C)
         if len(rgb_img.shape) != 3 or rgb_img.shape[2] != 3:
-            print(f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}")
+            print(
+                f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}"
+            )
             return None
-
 
         # Ensure image is in "RGB" format
         try:
@@ -148,7 +154,7 @@ class CameraCapture:
     def capture_all_cameras(self):
         """
         Capture images from all registered cameras.
-        
+
         Returns:
             dict: Map of camera IDs to saved image paths
         """
@@ -156,14 +162,14 @@ class CameraCapture:
         for camera_id in self.camera_registry:
             results[camera_id] = self.capture_image(camera_id)
         return results
-    
+
     def capture_all_timed(self, interval_seconds=2.0):
         """
         Capture images from all cameras if interval has passed.
-        
+
         Args:
             interval_seconds (float): Minimum time between captures
-            
+
         Returns:
             dict: Map of camera IDs to saved image paths (only for cameras that captured)
         """
@@ -177,8 +183,10 @@ class CameraCapture:
     def camera_registry(self):
         """Get the camera registry dictionary"""
         return self._camera_registry
-        
+
     def get_registered_cameras(self):
         """Get list of registered camera IDs"""
-        print(f"Registered Cameras in camera Capture: {list(self.camera_registry.keys())}")
+        print(
+            f"Registered Cameras in camera Capture: {list(self.camera_registry.keys())}"
+        )
         return list(self.camera_registry.keys())

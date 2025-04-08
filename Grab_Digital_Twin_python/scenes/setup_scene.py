@@ -21,7 +21,7 @@ from ..global_variables import (
     BOX_CAMERA_1,
     BOX_CAMERA_2,
     OVERVIEW_CAMERA,
-    )
+)
 
 
 def create_ground_plane(path):
@@ -76,21 +76,23 @@ def create_additional_joints():
 #         resolution=(1920, 1080),
 #         focal_length=13,
 #     )
-    
-def create_camera(resolutions=None): 
+
+
+def create_camera(resolutions=None):
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
-    
+
     # Register cameras with optional resolution changes
-    register_existing_camera(BASE_CAMERA_PATH, 
-                            resolution=resolutions.get(BASE_CAMERA_PATH))
-    register_existing_camera(BOX_CAMERA_1, 
-                            resolution=resolutions.get(BOX_CAMERA_1))
-    register_existing_camera(BOX_CAMERA_2, 
-                            resolution=resolutions.get(BOX_CAMERA_2))
-    register_existing_camera(OVERVIEW_CAMERA,
-                             resolution=resolutions.get(OVERVIEW_CAMERA))
+    register_existing_camera(
+        BASE_CAMERA_PATH, resolution=resolutions.get(BASE_CAMERA_PATH)
+    )
+    register_existing_camera(BOX_CAMERA_1, resolution=resolutions.get(BOX_CAMERA_1))
+    register_existing_camera(BOX_CAMERA_2, resolution=resolutions.get(BOX_CAMERA_2))
+    register_existing_camera(
+        OVERVIEW_CAMERA, resolution=resolutions.get(OVERVIEW_CAMERA)
+    )
+
 
 # def create_camera2():
 #     register_existing_camera(BASE_CAMERA_PATH)
@@ -103,6 +105,7 @@ def load_grab_usd():
     )
 
     add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
+
 
 def _add_light():
     sphereLight = UsdLux.SphereLight.Define(
@@ -130,14 +133,11 @@ def setup_scene():
         print("[setup_scene] PhysxSceneAPI already present")
 
     create_ground_plane(GROUND_PLANE_PATH)
-    
+
     load_grab_usd()
 
-    #create_camera()
-    custom_resolutions = {
-    BOX_CAMERA_1: (1280, 720),
-    OVERVIEW_CAMERA: (1280, 820)
-    }
+    # create_camera()
+    custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
     create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
