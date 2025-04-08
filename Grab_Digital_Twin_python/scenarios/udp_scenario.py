@@ -117,7 +117,7 @@ class UDPScenario:
         handlers = {
             "tp_robot": self._handle_tp_robot,
             "nudge_box": self._handle_nudge_box,
-            "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
+            "force_data": lambda p: self._robot_controller.print_contact_force(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
             "capture": lambda p: self._robot_controller.capture_from_all_cameras(),
