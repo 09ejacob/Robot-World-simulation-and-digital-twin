@@ -244,6 +244,7 @@ class UIBuilder:
 
         selected_scenario = scenario_names[selected_index]
         print(f"Switching to scenario: {selected_scenario}")
+        self._current_scenario_name = selected_scenario
 
         # Reset the previous scenario
         if self._scenario is not None:
