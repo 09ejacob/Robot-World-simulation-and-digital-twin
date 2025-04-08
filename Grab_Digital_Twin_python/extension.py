@@ -15,7 +15,6 @@ import omni
 import omni.kit.commands
 import omni.physx as _physx
 import omni.timeline
-import omni.kit.actions.core as actions
 import omni.ui as ui
 import omni.usd
 from isaacsim.gui.components.element_wrappers import ScrollingWindow
@@ -24,7 +23,6 @@ from omni.kit.menu.utils import add_menu_items, remove_menu_items
 from omni.usd import StageEventType
 
 from .global_variables import EXTENSION_TITLE
-from omni.isaac.dynamic_control import _dynamic_control
 from .ui.ui_builder import UIBuilder
 
 

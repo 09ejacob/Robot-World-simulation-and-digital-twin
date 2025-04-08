@@ -9,12 +9,10 @@
 
 import omni.timeline
 import omni.ui as ui
-from isaacsim.core.prims import SingleXFormPrim
-from isaacsim.core.utils.stage import create_new_stage, get_current_stage
+from isaacsim.core.utils.stage import create_new_stage
 from isaacsim.examples.extension.core_connectors import LoadButton, ResetButton
 from isaacsim.gui.components.element_wrappers import CollapsableFrame, StateButton
 from isaacsim.gui.components.ui_utils import get_style
-from pxr import Sdf, UsdLux
 from ..scenes.setup_scene import setup_scene
 from ..global_variables import (
     AXIS1_JOINT_PATH,

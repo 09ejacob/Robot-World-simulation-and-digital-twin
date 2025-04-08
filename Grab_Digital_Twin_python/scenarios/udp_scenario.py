@@ -14,7 +14,6 @@ from ..global_variables import (
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
     SHELF_PATH,
-    OVERVIEW_CAMERA,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
