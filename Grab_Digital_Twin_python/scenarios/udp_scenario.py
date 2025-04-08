@@ -17,6 +17,7 @@ from ..global_variables import (
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
     SHELF_PATH,
+    OVERVIEW_CAMERA,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
@@ -64,6 +65,10 @@ class UDPScenario:
         self.broadcast_target_host = self.SEND_HOST
         self.broadcast_target_port = self.SEND_PORT
         self.last_position_print_time = time.time()
+
+        self.overview_camera_active = False
+        self.last_overview_capture_time = 0
+        self.overview_capture_interval = 1 / 10
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
@@ -113,6 +118,15 @@ class UDPScenario:
             return
 
         command = parts[0].lower()
+
+        if command == "start_overview_camera":
+            self.overview_camera_active = True
+            print("Overview-camera capturing started.")
+            return
+        elif command == "stop_overview_camera":
+            self.overview_camera_active = False
+            print("Overview-camera capturing stopped.")
+            return
 
         handlers = {
             "tp_robot": self._handle_tp_robot,
@@ -428,6 +442,18 @@ class UDPScenario:
             self.print_box_position("/World/Environment/stack2/box_2_19")
 
             self.last_position_print_time = start_time
+
+        if self.overview_camera_active:
+            if (
+                start_time - self.last_overview_capture_time
+                >= self.overview_capture_interval
+            ):
+                result = self._robot_controller.camera_capture.capture_image(
+                    "OverviewCamera"
+                )
+                if result:
+                    print("Overview camera captured image:", result)
+                self.last_overview_capture_time = start_time
 
     def print_box_position(self, box_path):
         stage = omni.usd.get_context().get_stage()
