@@ -65,17 +65,6 @@ def create_additional_joints():
         None,
     )
 
-
-# # TODO: Remove duplicate function
-# def create_camera():
-#     # TODO: Create the camera in the USD file instead
-#     setup_camera(
-#         BASE_CAMERA_PATH,
-#         position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
-#         euler_angles=np.array([-180, 0, 0]),
-#         resolution=(1920, 1080),
-#         focal_length=13,
-#     )
     
 def create_camera(resolutions=None): 
     # If resolutions is None, initialize with empty dictionary
@@ -91,9 +80,6 @@ def create_camera(resolutions=None):
                             resolution=resolutions.get(BOX_CAMERA_2))
     register_existing_camera(OVERVIEW_CAMERA,
                              resolution=resolutions.get(OVERVIEW_CAMERA))
-
-# def create_camera2():
-#     register_existing_camera(BASE_CAMERA_PATH)
 
 
 def load_grab_usd():
