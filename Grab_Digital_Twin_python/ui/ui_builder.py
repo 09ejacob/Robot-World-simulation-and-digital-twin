@@ -347,6 +347,11 @@ class UIBuilder:
         image_path = self._robot_controller.capture_from_camera(camera_id)
         print(f"Captured image from {camera_id}: {image_path}")
 
+    def _capture_3d_from_camera(self, camera_id):
+        """Capture an image from the specified camera."""
+        image_path = self._camera_capture.capture_pointcloud(camera_id)
+        print(f"Captured image from {camera_id}: {image_path}")
+
     def _capture_from_all_cameras(self):
         """Capture images from all registered cameras."""
         image_paths = self._robot_controller.capture_from_all_cameras()

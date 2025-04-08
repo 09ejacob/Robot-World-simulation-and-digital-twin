@@ -11,6 +11,7 @@ from .camera import register_existing_camera
 from ..camera_capture import CameraCapture
 
 
+
 from ..global_variables import (
     FIXED_JOINT_BASE_GROUND,
     GROUND_PLANE_PATH,
@@ -76,18 +77,18 @@ def create_camera():
         focal_length=13,
     )
     
-# def create_camera(resolutions=None): 
-#     # If resolutions is None, initialize with empty dictionary
-#     if resolutions is None:
-#         resolutions = {}
+def create_camera3(resolutions=None): 
+    # If resolutions is None, initialize with empty dictionary
+    if resolutions is None:
+        resolutions = {}
     
-#     # Register cameras with optional resolution changes
-#     register_existing_camera(BASE_CAMERA_PATH, 
-#                             resolution=resolutions.get(BASE_CAMERA_PATH))
-#     register_existing_camera(BOX_CAMERA_1, 
-#                             resolution=resolutions.get(BOX_CAMERA_1))
-#     register_existing_camera(BOX_CAMERA_2, 
-#                             resolution=resolutions.get(BOX_CAMERA_2))
+    # Register cameras with optional resolution changes
+    register_existing_camera(BASE_CAMERA_PATH, 
+                            resolution=resolutions.get(BASE_CAMERA_PATH))
+    register_existing_camera(BOX_CAMERA_1, 
+                            resolution=resolutions.get(BOX_CAMERA_1))
+    register_existing_camera(BOX_CAMERA_2, 
+                            resolution=resolutions.get(BOX_CAMERA_2))
 
 def create_camera2():
     register_existing_camera(BASE_CAMERA_PATH)
@@ -111,6 +112,32 @@ def _add_light():
     sphereLight.CreateIntensityAttr(100000)
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
+def add_sensor_asset(sensor_type: str, parent_prim_path: str = "/World", sensor_name: str = "sensor") -> str:
+    """
+    Adds a sensor camera asset to the stage.
+    
+    Args:
+        sensor_type: Type of sensor (e.g. 'hawk_stereo', 'realsense', 'gemini2')
+        parent_prim_path: Path where the sensor will be parented
+        sensor_name: Name for the new sensor prim
+        
+    Returns:
+        Path to the created sensor prim
+    """
+    sensor_paths = {
+        'hawk_stereo': "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5/Isaac/Sensors/LeopardImaging/Hawk/hawk_v1.1_nominal.usd",
+    }
+    
+    if sensor_type not in sensor_paths:
+        raise ValueError(f"Unknown sensor type: {sensor_type}. Valid options: {list(sensor_paths.keys())}")
+    
+    full_prim_path = f"{parent_prim_path}/{sensor_name}"
+    add_reference_to_stage(
+        usd_path=sensor_paths[sensor_type],
+        prim_path=full_prim_path
+    )
+    return full_prim_path
+
 
 def setup_scene():
     stage = get_current_stage()
@@ -132,10 +159,18 @@ def setup_scene():
     
     load_grab_usd()
 
-    #create_camera()
-    #custom_resolutions = {
-    #BOX_CAMERA_1: (1280, 720),
-    #}
-    #create_camera(custom_resolutions)
+    # Add sensor cameras
+    #hawk_sensor_path = add_sensor_asset('hawk_stereo', parent_prim_path=ROBOT_PATH, sensor_name="Hawk_Stereo")
+    
+
+    
+
+    #create_camera2()
+    custom_resolutions = {
+    BOX_CAMERA_1: (1280, 720),
+    BOX_CAMERA_2: (1280, 720),
+    BASE_CAMERA_PATH: (1280, 720),
+    }
+    create_camera3(custom_resolutions)
     create_additional_joints()
     _add_light()
