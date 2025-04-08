@@ -106,7 +106,7 @@ class CameraCapture:
         if filename is None:
             counter = self.capture_counters[camera_id]
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{camera_id}_{timestamp}_{counter:04d}.png"
+            filename = f"{camera_id}_{timestamp}_{counter:04d}.jpg"
             self.capture_counters[camera_id] += 1
 
         # Save the image

@@ -62,7 +62,7 @@ class UDPScenario:
 
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
-        self.overview_capture_interval = 0.1
+        self.overview_capture_interval = 1 / 10
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
