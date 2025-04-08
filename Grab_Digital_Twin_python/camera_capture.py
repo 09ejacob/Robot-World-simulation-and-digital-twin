@@ -2,7 +2,6 @@ import os
 import time
 from datetime import datetime
 from PIL import Image
-import numpy as np
 
 
 class CameraCapture:

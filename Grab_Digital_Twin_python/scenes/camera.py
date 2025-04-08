@@ -1,17 +1,12 @@
 import numpy as np
 import isaacsim.core.utils.numpy.rotations as rot_utils
-import isaacsim.storage.native
 import omni.usd
-import imageio  # For saving images
-import time
 from isaacsim.sensors.camera import Camera
 import omni.replicator.core as rep
 from pxr import UsdPhysics, PhysxSchema
-from omni.isaac.kit import SimulationApp
 from ..camera_capture import CameraCapture
-from ..global_variables import CAMERA_PATH, BOX_CAMERA_1
+from ..global_variables import CAMERA_PATH
 
-# SimulationApp({"multi_gpu": False})
 initialized_cameras = {}
 camera_capture = CameraCapture()  # Global CameraCapture instance
 
