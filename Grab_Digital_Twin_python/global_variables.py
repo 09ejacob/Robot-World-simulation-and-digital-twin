@@ -20,6 +20,7 @@ PALLET_PATH = f"{WORLD_PATH}/Environment/pallet"
 PICK_BOX_1 = f"{WORLD_PATH}/Environment/pickBox1"
 PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
+SHELF_PATH = f"{ENVIRONMENT_PATH}/Shelf"
 
 # Robot paths (NOTE: Robot is directly under root, not under /World)
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
@@ -45,6 +46,7 @@ FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
 BOX_CAMERA_1 = f"{CAMERA_PATH}/boxCamera1"
 BOX_CAMERA_2 = f"{CAMERA_PATH}/boxCamera2"
 BASE_CAMERA_PATH = f"{BASE_CAMERA_XFORM_PATH}/baseCamera"
+OVERVIEW_CAMERA = f"{ROBOT_PATH}/OverviewCamera"
 
 # Joints
 JOINTS_PATH = f"{ROBOT_PATH}/Joints"

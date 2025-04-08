@@ -21,7 +21,8 @@ from ..global_variables import (
     ROBOT_PATH,
     BOX_CAMERA_1,
     BOX_CAMERA_2,
-    )
+    OVERVIEW_CAMERA,
+)
 
 
 def create_ground_plane(path):
@@ -95,7 +96,6 @@ def create_camera2():
 
 
 def load_grab_usd():
-    # Isaac Sim needs the absolute path
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
         join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
@@ -156,7 +156,7 @@ def setup_scene():
         print("[setup_scene] PhysxSceneAPI already present")
 
     create_ground_plane(GROUND_PLANE_PATH)
-    
+
     load_grab_usd()
 
     # Add sensor cameras

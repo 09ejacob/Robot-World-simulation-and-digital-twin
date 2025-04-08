@@ -20,8 +20,10 @@ from omni.isaac.dynamic_control import _dynamic_control
 from .global_variables import EXTENSION_DESCRIPTION, EXTENSION_TITLE
 from .ui.ui_builder import UIBuilder
 
+
 def is_headless():
     return "--no-window" in sys.argv or "--headless" in sys.argv
+
 
 class Extension(omni.ext.IExt):
     def on_startup(self, ext_id: str):
@@ -30,7 +32,9 @@ class Extension(omni.ext.IExt):
         self._usd_context = omni.usd.get_context()
 
         if is_headless():
-            print("Headless mode detected. Waiting for valid stage before running main().")
+            print(
+                "Headless mode detected. Waiting for valid stage before running main()."
+            )
             # Import headless_runner only when needed
             from .headless_runner import main
 

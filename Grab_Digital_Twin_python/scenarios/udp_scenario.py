@@ -4,6 +4,7 @@ import threading
 import omni.usd
 import numpy as np
 import psutil
+from os.path import dirname, abspath, join
 from pxr import UsdGeom, Gf
 from pxr import UsdGeom, Gf
 from omni.isaac.core import World
@@ -15,9 +16,12 @@ from ..global_variables import (
     ENVIRONMENT_PATH,
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
+    SHELF_PATH,
+    OVERVIEW_CAMERA,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
+from isaacsim.core.utils.stage import add_reference_to_stage
 
 
 class UDPScenario:
@@ -29,7 +33,13 @@ class UDPScenario:
     SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
     SEND_PORT = 9998
 
-    def __init__(self, robot_controller, world=None, print_positions=False, print_performance_stats=False):
+    def __init__(
+        self,
+        robot_controller,
+        world=None,
+        print_positions=True,
+        print_performance_stats=False,
+    ):
         self._robot_controller = robot_controller
         self._world = world
         self._did_run = False
@@ -56,6 +66,10 @@ class UDPScenario:
         self.broadcast_target_port = self.SEND_PORT
         self.last_position_print_time = time.time()
 
+        self.overview_camera_active = False
+        self.last_overview_capture_time = 0
+        self.overview_capture_interval = 1 / 10
+
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
             ("axis2", AXIS2_JOINT_PATH, False),
@@ -63,8 +77,6 @@ class UDPScenario:
             ("axis4", AXIS4_JOINT_PATH, True),
         ]
         self.axis_dofs = []
-
-
 
     def _udp_callback(self, message):
         """Receives UDP messages and stores them in a queue."""
@@ -107,13 +119,22 @@ class UDPScenario:
 
         command = parts[0].lower()
 
+        if command == "start_overview_camera":
+            self.overview_camera_active = True
+            print("Overview-camera capturing started.")
+            return
+        elif command == "stop_overview_camera":
+            self.overview_camera_active = False
+            print("Overview-camera capturing stopped.")
+            return
+
         handlers = {
             "tp_robot": self._handle_tp_robot,
             "nudge_box": self._handle_nudge_box,
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
-            "capture": lambda p: self._robot_controller.capture_from_all_cameras()
+            "capture": lambda p: self._robot_controller.capture_from_all_cameras(),
         }
 
         if command in handlers:
@@ -175,7 +196,7 @@ class UDPScenario:
         handler = axis_map.get(axis_id)
         if handler:
             handler(value)
-            print(f"Set axis{axis_id} to {value}")
+            # print(f"Set axis{axis_id} to {value}")
         else:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
@@ -228,7 +249,9 @@ class UDPScenario:
     def random_color(self):
         return np.random.rand(3)
 
-    def create_boxes(self, path, num_boxes: int, position=(1, 1, 1), stack_id=1):
+    def create_boxes(
+        self, path, num_boxes: int, position=(1, 1, 1), stack_id=1, reverse=False
+    ):
         boxes = []
         base_x_pos, base_y_pos, base_z_pos = position
         start_x = base_x_pos - 0.45
@@ -244,7 +267,11 @@ class UDPScenario:
             column = index_in_layer // 2
             row = index_in_layer % 2
 
-            x = start_x + (max_col - column) * x_inc
+            if reverse:
+                x = start_x + column * x_inc
+            else:
+                x = start_x + (max_col - column) * x_inc
+
             y = row_y[row]
             z = base_z + layer * z_inc
 
@@ -260,7 +287,12 @@ class UDPScenario:
         return boxes
 
     def create_pick_stack(
-        self, path, pallet_position=(0, 0, 0), number_of_boxes=1, stack_id=1
+        self,
+        path,
+        pallet_position=(0, 0, 0),
+        number_of_boxes=1,
+        stack_id=1,
+        reverse=False,
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
@@ -273,8 +305,37 @@ class UDPScenario:
         )
 
         self.create_boxes(
-            f"{path}/stack{stack_id}", number_of_boxes, pallet_position, stack_id
+            f"{path}/stack{stack_id}",
+            number_of_boxes,
+            pallet_position,
+            stack_id,
+            reverse,
         )
+
+    def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
+        current_dir = dirname(abspath(__file__))
+        usd_path = abspath(
+            join(
+                current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "shelf.usd"
+            )
+        )
+        add_reference_to_stage(usd_path=usd_path, prim_path=SHELF_PATH)
+
+        stage = omni.usd.get_context().get_stage()
+        shelf_prim = stage.GetPrimAtPath(SHELF_PATH)
+
+        if shelf_prim.IsValid():
+            xformable = UsdGeom.Xformable(shelf_prim)
+            xformable.ClearXformOpOrder()
+            xformable.AddTranslateOp().Set(Gf.Vec3d(*position))
+            xformable.AddScaleOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(
+                Gf.Vec3d(*scale)
+            )
+
+            print(f"Shelf loaded at position: {position}")
+
+        else:
+            print(f"Failed to load shelf at prim path: {SHELF_PATH}")
 
     def setup(self):
         self._world = World()
@@ -291,20 +352,51 @@ class UDPScenario:
 
         self.create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(1.7, 0.0, 0.072),
-            number_of_boxes=15,
+            pallet_position=(-1.4, 0.0, 0.072),
+            number_of_boxes=19,
             stack_id=1,
+            reverse=True,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(1.7, -1.0, 0.072),
+            pallet_position=(-1.4, -0.9, 0.072),
             number_of_boxes=20,
             stack_id=2,
+            reverse=True,
         )
-        # self.create_pick_stack(ENVIRONMENT_PATH, pallet_position=(1.7, -1.0, 0.072), number_of_boxes=45, stack_id=3)
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, 0.9, 0.072),
+            number_of_boxes=35,
+            stack_id=3,
+            reverse=True,
+        )
+
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, 0.0, 1.872),
+            number_of_boxes=30,
+            stack_id=4,
+            reverse=True,
+        )
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, -0.9, 1.872),
+            number_of_boxes=27,
+            stack_id=5,
+            reverse=True,
+        )
+        self.create_pick_stack(
+            ENVIRONMENT_PATH,
+            pallet_position=(-1.4, 0.9, 1.872),
+            number_of_boxes=12,
+            stack_id=6,
+            reverse=True,
+        )
+
+        self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
 
         self.start_udp_server()
-
 
     def update(self, step: float = 0.1):
         """Runs in the Isaac Sim main thread and processes queued UDP commands."""
@@ -333,21 +425,35 @@ class UDPScenario:
 
         # Print performance stats every 1 second
         if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
-            print(
-                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
-            )
+            # print(
+            #     f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
+            # )
             self.udp_message_count = 0
             self.executed_command_count = 0
             self.last_time_check = start_time
 
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
             print("-----------------------------------------------------------------")
-            for name, dof_index, is_angular in self.axis_dofs:
-                self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
-            
-            self.print_box_position("/World/Environment/box_1")
-            
+            # for name, dof_index, is_angular in self.axis_dofs:
+            #     self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
+
+            self.print_box_position("/World/Environment/stack1/box_1_19")
+            self.print_box_position("/World/Environment/stack4/box_4_30")
+            self.print_box_position("/World/Environment/stack2/box_2_19")
+
             self.last_position_print_time = start_time
+
+        if self.overview_camera_active:
+            if (
+                start_time - self.last_overview_capture_time
+                >= self.overview_capture_interval
+            ):
+                result = self._robot_controller.camera_capture.capture_image(
+                    "OverviewCamera"
+                )
+                if result:
+                    print("Overview camera captured image:", result)
+                self.last_overview_capture_time = start_time
 
     def print_box_position(self, box_path):
         stage = omni.usd.get_context().get_stage()
@@ -366,19 +472,21 @@ class UDPScenario:
 
         print(f"No translation op found for box at {box_path}")
 
+
 if __name__ == "__main__":
     # Initialize your RobotController here.
-    robot_controller = ...  
+    robot_controller = ...
     # Enable printing of positions and performance stats.
-    scenario = UDPScenario(robot_controller, print_positions=True, print_performance_stats=True)
+    scenario = UDPScenario(
+        robot_controller, print_positions=True, print_performance_stats=True
+    )
     scenario.setup()
 
     try:
         while True:
             scenario.update()
-            time.sleep(0.1)  # This helps to slow the loop so that the 1-second interval is met.
+            time.sleep(0.1)
     except KeyboardInterrupt:
         scenario.stop_broadcasting()
         scenario.udp.stop()
         print("Exiting UDP scenario.")
-
