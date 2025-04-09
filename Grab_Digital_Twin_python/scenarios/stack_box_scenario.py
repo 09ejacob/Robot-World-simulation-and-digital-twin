@@ -195,11 +195,11 @@ class StackBoxScenario:
             # Raise
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 1.0
+                    AXIS2_JOINT_PATH, 1.1
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=1.0,
+                    target_position=1.1,
                     pos_threshold=0.1,
                 )
             else:
