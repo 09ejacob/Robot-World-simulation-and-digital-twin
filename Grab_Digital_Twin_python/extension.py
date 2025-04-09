@@ -26,39 +26,11 @@ from .global_variables import EXTENSION_TITLE
 from .ui.ui_builder import UIBuilder
 
 
-def is_headless():
-    return "--no-window" in sys.argv or "--headless" in sys.argv
-
-
 class Extension(omni.ext.IExt):
     def on_startup(self, ext_id: str):
         """Initialize extension and UI elements"""
         self.ext_id = ext_id
         self._usd_context = omni.usd.get_context()
-
-        if is_headless():
-            print(
-                "Headless mode detected. Waiting for valid stage before running main()."
-            )
-            # Import headless_runner only when needed
-            from .headless_runner import main
-
-            update_stream = omni.kit.app.get_app().get_update_event_stream()
-
-            def on_update(dt):
-                context = omni.usd.get_context()
-                stage = context.get_stage()
-
-                if not stage or not stage.GetRootLayer():
-                    print("Waiting for stage to have a root layer...")
-                    return
-
-                print("Stage has root layer. Starting main()...")
-                subscription.unsubscribe()
-                main()
-
-            subscription = update_stream.create_subscription_to_pop(on_update)
-            return
 
         print("GUI mode detected — setting up UI.")
         # GUI Setup
@@ -98,18 +70,6 @@ class Extension(omni.ext.IExt):
         self._timeline = omni.timeline.get_timeline_interface()
 
     def on_shutdown(self):
-        if is_headless():
-            print("Headless shutdown")
-            try:
-                if hasattr(self, "ui_builder"):
-                    scenario = self.ui_builder._scenario
-                    if scenario is not None and hasattr(scenario, "udp"):
-                        print("Stopping UDP")
-                        scenario.udp.stop()
-            except Exception as e:
-                carb.log_warn(f"Shutdown in headless mode failed: {e}")
-            return
-
         scenario = self.ui_builder._scenario
 
         if scenario is not None and hasattr(scenario, "udp"):
