@@ -79,8 +79,8 @@ class UDPScenario:
         self.command_queue.put(message)
         self.udp_message_count += 1
 
-    def reset(self):
-        """Resets the scenario and stops the UDP server."""
+    def unload(self):
+        """Resets the simulation, stops the UDP server, and unloads the scenario-specific prims from the stage."""
         self._did_run = False
         self.udp.stop()
         self.stop_broadcasting()

@@ -113,14 +113,14 @@ class UIBuilder:
                 )
                 self.wrapped_ui_elements.append(self._load_btn)
 
-                self._reset_btn = ResetButton(
-                    "Reset Button",
-                    "RESET",
+                self._unload_btn = ResetButton(
+                    "Unload Button",
+                    "UNLOAD SCENARIO",
                     pre_reset_fn=None,
-                    post_reset_fn=self._on_post_reset_btn,
+                    post_reset_fn=self._on_post_unload_btn,
                 )
-                self._reset_btn.enabled = False
-                self.wrapped_ui_elements.append(self._reset_btn)
+                self._unload_btn.enabled = False
+                self.wrapped_ui_elements.append(self._unload_btn)
 
         scenario_frame = CollapsableFrame("Scenario", collapsed=False)
         with scenario_frame:
@@ -244,9 +244,9 @@ class UIBuilder:
         print(f"Switching to scenario: {selected_scenario}")
         self._current_scenario_name = selected_scenario
 
-        # Reset the previous scenario
+        # Unload the previous scenario
         if self._scenario is not None:
-            self._scenario.reset()
+            self._scenario.unload()
 
         scenario_cls = self._scenarios[selected_scenario]
         self._scenario = scenario_cls(robot_controller=self._robot_controller)
@@ -276,9 +276,9 @@ class UIBuilder:
             self._scenario.setup()
             self._scenario_state_btn.reset()
             self._scenario_state_btn.enabled = True
-            self._reset_btn.enabled = True
+            self._unload_btn.enabled = True
 
-    def _on_post_reset_btn(self):
+    def _on_post_unload_btn(self):
         """
         This function is attached to the Reset Button as the post_reset_fn callback.
         The user may assume that their objects are properly initialized, and that the timeline is paused on timestep 0.
@@ -287,7 +287,7 @@ class UIBuilder:
         I.e. the cube prim will move back to the position it was in when it was created in self._setup_scene().
         """
         if self._scenario:
-            self._scenario.reset()
+            self._scenario.unload()
             self._scenario_state_btn.reset()
             self._scenario_state_btn.enabled = True
 
@@ -339,7 +339,7 @@ class UIBuilder:
     def _reset_ui(self):
         self._scenario_state_btn.reset()
         self._scenario_state_btn.enabled = False
-        self._reset_btn.enabled = False
+        self._unload_btn.enabled = False
 
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""

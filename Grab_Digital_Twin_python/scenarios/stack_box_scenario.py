@@ -42,11 +42,8 @@ class StackBoxScenario:
 
         self._scenario_generator = self._run_simulation()
 
-    def reset(self):
-        """
-        Called whenever the user presses the RESET button.
-        Resets the simulation and removes the scenario-specific prims from the stage.
-        """
+    def unload(self):
+        """Resets the simulation and unloads the scenario-specific prims from the stage."""
         self._did_run = False
         if self._world is not None:
             self._world.reset()
