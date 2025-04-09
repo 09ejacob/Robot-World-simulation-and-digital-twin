@@ -129,9 +129,7 @@ class PickBoxesScenario:
         )
 
         # Move axis3 out
-        self._robot_controller.set_prismatic_joint_position(
-            AXIS3_JOINT_PATH, 1.209
-        )  # -1.259
+        self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 1.209)
         yield from self._robot_controller.wait_for_joint_position(
             axis3_dof_index,
             target_position=1.209,
@@ -166,7 +164,7 @@ class PickBoxesScenario:
             pos_threshold=0.0185,
         )
 
-        # # Close gripper
+        # Close gripper
         self._robot_controller.close_gripper()
 
         # Raise axis2
@@ -357,7 +355,7 @@ class PickBoxesScenario:
 
         self._robot_controller.open_gripper()
 
-        # Move axis3 out
+        # Move axis3 in
         self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
         yield from self._robot_controller.wait_for_joint_position(
             axis3_dof_index,
@@ -373,11 +371,11 @@ class PickBoxesScenario:
             pos_threshold=0.0185,
         )
 
+        # Finish
         for _ in range(100):
             self._world.step(render=True)
             yield
 
-        # Finish
         for _ in range(60):
             self._world.step(render=True)
             yield
