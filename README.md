@@ -25,3 +25,4 @@ NOTE: ***Make sure that the folder for the extension does not contain any triple
         - Pressing the `Refresh Camera List` fetches the cameras that are loaded into the scene. After doing so, and the cameras are successfully fetched, buttons for capturing the individual cameras should show up under.
             - Pressing the `Capture from` buttons for the individual cameras will make the corresponding camera capture a picture.
         - Pressing the `Capture from All Cameras` button will make all the cameras capture a picture.  
+4. Pressing the `UNLOAD SCENARIO` button under the `LOAD` button will reset the simulation and unload the currently loaded scenario.
