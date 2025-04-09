@@ -96,7 +96,7 @@ class StackBoxScenario:
             )
 
             # Move snake out
-            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -1.45)
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 1.45)
             yield from self._robot_controller.wait_for_joint_position(
                 axis3_dof_index,
                 target_position=1.45,
@@ -148,7 +148,7 @@ class StackBoxScenario:
                 )
 
             # Move snake in
-            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -0.5)
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 0.5)
             yield from self._robot_controller.wait_for_joint_position(
                 axis3_dof_index,
                 target_position=0.5,
@@ -165,7 +165,7 @@ class StackBoxScenario:
             )
 
             # Move snake out
-            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, -1)
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 1)
             yield from self._robot_controller.wait_for_joint_position(
                 axis3_dof_index,
                 target_position=1,
