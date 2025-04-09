@@ -145,10 +145,10 @@ class StackBoxScenario:
                 )
 
             # Move snake in
-            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 0.5)
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
             yield from self._robot_controller.wait_for_joint_position(
                 axis3_dof_index,
-                target_position=0.5,
+                target_position=0,
                 pos_threshold=0.1,
             )
 
@@ -189,7 +189,44 @@ class StackBoxScenario:
                     pos_threshold=0.01,
                 )
 
+            # Open gripper
             self._robot_controller.open_gripper()
+
+            # Raise
+            if i == 1:  # For box2, raise more
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 1.0
+                )
+                yield from self._robot_controller.wait_for_joint_position(
+                    axis2_dof_index,
+                    target_position=1.0,
+                    pos_threshold=0.1,
+                )
+            else:
+                self._robot_controller.set_prismatic_joint_position(
+                    AXIS2_JOINT_PATH, 0.8
+                )
+                yield from self._robot_controller.wait_for_joint_position(
+                    axis2_dof_index,
+                    target_position=0.8,
+                    pos_threshold=0.1,
+                )
+
+            # Move snake in
+            self._robot_controller.set_prismatic_joint_position(AXIS3_JOINT_PATH, 0)
+            yield from self._robot_controller.wait_for_joint_position(
+                axis3_dof_index,
+                target_position=0,
+                pos_threshold=0.1,
+            )
+
+        # Move axis 2 to resting position
+        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0)
+        yield from self._robot_controller.wait_for_joint_position(
+            axis2_dof_index,
+            target_position=0,
+            pos_threshold=0.0185,
+        )
 
         for _ in range(180):
             self._world.step(render=True)
