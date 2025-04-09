@@ -2,7 +2,6 @@ import numpy as np
 import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
-from omni.isaac.dynamic_control import _dynamic_control
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
@@ -12,7 +11,6 @@ from ..global_variables import (
     PICK_BOX_1,
     PICK_BOX_2,
     PICK_BOX_3,
-    ROBOT_PATH,
 )
 
 
@@ -36,28 +34,32 @@ class PickBoxesScenario:
         self._did_run = False
         self._robot_controller.refresh_handles()
 
-        pallet = DynamicCuboid(
+        # Pallet
+        DynamicCuboid(
             prim_path=PALLET_PATH,
             position=np.array((1.7, 0, 0.1)),
             scale=np.array((1.2, 0.8, 0.144)),
             color=np.array((0.2, 0.08, 0.05)),
         )
 
-        pickBox1 = DynamicCuboid(
+        # Pick Box 1
+        DynamicCuboid(
             prim_path=PICK_BOX_1,
             position=np.array((1.25, -0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.05, 0.1, 0.08)),
         )
 
-        pickBox2 = DynamicCuboid(
+        # Pick Box 2
+        DynamicCuboid(
             prim_path=PICK_BOX_2,
             position=np.array((1.25, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.1, 0.08, 0.05)),
         )
 
-        pickBox3 = DynamicCuboid(
+        # Pick Box 3
+        DynamicCuboid(
             prim_path=PICK_BOX_3,
             position=np.array((1.55, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
@@ -86,9 +88,6 @@ class PickBoxesScenario:
             return True
 
     def _run_simulation(self):
-        dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        articulation = dc_interface.get_articulation(ROBOT_PATH)
-
         # Find which DOF index corresponds to prismatic or revolute joint
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH
