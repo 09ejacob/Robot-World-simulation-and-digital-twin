@@ -86,6 +86,21 @@ class UDPScenario:
         self.stop_broadcasting()
         if self._world is not None:
             self._world.reset()
+        self.remove_scenario_specific_prims()
+
+    def remove_scenario_specific_prims(self):
+        """
+        Removes the scenario-specific prims from the stage.
+        """
+        stage = omni.usd.get_context().get_stage()
+        box_prim_paths = [box.prim_path for box in self.boxes]
+        pallet_prim_paths = [pallet.prim_path for pallet in self.pallets]
+        additional_prim_paths = [SHELF_PATH]
+        prim_paths = pallet_prim_paths + box_prim_paths + additional_prim_paths
+        for prim_path in prim_paths:
+            prim = stage.GetPrimAtPath(prim_path)
+            if prim.IsValid():
+                stage.RemovePrim(prim_path)
 
     def start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
         """Starts the UDP server if the port is not already in use."""
@@ -280,6 +295,8 @@ class UDPScenario:
                 mass=14.0,
             )
             boxes.append(box)
+            # Also add the box to the scenario class
+            self.boxes.append(box)
         return boxes
 
     def create_pick_stack(
@@ -292,12 +309,14 @@ class UDPScenario:
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
-        self.pallet = DynamicCuboid(
-            prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
-            position=pallet_position,
-            scale=np.array((1.2, 0.8, 0.144)),
-            color=np.array((0.2, 0.08, 0.05)),
-            mass=25.0,
+        self.pallets.append(
+            DynamicCuboid(
+                prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
+                position=pallet_position,
+                scale=np.array((1.2, 0.8, 0.144)),
+                color=np.array((0.2, 0.08, 0.05)),
+                mass=25.0,
+            )
         )
 
         self.create_boxes(
@@ -346,6 +365,9 @@ class UDPScenario:
             else:
                 self.axis_dofs.append((name, dof_index, is_angular))
 
+        # Create several pallets with stacks of boxes on top
+        self.pallets = []
+        self.boxes = []
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 0.072),
