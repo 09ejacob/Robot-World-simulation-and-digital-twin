@@ -1,6 +1,8 @@
 import time
 from omni.isaac.kit import SimulationApp
 
+simulation_app = SimulationApp({"headless": True})
+
 import omni.timeline
 import omni.physx as _physx
 
@@ -11,8 +13,6 @@ from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
 from Grab_Digital_Twin_python.robot.robot_controller import RobotController
 from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
 from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
-
-simulation_app = SimulationApp({"headless": True})
 
 
 def main():
@@ -85,9 +85,13 @@ def main():
         print("[MAIN] Articulation handle is still invalid. Something is wrong.")
         return
 
-    scenario = UDPScenario(robot_controller=robot_controller, world=world, print_positions=True, print_performance_stats=True)
+    scenario = UDPScenario(
+        robot_controller=robot_controller,
+        world=world,
+        print_positions=True,
+        print_performance_stats=True,
+    )
     scenario.setup()
-
 
     for _ in range(10):
         world.step(render=False)
@@ -97,7 +101,7 @@ def main():
 
     try:
         while True:
-            #print("[LOOP] Simulation loop is running...")
+            # print("[LOOP] Simulation loop is running...")
             scenario.update()
             world.step(render=True)
             time.sleep(0.01)
