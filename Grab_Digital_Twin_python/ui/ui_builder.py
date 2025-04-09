@@ -128,7 +128,7 @@ class UIBuilder:
                 ui.Label("Select Scenario:")
 
                 self._scenario_dropdown = ui.ComboBox(
-                    0,
+                    -1,
                     *list(self._scenarios.keys()),
                 )
 
@@ -225,7 +225,7 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
-        self._scenario = UDPScenario(robot_controller=self._robot_controller)
+        self._scenario = None
 
     def _select_scenario(self):
         """
