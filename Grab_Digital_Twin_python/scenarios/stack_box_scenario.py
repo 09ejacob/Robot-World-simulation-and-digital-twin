@@ -2,13 +2,11 @@ import numpy as np
 import omni.usd
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid
-from omni.isaac.dynamic_control import _dynamic_control
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
     PICK_BOX_1,
-    ROBOT_PATH,
 )
 
 
@@ -69,9 +67,6 @@ class StackBoxScenario:
             return True  # Scenario finished
 
     def _run_simulation(self):
-        dc_interface = _dynamic_control.acquire_dynamic_control_interface()
-        articulation = dc_interface.get_articulation(ROBOT_PATH)
-
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH
         )
@@ -83,7 +78,7 @@ class StackBoxScenario:
         )
 
         # Simulate stacking
-        for i, box in enumerate([self.box1, self.box2]):
+        for i, _ in enumerate([self.box1, self.box2]):
             self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.6)
             yield from self._robot_controller.wait_for_joint_position(
                 axis2_dof_index,
