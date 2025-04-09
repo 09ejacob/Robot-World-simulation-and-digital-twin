@@ -376,9 +376,5 @@ class PickBoxesScenario:
             self._world.step(render=True)
             yield
 
-        for _ in range(60):
-            self._world.step(render=True)
-            yield
-
         print("Simulation complete. Stopping simulation.")
         self._world.stop()
