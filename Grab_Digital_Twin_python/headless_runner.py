@@ -15,6 +15,15 @@ from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
 from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
 
 
+def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
+    start_time = time.time()
+    while not condition_fn():
+        if update_fn is not None:
+            update_fn()
+        if time.time() - start_time > timeout:
+            break
+
+
 def main():
     print("Starting UDP scenario in headless mode.")
 
@@ -24,20 +33,19 @@ def main():
     print("Setting up Scene...")
     setup_scene()
 
-    print("[MAIN] Forcing update loop to finalize stage...")
-    for _ in range(30):
-        simulation_app.update()
-        time.sleep(0.05)
+    wait_for_condition(
+        lambda: get_current_stage().GetRootLayer() is not None,
+        timeout=5.0,
+        update_fn=simulation_app.update,
+    )
 
     stage = get_current_stage()
+
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
         print("[MAIN] Physics scene not found in stage")
         return
 
-    print("[MAIN] Giving physics a moment to settle...")
-    for _ in range(20):
-        simulation_app.update()
-        time.sleep(0.05)
+    wait_for_condition(lambda: False, timeout=1.0, update_fn=simulation_app.update)
 
     physx_iface = _physx.acquire_physx_interface()
     print(f"[DEBUG] PhysX interface acquired: {physx_iface is not None}")
@@ -48,35 +56,31 @@ def main():
 
     for _ in range(5):
         world.step(render=False)
-        time.sleep(0.1)
 
     print("[MAIN] Physics context initialized.")
 
     timeline_iface = omni.timeline.get_timeline_interface()
     timeline_iface.set_auto_update(False)
 
-    root = stage.GetPseudoRoot()
     print("[DEBUG] Stage children:")
-    for child in root.GetChildren():
+    for child in stage.GetPseudoRoot().GetChildren():
         print(f" - {child.GetPath()}")
 
-    for i in range(200):
-        robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
-        if robot_prim.IsValid():
-            print("[MAIN] /Robot loaded.")
-            break
-        if i % 10 == 0:
-            print(f"[MAIN] Waiting for /Robot to appear... (attempt {i})")
-        time.sleep(0.05)
-    else:
+    wait_for_condition(
+        lambda: stage.GetPrimAtPath(ROBOT_PATH).IsValid(),
+        timeout=5.0,
+        update_fn=simulation_app.update,
+    )
+    if not stage.GetPrimAtPath(ROBOT_PATH).IsValid():
         print("[MAIN] /Robot never appeared — aborting.")
         return
+    else:
+        print("[MAIN] /Robot loaded.")
 
     timeline_iface.play()
 
-    for _ in range(50):
+    for _ in range(10):
         world.step(render=False)
-        time.sleep(0.1)
 
     robot_controller = RobotController()
     robot_controller.refresh_handles()
@@ -95,16 +99,15 @@ def main():
 
     for _ in range(10):
         world.step(render=False)
-        time.sleep(0.1)
 
     print("[MAIN] Scenario is set up. Entering main loop...")
 
     try:
         while True:
-            # print("[LOOP] Simulation loop is running...")
             scenario.update()
+            for _ in range(10):
+                world.step(render=False)
             world.step(render=True)
-            time.sleep(0.01)
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")
 
