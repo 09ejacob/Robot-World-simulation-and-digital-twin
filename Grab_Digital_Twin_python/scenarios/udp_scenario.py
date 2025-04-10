@@ -14,6 +14,11 @@ from ..global_variables import (
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
     SHELF_PATH,
+    BROADCAST_RATE,
+    LISTEN_HOST,
+    LISTEN_PORT,
+    SEND_HOST,
+    SEND_PORT,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
@@ -21,14 +26,6 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 
 
 class UDPScenario:
-    BROADCAST_RATE = 0.05  # 0.05s = 20 Hz
-
-    LISTEN_HOST = "127.0.0.1"
-    LISTEN_PORT = 9999
-
-    SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
-    SEND_PORT = 9998
-
     def __init__(
         self,
         robot_controller,
@@ -42,24 +39,21 @@ class UDPScenario:
 
         self.command_queue = queue.Queue()
 
-        # Performance tracking
         self.print_performance_stats = print_performance_stats
         self.udp_message_count = 0
         self.executed_command_count = 0
         self.last_time_check = time.time()
 
-        # Print DOF positions
         self.print_positions = print_positions
 
-        # Initialize the UDP server
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
         self.broadcast_thread = None
         self.broadcast_stop_event = threading.Event()
-        self.broadcast_rate = self.BROADCAST_RATE
-        self.broadcast_target_host = self.SEND_HOST
-        self.broadcast_target_port = self.SEND_PORT
+        self.broadcast_rate = BROADCAST_RATE
+        self.broadcast_target_host = SEND_HOST
+        self.broadcast_target_port = SEND_PORT
         self.last_position_print_time = time.time()
 
         self.overview_camera_active = False
