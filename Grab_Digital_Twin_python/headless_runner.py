@@ -32,6 +32,16 @@ def parse_args():
         action="store_true",
         help="Disable camera setup and UDP capture functionality",
     )
+    parser.add_argument(
+        "--print_positions",
+        action="store_true",
+        help="Print joint and object positions",
+    )
+    parser.add_argument(
+        "--print_performance_stats",
+        action="store_true",
+        help="Print UDP and command execution stats",
+    )
     return parser.parse_args()
 
 
@@ -120,8 +130,8 @@ def main():
     scenario = UDPScenario(
         robot_controller=robot_controller,
         world=world,
-        print_positions=False,
-        print_performance_stats=False,
+        print_positions=args.print_positions,
+        print_performance_stats=args.print_performance_stats,
         allow_udp_capture=not args.disable_cameras,
     )
     scenario.setup()
