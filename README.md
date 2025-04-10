@@ -14,7 +14,7 @@ NOTE: ***Make sure that the folder for the extension does not contain any triple
 ## Using the Extension
 
 1. After opening `Grab Digital Twin` from the toolbar, a new tab should appear.
-2. Pressing the `LOAD` button under *World Controls* should make the robot appear with the default scenario.
+2. Pressing the `LOAD` button under *World Controls* should make the robot appear with no scenario selected.
 3. From here it is possible to either run a scenario, or control the robot manually.
     - Under *Scenario* it should be possible to select one of several scenarios made for the robot.
         - After selecting a scenario while the simulation is not running, pressing the `RUN` button should make the robot perform the predefined task of the chosen scenario.
