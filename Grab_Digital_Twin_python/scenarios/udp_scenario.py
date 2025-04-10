@@ -171,7 +171,8 @@ class UDPScenario:
         try:
             pos = list(map(float, parts[1:4]))
             self._robot_controller.teleport_robot(pos)
-            print(f"Teleported robot to: {pos}")
+            if self.print_positions:
+                print(f"Teleported robot to position: {pos}")
         except ValueError:
             print("[ERROR] tp_robot values must be floats.")
 
@@ -183,7 +184,6 @@ class UDPScenario:
         try:
             offset = tuple(map(float, parts[2:5]))
             self.nudge_box(prim_path, offset)
-            print(f"Nudged box at {prim_path} by {offset}")
         except ValueError:
             print("[ERROR] nudge_box values must be floats.")
 
@@ -237,9 +237,10 @@ class UDPScenario:
         current_translation = translate_op.Get()
         new_translation = current_translation + Gf.Vec3d(*offset)
         translate_op.Set(new_translation)
-        print(
-            f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}"
-        )
+        if self.print_positions:
+            print(
+                f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}"
+            )
 
     def _handle_capture_command(self, parts):
         if self.allow_udp_capture:
@@ -483,11 +484,7 @@ class UDPScenario:
                 start_time - self.last_overview_capture_time
                 >= self.overview_capture_interval
             ):
-                result = self._robot_controller.camera_capture.capture_image(
-                    "OverviewCamera"
-                )
-                if result:
-                    print("Overview camera captured image:", result)
+                self._robot_controller.camera_capture.capture_image("OverviewCamera")
                 self.last_overview_capture_time = start_time
 
     def print_box_position(self, box_path):
