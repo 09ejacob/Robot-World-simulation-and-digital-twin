@@ -258,6 +258,8 @@ class UIBuilder:
         On pressing the Load Button, a new instance of World() is created and then this function is called.
         The user should now load their assets onto the stage and add them to the World Scene.
         """
+      
+        self._camera_capture.initialize()
         create_new_stage()
         setup_scene()
 
