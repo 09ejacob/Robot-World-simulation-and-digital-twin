@@ -27,6 +27,11 @@ def parse_args():
     parser.add_argument(
         "--physics_fps", type=float, default=60.0, help="Physics frames per second"
     )
+    parser.add_argument(
+        "--disable_cameras",
+        action="store_true",
+        help="Disable camera setup and UDP capture functionality",
+    )
     return parser.parse_args()
 
 
@@ -54,7 +59,7 @@ def main():
     create_new_stage()
 
     print("Setting up Scene...")
-    setup_scene()
+    setup_scene(enable_cameras=not args.disable_cameras)
 
     wait_for_condition(
         lambda: get_current_stage().GetRootLayer() is not None,
@@ -115,8 +120,9 @@ def main():
     scenario = UDPScenario(
         robot_controller=robot_controller,
         world=world,
-        print_positions=True,
-        print_performance_stats=True,
+        print_positions=False,
+        print_performance_stats=False,
+        allow_udp_capture=not args.disable_cameras,
     )
     scenario.setup()
 
@@ -130,7 +136,8 @@ def main():
             scenario.update()
             for _ in range(10):
                 world.step(render=False)
-            world.step(render=True)
+            if not args.disable_cameras:
+                world.step(render=True)
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")
 
