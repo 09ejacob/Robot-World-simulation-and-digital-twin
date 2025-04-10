@@ -75,9 +75,7 @@ def create_camera(resolutions=None):
     )
     register_existing_camera(BOX_CAMERA_1, resolution=resolutions.get(BOX_CAMERA_1))
     register_existing_camera(BOX_CAMERA_2, resolution=resolutions.get(BOX_CAMERA_2))
-    register_existing_camera(
-        OVERVIEW_CAMERA, resolution=resolutions.get(OVERVIEW_CAMERA)
-    )
+    register_existing_camera(OVERVIEW_CAMERA, resolution=resolutions.get(OVERVIEW_CAMERA))
 
 
 def load_grab_usd():

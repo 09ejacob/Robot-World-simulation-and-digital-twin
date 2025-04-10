@@ -64,7 +64,7 @@ class UDPScenario:
 
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
-        self.overview_capture_interval = 1 / 10
+        self.overview_capture_interval = 0.2
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
@@ -137,6 +137,8 @@ class UDPScenario:
         elif command == "stop_overview_camera":
             self.overview_camera_active = False
             print("Overview-camera capturing stopped.")
+
+            self._robot_controller.generate_video(3 / self.overview_capture_interval)
             return
 
         handlers = {

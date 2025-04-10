@@ -234,3 +234,6 @@ class RobotController:
             list: Camera IDs
         """
         return self.camera_capture.get_registered_cameras()
+    
+    def generate_video(self, fps):
+        self.camera_capture.convert_video_from_images(fps)
