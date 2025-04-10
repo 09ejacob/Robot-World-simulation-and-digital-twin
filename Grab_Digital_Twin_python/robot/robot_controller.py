@@ -194,7 +194,6 @@ class RobotController:
         xformable.ClearXformOpOrder()
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
-        print(f"Teleported robot to position: {position}")
 
     def capture_from_camera(self, camera_id):
         """
@@ -234,6 +233,6 @@ class RobotController:
             list: Camera IDs
         """
         return self.camera_capture.get_registered_cameras()
-    
+
     def generate_video(self, fps):
         self.camera_capture.convert_video_from_images(fps)
