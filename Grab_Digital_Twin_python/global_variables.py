@@ -14,7 +14,7 @@ PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 SHELF_PATH = f"{ENVIRONMENT_PATH}/Shelf"
 
-# Robot paths (NOTE: Robot is directly under root, not under /World)
+# Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
 CAMERA_PATH = f"{ROBOT_PATH}/BoxCamera"
