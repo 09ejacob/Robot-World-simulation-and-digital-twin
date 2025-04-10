@@ -1,4 +1,5 @@
 import time
+import argparse
 from omni.isaac.kit import SimulationApp
 
 simulation_app = SimulationApp({"headless": True})
@@ -15,6 +16,20 @@ from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
 from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--rendering_fps",
+        type=float,
+        default=60.0,
+        help="Rendering frames per second (e.g., 30, 60)",
+    )
+    parser.add_argument(
+        "--physics_fps", type=float, default=60.0, help="Physics frames per second"
+    )
+    return parser.parse_args()
+
+
 def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
     start_time = time.time()
     while not condition_fn():
@@ -25,8 +40,16 @@ def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
 
 
 def main():
-    print("Starting UDP scenario in headless mode.")
+    args = parse_args()
 
+    physics_dt = 1.0 / args.physics_fps
+    rendering_dt = 1.0 / args.rendering_fps
+
+    print(
+        f"Starting UDP scenario in headless mode "
+        f"(physics_fps={args.physics_fps}, rendering_fps={args.rendering_fps}, "
+        f"physics_dt={physics_dt:.5f}, rendering_dt={rendering_dt:.5f})"
+    )
     print("Creating stage...")
     create_new_stage()
 
@@ -51,7 +74,7 @@ def main():
     print(f"[DEBUG] PhysX interface acquired: {physx_iface is not None}")
 
     print("Creating World...")
-    world = World(physics_dt=1 / 60.0, rendering_dt=1 / 60.0)
+    world = World(physics_dt=physics_dt, rendering_dt=rendering_dt)
     world.reset()
 
     for _ in range(5):
