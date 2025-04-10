@@ -30,8 +30,9 @@ class UDPScenario:
         self,
         robot_controller,
         world=None,
-        print_positions=True,
+        print_positions=False,
         print_performance_stats=False,
+        allow_udp_capture=True,
     ):
         self._robot_controller = robot_controller
         self._world = world
@@ -46,6 +47,10 @@ class UDPScenario:
 
         self.print_positions = print_positions
 
+        # Allow capturing from camera
+        self.allow_udp_capture = allow_udp_capture
+
+        # Initialize the UDP server
         self.udp = UDPController()
         self.udp.callback = self._udp_callback
 
@@ -125,14 +130,22 @@ class UDPScenario:
         command = parts[0].lower()
 
         if command == "start_overview_camera":
-            self.overview_camera_active = True
-            print("Overview-camera capturing started.")
+            if self.allow_udp_capture:
+                self.overview_camera_active = True
+                print("Overview-camera capturing started.")
+            else:
+                print("[INFO] Overview camera is disabled.")
             return
-        elif command == "stop_overview_camera":
-            self.overview_camera_active = False
-            print("Overview-camera capturing stopped.")
 
-            self._robot_controller.generate_video(3 / self.overview_capture_interval)
+        elif command == "stop_overview_camera":
+            if self.allow_udp_capture:
+                self.overview_camera_active = False
+                print("Overview-camera capturing stopped.")
+                self._robot_controller.generate_video(
+                    3 / self.overview_capture_interval
+                )
+            else:
+                print("[INFO] Camera is disabled — skipping video generation.")
             return
 
         handlers = {
@@ -141,7 +154,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
-            "capture": lambda p: self._robot_controller.capture_from_all_cameras(),
+            "capture": lambda p: self._handle_capture_command(p),
         }
 
         if command in handlers:
@@ -227,6 +240,12 @@ class UDPScenario:
         print(
             f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}"
         )
+
+    def _handle_capture_command(self, parts):
+        if self.allow_udp_capture:
+            self._robot_controller.capture_from_all_cameras()
+        else:
+            print("[INFO] Camera is disabled.")
 
     def stop_broadcasting(self):
         self.broadcast_stop_event.set()
@@ -439,17 +458,19 @@ class UDPScenario:
 
         # Print performance stats every 1 second
         if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
-            # print(
-            #     f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
-            # )
+            print(
+                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
+            )
             self.udp_message_count = 0
             self.executed_command_count = 0
             self.last_time_check = start_time
 
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
             print("-----------------------------------------------------------------")
-            # for name, dof_index, is_angular in self.axis_dofs:
-            #     self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
+            for name, dof_index, is_angular in self.axis_dofs:
+                self._robot_controller.print_joint_position_by_index(
+                    dof_index, is_angular
+                )
 
             self.print_box_position("/World/Environment/stack1/box_1_19")
             self.print_box_position("/World/Environment/stack4/box_4_30")
