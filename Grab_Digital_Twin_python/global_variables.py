@@ -1,11 +1,3 @@
-# Copyright (c) 2022-2024, NVIDIA CORPORATION. All rights reserved.
-#
-# NVIDIA CORPORATION and its licensors retain all intellectual property
-# and proprietary rights in and to this software, related documentation
-# and any modifications thereto. Any use, reproduction, disclosure or
-# distribution of this software and related documentation without an express
-# license agreement from NVIDIA CORPORATION is strictly prohibited.
-
 # Extension Info
 EXTENSION_TITLE = "Grab Digital Twin"
 EXTENSION_DESCRIPTION = "solwr.grab.digital.twin"
@@ -22,7 +14,7 @@ PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 SHELF_PATH = f"{ENVIRONMENT_PATH}/Shelf"
 
-# Robot paths (NOTE: Robot is directly under root, not under /World)
+# Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
 CAMERA_PATH = f"{ROBOT_PATH}/BoxCamera"
@@ -69,3 +61,10 @@ GRIPPER_ACTION_GRAPH_PATH = f"{GRIPPER_PATH}/SurfaceGripperActionGraph"
 GRIPPER_OPEN_PATH = f"{GRIPPER_ACTION_GRAPH_PATH}/open"
 GRIPPER_CLOSE_PATH = f"{GRIPPER_ACTION_GRAPH_PATH}/close"
 GRIPPER_OFFSET_PATH = f"{GRIPPER_ACTION_GRAPH_PATH}/SurfaceGripperOffset"
+
+# UDP Communication Settings
+BROADCAST_RATE = 0.05  # 20 Hz
+LISTEN_HOST = "127.0.0.1"
+LISTEN_PORT = 9999
+SEND_HOST = "127.0.0.1"
+SEND_PORT = 9998

@@ -6,7 +6,6 @@ import numpy as np
 import psutil
 from os.path import dirname, abspath, join
 from pxr import UsdGeom, Gf
-from pxr import UsdGeom, Gf
 from omni.isaac.core import World
 from ..global_variables import (
     AXIS1_JOINT_PATH,
@@ -14,10 +13,12 @@ from ..global_variables import (
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
     ENVIRONMENT_PATH,
-    AXIS4_JOINT_PATH,
-    ENVIRONMENT_PATH,
     SHELF_PATH,
-    OVERVIEW_CAMERA,
+    BROADCAST_RATE,
+    LISTEN_HOST,
+    LISTEN_PORT,
+    SEND_HOST,
+    SEND_PORT,
 )
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
@@ -25,20 +26,13 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 
 
 class UDPScenario:
-    BROADCAST_RATE = 0.05  # 0.05s = 20 Hz
-
-    LISTEN_HOST = "127.0.0.1"
-    LISTEN_PORT = 9999
-
-    SEND_HOST = "127.0.0.1"  # IP of device to broadcast to
-    SEND_PORT = 9998
-
     def __init__(
         self,
         robot_controller,
         world=None,
-        print_positions=True,
+        print_positions=False,
         print_performance_stats=False,
+        allow_udp_capture=True,
     ):
         self._robot_controller = robot_controller
         self._world = world
@@ -46,14 +40,15 @@ class UDPScenario:
 
         self.command_queue = queue.Queue()
 
-        # Performance tracking
         self.print_performance_stats = print_performance_stats
         self.udp_message_count = 0
         self.executed_command_count = 0
         self.last_time_check = time.time()
 
-        # Print DOF positions
         self.print_positions = print_positions
+
+        # Allow capturing from camera
+        self.allow_udp_capture = allow_udp_capture
 
         # Initialize the UDP server
         self.udp = UDPController()
@@ -61,14 +56,14 @@ class UDPScenario:
 
         self.broadcast_thread = None
         self.broadcast_stop_event = threading.Event()
-        self.broadcast_rate = self.BROADCAST_RATE
-        self.broadcast_target_host = self.SEND_HOST
-        self.broadcast_target_port = self.SEND_PORT
+        self.broadcast_rate = BROADCAST_RATE
+        self.broadcast_target_host = SEND_HOST
+        self.broadcast_target_port = SEND_PORT
         self.last_position_print_time = time.time()
 
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
-        self.overview_capture_interval = 1 / 10
+        self.overview_capture_interval = 0.2
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
@@ -83,13 +78,28 @@ class UDPScenario:
         self.command_queue.put(message)
         self.udp_message_count += 1
 
-    def reset(self):
-        """Resets the scenario and stops the UDP server."""
+    def unload(self):
+        """Resets the simulation, stops the UDP server, and unloads the scenario-specific prims from the stage."""
         self._did_run = False
         self.udp.stop()
         self.stop_broadcasting()
         if self._world is not None:
             self._world.reset()
+        self.remove_scenario_specific_prims()
+
+    def remove_scenario_specific_prims(self):
+        """
+        Removes the scenario-specific prims from the stage.
+        """
+        stage = omni.usd.get_context().get_stage()
+        box_prim_paths = [box.prim_path for box in self.boxes]
+        pallet_prim_paths = [pallet.prim_path for pallet in self.pallets]
+        additional_prim_paths = [SHELF_PATH]
+        prim_paths = pallet_prim_paths + box_prim_paths + additional_prim_paths
+        for prim_path in prim_paths:
+            prim = stage.GetPrimAtPath(prim_path)
+            if prim.IsValid():
+                stage.RemovePrim(prim_path)
 
     def start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
         """Starts the UDP server if the port is not already in use."""
@@ -120,12 +130,22 @@ class UDPScenario:
         command = parts[0].lower()
 
         if command == "start_overview_camera":
-            self.overview_camera_active = True
-            print("Overview-camera capturing started.")
+            if self.allow_udp_capture:
+                self.overview_camera_active = True
+                print("Overview-camera capturing started.")
+            else:
+                print("[INFO] Overview camera is disabled.")
             return
+
         elif command == "stop_overview_camera":
-            self.overview_camera_active = False
-            print("Overview-camera capturing stopped.")
+            if self.allow_udp_capture:
+                self.overview_camera_active = False
+                print("Overview-camera capturing stopped.")
+                self._robot_controller.generate_video(
+                    3 / self.overview_capture_interval
+                )
+            else:
+                print("[INFO] Camera is disabled — skipping video generation.")
             return
 
         handlers = {
@@ -134,7 +154,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.print_contact_force(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
-            "capture": lambda p: self._robot_controller.capture_from_all_cameras(),
+            "capture": lambda p: self._handle_capture_command(p),
         }
 
         if command in handlers:
@@ -151,7 +171,8 @@ class UDPScenario:
         try:
             pos = list(map(float, parts[1:4]))
             self._robot_controller.teleport_robot(pos)
-            print(f"Teleported robot to: {pos}")
+            if self.print_positions:
+                print(f"Teleported robot to position: {pos}")
         except ValueError:
             print("[ERROR] tp_robot values must be floats.")
 
@@ -163,7 +184,6 @@ class UDPScenario:
         try:
             offset = tuple(map(float, parts[2:5]))
             self.nudge_box(prim_path, offset)
-            print(f"Nudged box at {prim_path} by {offset}")
         except ValueError:
             print("[ERROR] nudge_box values must be floats.")
 
@@ -217,9 +237,16 @@ class UDPScenario:
         current_translation = translate_op.Get()
         new_translation = current_translation + Gf.Vec3d(*offset)
         translate_op.Set(new_translation)
-        print(
-            f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}"
-        )
+        if self.print_positions:
+            print(
+                f"Nudged box at {prim_path} by offset {offset}. New position: {new_translation}"
+            )
+
+    def _handle_capture_command(self, parts):
+        if self.allow_udp_capture:
+            self._robot_controller.capture_from_all_cameras()
+        else:
+            print("[INFO] Camera is disabled.")
 
     def stop_broadcasting(self):
         self.broadcast_stop_event.set()
@@ -284,6 +311,8 @@ class UDPScenario:
                 mass=14.0,
             )
             boxes.append(box)
+            # Also add the box to the scenario class
+            self.boxes.append(box)
         return boxes
 
     def create_pick_stack(
@@ -296,12 +325,14 @@ class UDPScenario:
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
-        self.pallet = DynamicCuboid(
-            prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
-            position=pallet_position,
-            scale=np.array((1.2, 0.8, 0.144)),
-            color=np.array((0.2, 0.08, 0.05)),
-            mass=14.0,
+        self.pallets.append(
+            DynamicCuboid(
+                prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
+                position=pallet_position,
+                scale=np.array((1.2, 0.8, 0.144)),
+                color=np.array((0.2, 0.08, 0.05)),
+                mass=25.0,
+            )
         )
 
         self.create_boxes(
@@ -350,6 +381,9 @@ class UDPScenario:
             else:
                 self.axis_dofs.append((name, dof_index, is_angular))
 
+        # Create several pallets with stacks of boxes on top
+        self.pallets = []
+        self.boxes = []
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 0.072),
@@ -425,17 +459,19 @@ class UDPScenario:
 
         # Print performance stats every 1 second
         if self.print_performance_stats and (start_time - self.last_time_check >= 1.0):
-            # print(
-            #     f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
-            # )
+            print(
+                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
+            )
             self.udp_message_count = 0
             self.executed_command_count = 0
             self.last_time_check = start_time
 
         if self.print_positions and (start_time - self.last_position_print_time >= 1.0):
             print("-----------------------------------------------------------------")
-            # for name, dof_index, is_angular in self.axis_dofs:
-            #     self._robot_controller.print_joint_position_by_index(dof_index, is_angular)
+            for name, dof_index, is_angular in self.axis_dofs:
+                self._robot_controller.print_joint_position_by_index(
+                    dof_index, is_angular
+                )
 
             self.print_box_position("/World/Environment/stack1/box_1_19")
             self.print_box_position("/World/Environment/stack4/box_4_30")
@@ -448,11 +484,7 @@ class UDPScenario:
                 start_time - self.last_overview_capture_time
                 >= self.overview_capture_interval
             ):
-                result = self._robot_controller.camera_capture.capture_image(
-                    "OverviewCamera"
-                )
-                if result:
-                    print("Overview camera captured image:", result)
+                self._robot_controller.camera_capture.capture_image("OverviewCamera")
                 self.last_overview_capture_time = start_time
 
     def print_box_position(self, box_path):

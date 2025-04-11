@@ -5,10 +5,8 @@ from isaacsim.core.utils.prims import create_prim
 from isaacsim.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
-from .camera import setup_camera
 from isaacsim.core.prims import SingleXFormPrim
 from .camera import register_existing_camera
-from ..camera_capture import CameraCapture
 
 
 from ..global_variables import (
@@ -100,7 +98,7 @@ def _add_light():
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
 
-def setup_scene():
+def setup_scene(enable_cameras=True):
     stage = get_current_stage()
 
     # Define PhysicsScene if it doesn't exist
@@ -120,8 +118,8 @@ def setup_scene():
 
     load_grab_usd()
 
-    # create_camera()
-    custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
-    create_camera(custom_resolutions)
+    if enable_cameras:
+        custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
+        create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
