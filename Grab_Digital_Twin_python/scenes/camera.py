@@ -123,7 +123,6 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
         print(f"Camera resolution updated to {resolution}")
 
         # Register with camera capture system
-        camera_id = prim_path.split("/")[-1]
         camera_capture.register_camera(camera_id, camera)
         
 

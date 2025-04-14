@@ -5,7 +5,6 @@ from isaacsim.core.utils.prims import create_prim
 from isaacsim.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
-from .camera import setup_camera
 from isaacsim.core.prims import SingleXFormPrim
 from .camera import register_existing_camera
 from .camera import register_stereo_pair
@@ -96,24 +95,6 @@ def create_camera3(resolutions=None):
 def create_camera2():
     register_existing_camera(BASE_CAMERA_PATH)
 
-
-def load_grab_usd():
-    current_dir = dirname(abspath(__file__))
-    usd_path = abspath(
-        join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
-    )
-
-    add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
-
-
-def _add_light():
-    sphereLight = UsdLux.SphereLight.Define(
-        get_current_stage(), Sdf.Path("/World/SphereLight")
-    )
-    sphereLight.CreateRadiusAttr(2)
-    sphereLight.CreateIntensityAttr(100000)
-    SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
-
 def add_sensor_asset(sensor_type: str, parent_prim_path: str = "/World", sensor_name: str = "sensor") -> str:
     """
     Adds a sensor camera asset to the stage.
@@ -148,7 +129,26 @@ def addstereo_camera():
     )
     
 
-def setup_scene():
+
+def load_grab_usd():
+    current_dir = dirname(abspath(__file__))
+    usd_path = abspath(
+        join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
+    )
+
+    add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
+
+
+def _add_light():
+    sphereLight = UsdLux.SphereLight.Define(
+        get_current_stage(), Sdf.Path("/World/SphereLight")
+    )
+    sphereLight.CreateRadiusAttr(2)
+    sphereLight.CreateIntensityAttr(100000)
+    SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
+
+
+def setup_scene(enable_cameras=True):
     stage = get_current_stage()
 
     # Define PhysicsScene if it doesn't exist
@@ -185,5 +185,8 @@ def setup_scene():
         BOX_CAMERA_1,
         BOX_CAMERA_2,
     )
+    if enable_cameras:
+        custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
+        create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
