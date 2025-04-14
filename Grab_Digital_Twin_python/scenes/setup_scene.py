@@ -9,6 +9,7 @@ from .camera import setup_camera
 from isaacsim.core.prims import SingleXFormPrim
 from .camera import register_existing_camera
 from .camera import register_stereo_pair
+from .camera import get_camera_baseline
 from ..camera_capture import CameraCapture
 
 
@@ -165,6 +166,7 @@ def setup_scene():
 
     create_ground_plane(GROUND_PLANE_PATH)
 
+
     load_grab_usd()
 
     # Add sensor cameras
@@ -179,5 +181,9 @@ def setup_scene():
     }
     #create_camera3(custom_resolutions)
     addstereo_camera()
+    get_camera_baseline(
+        BOX_CAMERA_1,
+        BOX_CAMERA_2,
+    )
     create_additional_joints()
     _add_light()

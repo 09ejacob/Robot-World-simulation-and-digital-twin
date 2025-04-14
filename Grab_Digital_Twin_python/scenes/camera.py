@@ -184,3 +184,49 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     
     print(f"✅ Successfully registered stereo pair '{pair_id}' with baseline , stereo pair: {stereo_pair}")
     return stereo_pair
+
+
+def get_camera_baseline(left_prim_path, right_prim_path):
+    """
+    Calculate the baseline distance between two camera prims in the scene
+    
+    Args:
+        left_prim_path (str): USD path to the left camera
+        right_prim_path (str): USD path to the right camera
+        
+    Returns:
+        float: Baseline distance in scene units
+    """
+    stage = omni.usd.get_context().get_stage()
+    
+    # Get camera prims
+    left_prim = stage.GetPrimAtPath(left_prim_path)
+    right_prim = stage.GetPrimAtPath(right_prim_path)
+    
+    if not left_prim.IsValid() or not right_prim.IsValid():
+        print("Error: One or both camera prims are invalid.")
+        return None
+    
+    # Get world transforms for both cameras
+    from pxr import UsdGeom
+    left_xform = UsdGeom.Xformable(left_prim)
+    right_xform = UsdGeom.Xformable(right_prim)
+    
+    # Get world positions
+    left_matrix = left_xform.ComputeLocalToWorldTransform(0)
+    right_matrix = right_xform.ComputeLocalToWorldTransform(0)
+    
+    # Extract translation components (positions)
+    left_position = left_matrix.ExtractTranslation()
+    right_position = right_matrix.ExtractTranslation()
+    
+    # Calculate Euclidean distance between cameras
+    import math
+    baseline = math.sqrt(
+        (right_position[0] - left_position[0])**2 +
+        (right_position[1] - left_position[1])**2 +
+        (right_position[2] - left_position[2])**2
+    )
+    
+    print(f"Detected baseline between cameras: {baseline:.4f} scene units")
+    return baseline
