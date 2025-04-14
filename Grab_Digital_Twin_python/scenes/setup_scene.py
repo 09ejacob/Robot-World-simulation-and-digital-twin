@@ -8,6 +8,7 @@ from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from .camera import setup_camera
 from isaacsim.core.prims import SingleXFormPrim
 from .camera import register_existing_camera
+from .camera import register_stereo_pair
 from ..camera_capture import CameraCapture
 
 
@@ -138,6 +139,13 @@ def add_sensor_asset(sensor_type: str, parent_prim_path: str = "/World", sensor_
     )
     return full_prim_path
 
+def addstereo_camera():
+    register_stereo_pair(
+        left_prim_path=BOX_CAMERA_1,
+        right_prim_path=BOX_CAMERA_2,
+        pair_id="stereo_pair",
+    )
+    
 
 def setup_scene():
     stage = get_current_stage()
@@ -169,6 +177,7 @@ def setup_scene():
     BOX_CAMERA_2: (1280, 720),
     BASE_CAMERA_PATH: (1280, 720),
     }
-    create_camera3(custom_resolutions)
+    #create_camera3(custom_resolutions)
+    addstereo_camera()
     create_additional_joints()
     _add_light()

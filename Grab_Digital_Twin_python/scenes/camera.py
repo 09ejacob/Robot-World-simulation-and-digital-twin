@@ -116,6 +116,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
 
         # camera.set_frequency(30)
         print(camera.get_frequency())
+        
 
         if resolution is not None:
             camera.set_resolution(resolution)
@@ -124,10 +125,62 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
         # Register with camera capture system
         camera_id = prim_path.split("/")[-1]
         camera_capture.register_camera(camera_id, camera)
+        
 
         print(f"Successfully registered camera: {camera_id}")
         return camera
+        
 
     except Exception as e:
         print(f"Error registering camera at {prim_path}: {e}")
         return None
+    
+
+
+def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
+    """
+    Register a stereo camera pair from existing cameras in the scene with a known baseline distance
+
+    Args:
+        left_prim_path (str): Full USD prim path of the left camera
+        right_prim_path (str): Full USD prim path of the right camera
+        baseline (float): Known baseline distance between cameras in scene units
+        pair_id (str, optional): ID for the stereo pair. If None, will be generated from camera names
+
+    Returns:
+        dict or None: Stereo pair information if successful, None otherwise
+    """
+    # Extract camera IDs from prim paths
+    left_camera_id = left_prim_path.split("/")[-1]
+    right_camera_id = right_prim_path.split("/")[-1]
+    
+    # Generate pair_id if not provided
+    if pair_id is None:
+        pair_id = f"{left_camera_id}_{right_camera_id}"
+    
+    
+    # Check if both cameras are registered
+    if left_camera_id not in camera_capture.camera_registry:
+        print(f"Left camera '{left_camera_id}' not registered. Attempting to register...")
+        left_camera = register_existing_camera(left_prim_path)
+        if left_camera is None:
+            print(f"Failed to register left camera '{left_camera_id}'")
+            return None
+    
+    if right_camera_id not in camera_capture.camera_registry:
+        print(f"Right camera '{right_camera_id}' not registered. Attempting to register...")
+        right_camera = register_existing_camera(right_prim_path)
+        if right_camera is None:
+            print(f"Failed to register right camera '{right_camera_id}'")
+            return None
+    
+    # Register the stereo pair
+    stereo_pair = {
+        "left": left_camera_id,
+        "right": right_camera_id,
+        "left_prim_path": left_prim_path,
+        "right_prim_path": right_prim_path,
+    }
+    
+    print(f"✅ Successfully registered stereo pair '{pair_id}' with baseline , stereo pair: {stereo_pair}")
+    return stereo_pair

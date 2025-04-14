@@ -9,20 +9,19 @@ class CameraCapture:
     A class to manage camera captures in Isaac Sim.
     Handles image capturing, storage, and scheduling for multiple cameras.
     """
-
+    camera_registry = {}  # class-level variable
+    base_save_dir = "camera_captures"
+    capture_counters = {}
+    last_capture_time = {}
     _instance = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(CameraCapture, cls).__new__(cls)
-            cls._instance.initialize()
-        return cls._instance
+    # def __new__(cls):
+    #     if cls._instance is None:
+    #         cls._instance = super(CameraCapture, cls).__new__(cls)
+    #         cls._instance.initialize()
+    #     return cls._instance
 
     def initialize(self):
-        self.base_save_dir = "camera_captures"
-        self.camera_registry = {}
-        self.capture_counters = {}  # Initialize capture_counters
-        self.last_capture_time = {}
         print("Camera Capture System Initialized")
 
     def register_camera(self, camera_id, camera):
@@ -306,3 +305,4 @@ class CameraCapture:
         except Exception as e:
             print(f"❌ Error saving pointcloud from {camera_id}: {e}")
             return None
+    
