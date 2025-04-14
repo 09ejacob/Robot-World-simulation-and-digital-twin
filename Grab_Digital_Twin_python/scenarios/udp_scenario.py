@@ -448,6 +448,16 @@ class UDPScenario:
                 )
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
+
+            try:
+                reading = self._robot_controller.get_contact_force_reading()
+                force_n = reading.get("force", 0)
+                force_kgf = force_n / 9.81
+                data.append(f"force_N:{force_n:.2f}")
+                data.append(f"force_kgf:{force_kgf:.2f}")
+            except Exception as e:
+                print(f"[WARN] Could not read force sensor: {e}")
+
             if data:
                 self.udp.send(
                     ";".join(data),

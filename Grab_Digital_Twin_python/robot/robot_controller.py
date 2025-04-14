@@ -81,6 +81,13 @@ class RobotController:
         clamped_position = max(lower_limit, min(position, upper_limit))
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
+    def get_contact_force_reading(self):
+        sensor = ContactSensor(
+            prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
+            name="Contact_Sensor",
+        )
+        return sensor.get_current_frame()
+
     def print_contact_force(self):
         sensor = ContactSensor(
             prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
