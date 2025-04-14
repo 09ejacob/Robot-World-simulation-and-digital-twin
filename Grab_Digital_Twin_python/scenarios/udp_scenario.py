@@ -23,6 +23,8 @@ from ..global_variables import (
 from ..networking.udp_controller import UDPController
 from omni.isaac.core.objects import DynamicCuboid
 from isaacsim.core.utils.stage import add_reference_to_stage
+from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
+from isaacsim.core.utils.stage import create_new_stage
 
 
 class UDPScenario:
@@ -155,6 +157,7 @@ class UDPScenario:
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
             "capture": lambda p: self._handle_capture_command(p),
+            "reload": lambda p: self._reload_scene(),
         }
 
         if command in handlers:
@@ -504,11 +507,22 @@ class UDPScenario:
 
         print(f"No translation op found for box at {box_path}")
 
+    def _reload_scene(self):
+        print("Reloading scene with UDP scenario...")
+
+        self.unload()
+
+        create_new_stage()
+        setup_scene(enable_cameras=self.allow_udp_capture)
+
+        self.setup()
+
+        print("Scene reloaded and UDP scenario started.")
+
 
 if __name__ == "__main__":
-    # Initialize your RobotController here.
     robot_controller = ...
-    # Enable printing of positions and performance stats.
+
     scenario = UDPScenario(
         robot_controller, print_positions=True, print_performance_stats=True
     )

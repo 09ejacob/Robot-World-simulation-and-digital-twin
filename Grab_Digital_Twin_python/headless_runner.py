@@ -145,9 +145,10 @@ def main():
         while True:
             scenario.update()
             for _ in range(10):
-                world.step(render=False)
+                scenario._world.step(render=False)
             if not args.disable_cameras:
-                world.step(render=True)
+                scenario._world.step(render=True)
+
     except KeyboardInterrupt:
         print("Exiting headless UDP scenario.")
 
