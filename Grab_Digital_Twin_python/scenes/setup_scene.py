@@ -12,7 +12,6 @@ from .camera import get_camera_baseline
 from ..camera_capture import CameraCapture
 
 
-
 from ..global_variables import (
     FIXED_JOINT_BASE_GROUND,
     GROUND_PLANE_PATH,
@@ -66,20 +65,8 @@ def create_additional_joints():
         "PhysicsFixedJoint",
         None,
     )
-
-
-# TODO: Remove duplicate function
-def create_camera():
-    # TODO: Create the camera in the USD file instead
-    setup_camera(
-        BASE_CAMERA_PATH,
-        position=np.array([-0.07/2 , 0.02 / 2, -1.19 / 2]),
-        euler_angles=np.array([-180, 0, 0]),
-        resolution=(1920, 1080),
-        focal_length=13,
-    )
     
-def create_camera3(resolutions=None): 
+def create_camera(resolutions=None): 
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
@@ -92,8 +79,6 @@ def create_camera3(resolutions=None):
     register_existing_camera(BOX_CAMERA_2, 
                             resolutions.get(BOX_CAMERA_2))
 
-def create_camera2():
-    register_existing_camera(BASE_CAMERA_PATH)
 
 def add_sensor_asset(sensor_type: str, parent_prim_path: str = "/World", sensor_name: str = "sensor") -> str:
     """
@@ -123,8 +108,8 @@ def add_sensor_asset(sensor_type: str, parent_prim_path: str = "/World", sensor_
 
 def addstereo_camera():
     register_stereo_pair(
-        left_prim_path=BOX_CAMERA_1,
-        right_prim_path=BOX_CAMERA_2,
+        left_prim_path=BOX_CAMERA_2,
+        right_prim_path=BOX_CAMERA_1,
         pair_id="stereo_pair",
     )
     
@@ -180,11 +165,11 @@ def setup_scene(enable_cameras=True):
     BASE_CAMERA_PATH: (1280, 720),
     }
     #create_camera3(custom_resolutions)
-    addstereo_camera()
-    get_camera_baseline(
-        BOX_CAMERA_1,
-        BOX_CAMERA_2,
-    )
+    # addstereo_camera()
+    # get_camera_baseline(
+    #     left_prim_path=BOX_CAMERA_2,
+    #     right_prim_path=BOX_CAMERA_1,
+    # )
     if enable_cameras:
         custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
         create_camera(custom_resolutions)

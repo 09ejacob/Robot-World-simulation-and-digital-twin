@@ -10,17 +10,13 @@ class CameraCapture:
     A class to manage camera captures in Isaac Sim.
     Handles image capturing, storage, and scheduling for multiple cameras.
     """
-    camera_registry = {}  # class-level variable
-    base_save_dir = "camera_captures"
-    capture_counters = {}
-    last_capture_time = {}
     _instance = None
 
-    # def __new__(cls):
-    #     if cls._instance is None:
-    #         cls._instance = super(CameraCapture, cls).__new__(cls)
-    #         cls._instance.initialize()
-    #     return cls._instance
+    def __new__(cls):
+         if cls._instance is None:
+             cls._instance = super(CameraCapture, cls).__new__(cls)
+             cls._instance.initialize()
+         return cls._instance
 
     def initialize(self):
         self.base_save_dir = "camera_captures"
@@ -62,6 +58,8 @@ class CameraCapture:
 
         # Ensure we have the latest frame
         frame = camera.get_current_frame()
+        print(f"🔄 Fetching latest frame from {camera_id}..."
+              f" Frame data: {frame}")
 
         # Check if frame has RGBA data
         if frame is None or "rgba" not in frame:
