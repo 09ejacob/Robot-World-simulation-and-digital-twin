@@ -83,7 +83,14 @@ def create_camera(resolutions=None):
 def load_grab_usd():
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
-        join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
+        join(
+            current_dir,
+            "..",
+            "..",
+            "Grab_Digital_Twin_python",
+            "usd",
+            "Grab-bottlegripper.usd",
+        )
     )
 
     add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
