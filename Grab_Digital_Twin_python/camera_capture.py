@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from PIL import Image
 import numpy as np
+import cv2
 
 
 class CameraCapture:
@@ -68,36 +69,52 @@ class CameraCapture:
 
         return rgb_array.astype(np.uint8)
 
-    def capture_image(self, camera_id, filename=None):
-        """
-        Capture and save an image from a registered camera.
-        """
-        rgb_array = self.capture_image_array(camera_id)
-        if rgb_array is None:
-            print(f"[ERROR] Failed to get image array from {camera_id}")
-            return None
-
+    def _save_image(self, camera_id, rgb_array):
         try:
             image = Image.fromarray(rgb_array, mode="RGB")
-        except Exception as e:
-            print(f"[ERROR] Error converting image to PIL format: {e}")
-            return None
-
-        if filename is None:
             counter = self.capture_counters[camera_id]
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             filename = f"{camera_id}_{timestamp}_{counter:04d}.jpg"
             self.capture_counters[camera_id] += 1
 
-        camera_dir = os.path.join(self.base_save_dir, camera_id, self.scenario_start)
-        os.makedirs(camera_dir, exist_ok=True)
-        save_path = os.path.join(camera_dir, filename)
+            camera_dir = os.path.join(
+                self.base_save_dir, camera_id, self.scenario_start
+            )
+            os.makedirs(camera_dir, exist_ok=True)
+            save_path = os.path.join(camera_dir, filename)
+
+            image.save(save_path)
+            return save_path
+
+        except Exception as e:
+            print(f"[ERROR] Failed to save image for {camera_id}: {e}")
+            return None
+
+    def capture_image(self, camera_id):
+        rgb_array = self.capture_image_array(camera_id)
+        if rgb_array is None:
+            return None
+        return self._save_image(camera_id, rgb_array)
+
+    def capture_and_stream(self, camera_id, udp_controller, host, port):
+        rgb_array = self.capture_image_array(camera_id)
+        if rgb_array is None:
+            print(f"[ERROR] Could not capture image from {camera_id}")
+            return None
+
+        save_path = self._save_image(camera_id, rgb_array)
 
         try:
-            image.save(save_path)
+            # Compress the image to JPEG
+            success, jpeg_data = cv2.imencode(".jpg", rgb_array)
+            if not success:
+                print(f"[ERROR] Failed to compress image from {camera_id}")
+                return save_path
+
+            udp_controller.send(jpeg_data.tobytes(), host, port)
+
         except Exception as e:
-            print(f"[ERROR] Error saving image from {camera_id}: {e}")
-            return None
+            print(f"[ERROR] Streaming image failed for {camera_id}: {e}")
 
         return save_path
 

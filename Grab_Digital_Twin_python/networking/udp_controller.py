@@ -13,7 +13,21 @@ class UDPController:
 
     def send(self, message, target_host, target_port):
         try:
-            self._send_sock.sendto(message.encode("utf-8"), (target_host, target_port))
+            if isinstance(message, str):
+                data = message.encode("utf-8")
+            elif isinstance(message, bytes):
+                data = message
+            else:
+                raise TypeError(f"Unsupported message type: {type(message)}")
+
+            if len(data) > 65500:
+                print(
+                    f"[UDP Controller] Message too long ({len(data)} bytes). Max is 65500."
+                )
+                return
+
+            self._send_sock.sendto(data, (target_host, target_port))
+
         except Exception as e:
             print(f"[UDP Controller] Send error: {e}")
 

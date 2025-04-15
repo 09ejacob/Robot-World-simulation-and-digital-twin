@@ -192,8 +192,9 @@ class UDPScenario:
 
     def _handle_capture_command(self, parts):
         if self.allow_udp_capture:
-            self._robot_controller.capture_from_all_cameras()
-
+            self._robot_controller.capture_and_stream_selected_cameras(
+                self.udp, self.broadcast_target_host, self.broadcast_target_port
+            )
         else:
             print("[INFO] Camera is disabled.")
 

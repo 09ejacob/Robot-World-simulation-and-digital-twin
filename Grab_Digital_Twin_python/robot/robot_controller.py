@@ -225,6 +225,16 @@ class RobotController:
 
         return results
 
+    def capture_and_stream_selected_cameras(self, udp_controller, host, port):
+        selected = ["baseCamera", "boxCamera1", "boxCamera2"]
+        results = {}
+        for cam_id in selected:
+            result = self.camera_capture.capture_and_stream(
+                cam_id, udp_controller, host, port
+            )
+            results[cam_id] = result
+        return results
+
     def get_registered_cameras(self):
         """
         Get list of registered camera IDs
