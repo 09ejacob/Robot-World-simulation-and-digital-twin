@@ -195,44 +195,37 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
 
-    def capture_from_camera(self, camera_id):
+    def capture_cameras(
+        self, cameras=None, udp_controller=None, host=None, port=None, stream=False
+    ):
         """
-        Capture an image from a specific camera
+        Capture images from specified cameras, with optional UDP streaming.
 
         Args:
-            camera_id (str): ID of the camera to capture from
+            cameras (list[str], optional): Camera IDs to capture from. Defaults to all registered.
+            udp_controller (UDPController, optional): Used for streaming
+            host (str, optional): Target host for UDP
+            port (int, optional): Target port for UDP
+            stream (bool): Whether to stream over UDP
 
         Returns:
-            str: Path to the saved image file, or None if capture failed
+            dict: Map of camera ID to saved image path (or None if failed)
         """
-        # Make sure timeline is playing to update frames
+        if cameras is None:
+            cameras = self.camera_capture.get_registered_cameras()
 
-        # Capture the image
-        result = self.camera_capture.capture_image(camera_id)
-        return result
-
-    def capture_from_all_cameras(self):
-        """
-        Capture images from all registered cameras
-
-        Returns:
-            dict: Map of camera IDs to saved image paths
-        """
-        # Make sure timeline is playing to update frames
-
-        # Capture from all cameras
-        results = self.camera_capture.capture_all_cameras()
-
-        return results
-
-    def capture_and_stream_selected_cameras(self, udp_controller, host, port):
-        selected = ["baseCamera", "boxCamera1", "boxCamera2"]
         results = {}
-        for cam_id in selected:
-            result = self.camera_capture.capture_and_stream(
-                cam_id, udp_controller, host, port
-            )
+
+        for cam_id in cameras:
+            if stream and udp_controller and host and port:
+                result = self.camera_capture.capture_and_stream(
+                    cam_id, udp_controller, host, port
+                )
+            else:
+                result = self.camera_capture.capture_image(cam_id)
+
             results[cam_id] = result
+
         return results
 
     def get_registered_cameras(self):

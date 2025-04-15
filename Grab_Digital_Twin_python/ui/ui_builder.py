@@ -258,7 +258,7 @@ class UIBuilder:
         On pressing the Load Button, a new instance of World() is created and then this function is called.
         The user should now load their assets onto the stage and add them to the World Scene.
         """
-      
+
         self._camera_capture.initialize()
         create_new_stage()
         setup_scene()
@@ -345,17 +345,17 @@ class UIBuilder:
 
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
-        image_path = self._robot_controller.capture_from_camera(camera_id)
+        image_path = self._robot_controller.capture_cameras(camera_id)
         print(f"Captured image from {camera_id}: {image_path}")
 
     def _capture_from_all_cameras(self):
         """Capture images from all registered cameras."""
-        image_paths = self._robot_controller.capture_from_all_cameras()
+        image_paths = self._robot_controller.capture_cameras()
         print(f"Captured images: {image_paths}")
 
     def _capture_all_images(self):
         """Capture images from all registered cameras."""
-        image_paths = self._robot_controller.capture_from_all_cameras()
+        image_paths = self._robot_controller.capture_cameras()
         if image_paths:
             print("Captured images from all cameras:", image_paths)
         else:
