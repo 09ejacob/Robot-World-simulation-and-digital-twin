@@ -46,47 +46,41 @@ class CameraCapture:
 
         return camera_dir
 
-    def capture_image(self, camera_id, filename=None):
-        """
-        Capture an image from the specified camera with debugging.
-        """
-
-        # Check if the camera exists
+    def capture_image_array(self, camera_id):
         if camera_id not in self.camera_registry:
-            print(f"❌ Error: Camera with ID {camera_id} not registered.")
+            print(f"[ERROR] Camera {camera_id} not registered.")
             return None
 
-        camera = self.camera_registry[camera_id]
-
-        # Ensure we have the latest frame
-        frame = camera.get_current_frame()
-
-        # Check if frame has RGBA data
-        if frame is None or "rgba" not in frame:
-            print(f"❌ Error: No valid frame data from camera {camera_id}")
+        frame = self.camera_registry[camera_id].get_current_frame()
+        if not frame or "rgba" not in frame:
+            print(f"[ERROR] No 'rgba' frame for {camera_id}")
             return None
 
-        # Extract RGB from RGBA
         rgba = frame["rgba"]
         if rgba is None or rgba.size == 0:
-            print(f"❌ Error: Empty RGBA data from camera {camera_id}")
+            print(f"[ERROR] Empty RGBA data from {camera_id}")
             return None
 
-        rgb_img = rgba[:, :, :3]
-        if rgb_img is None or rgb_img.size == 0:
-            print(f"❌ Error: Failed to extract RGB data from camera {camera_id}")
+        rgb_array = rgba[:, :, :3]
+        if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
+            print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
             return None
 
-        if len(rgb_img.shape) != 3 or rgb_img.shape[2] != 3:
-            print(
-                f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}"
-            )
+        return rgb_array.astype(np.uint8)
+
+    def capture_image(self, camera_id, filename=None):
+        """
+        Capture and save an image from a registered camera.
+        """
+        rgb_array = self.capture_image_array(camera_id)
+        if rgb_array is None:
+            print(f"[ERROR] Failed to get image array from {camera_id}")
             return None
 
         try:
-            image = Image.fromarray(rgb_img, mode="RGB")
+            image = Image.fromarray(rgb_array, mode="RGB")
         except Exception as e:
-            print(f"❌ Error converting image to PIL format: {e}")
+            print(f"[ERROR] Error converting image to PIL format: {e}")
             return None
 
         if filename is None:
@@ -95,7 +89,6 @@ class CameraCapture:
             filename = f"{camera_id}_{timestamp}_{counter:04d}.jpg"
             self.capture_counters[camera_id] += 1
 
-        # Use the registered camera folder (which now includes the scenario start subfolder)
         camera_dir = os.path.join(self.base_save_dir, camera_id, self.scenario_start)
         os.makedirs(camera_dir, exist_ok=True)
         save_path = os.path.join(camera_dir, filename)
@@ -103,7 +96,7 @@ class CameraCapture:
         try:
             image.save(save_path)
         except Exception as e:
-            print(f"❌ Error saving image from {camera_id}: {e}")
+            print(f"[ERROR] Error saving image from {camera_id}: {e}")
             return None
 
         return save_path
