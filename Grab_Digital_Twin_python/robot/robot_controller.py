@@ -228,14 +228,5 @@ class RobotController:
 
         return results
 
-    def get_registered_cameras(self):
-        """
-        Get list of registered camera IDs
-
-        Returns:
-            list: Camera IDs
-        """
-        return self.camera_capture.get_registered_cameras()
-
     def generate_video(self, fps):
         self.camera_capture.convert_video_from_images(fps)
