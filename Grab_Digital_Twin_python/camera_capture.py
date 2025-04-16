@@ -5,6 +5,8 @@ from datetime import datetime
 from PIL import Image
 import numpy as np
 import cv2
+import json
+import struct
 
 
 class CameraCapture:
@@ -111,7 +113,25 @@ class CameraCapture:
                 print(f"[ERROR] Failed to compress image from {camera_id}")
                 return save_path
 
-            udp_controller.send(jpeg_data.tobytes(), host, port)
+            timestamp = datetime.utcnow().isoformat() + "Z"
+            frame_id = self.capture_counters[camera_id]
+            metadata = {
+                "camera_id": camera_id,
+                "timestamp": timestamp,
+                "frame_id": frame_id,
+                "image_format": "jpeg",
+                "image_shape": rgb_array.shape,
+            }
+
+            metadata_bytes = json.dumps(metadata).encode("utf-8")
+            metadata_length = struct.pack(
+                "!I", len(metadata_bytes)
+            )  # 4-byte unsigned int
+
+            # packet = [4-byte length][metadata JSON][JPEG data]
+            packet = metadata_length + metadata_bytes + jpeg_data.tobytes()
+
+            udp_controller.send(packet, host, port)
 
         except Exception as e:
             print(f"[ERROR] Streaming image failed for {camera_id}: {e}")
