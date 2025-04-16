@@ -191,7 +191,7 @@ class UDPScenario:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
     def _handle_capture_command(self, parts):
-        print(f"[DEBUG] Received capture command with cameras: {parts[1:]}")
+        print(f"[DEBUG] Received capture command with parts: {parts}")
 
         if not self.allow_udp_capture:
             print("[INFO] Camera capture is disabled.")
@@ -199,21 +199,39 @@ class UDPScenario:
 
         if len(parts) < 2:
             print(
-                "[ERROR] No cameras specified. Use format: capture:camera1:camera2:camera3"
+                "[ERROR] No cameras specified. Use format: capture:cam1:cam2[:...][:stream=true|false]"
             )
             return
 
-        cameras = parts[1:]
-        if not all(cameras):
-            print(f"[ERROR] Invalid camera names detected in: {parts}")
+        # Check if the last part is a stream directive
+        stream = True
+        if "stream=" in parts[-1].lower():
+            stream_arg = parts[-1].lower()
+            if stream_arg == "stream=true":
+                stream = True
+            elif stream_arg == "stream=false":
+                stream = False
+            else:
+                print(
+                    f"[ERROR] Invalid stream value: {parts[-1]}. Use stream=true or stream=false."
+                )
+                return
+            cameras = parts[1:-1]  # exclude the stream parameter
+        else:
+            cameras = parts[1:]
+
+        if not cameras or not all(cameras):
+            print(f"[ERROR] Invalid or missing camera names in command: {parts}")
             return
+
+        print(f"[INFO] Capturing from cameras: {cameras} | stream={stream}")
 
         self._robot_controller.capture_cameras(
             cameras=cameras,
             udp_controller=self.udp,
             host=self.broadcast_target_host,
             port=self.broadcast_target_port,
-            stream=True,
+            stream=stream,
         )
 
     def nudge_box(self, prim_path, offset):
