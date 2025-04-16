@@ -1,7 +1,7 @@
 import os
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from PIL import Image
 import numpy as np
 import cv2
@@ -72,13 +72,17 @@ class CameraCapture:
         return rgb_array.astype(np.uint8)
 
     def _generate_capture_metadata(self, camera_id, rgb_array):
-        timestamp = datetime.utcnow().isoformat() + "Z"
+        utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        local_now = datetime.now().astimezone()
+
         frame_id = self.capture_counters[camera_id]
+        timestamp = utc_now.isoformat()
         filename_base = f"{camera_id}_{timestamp.replace(':', '-').replace('T', '_').replace('Z', '')}_{frame_id:04d}"
 
         metadata = {
             "camera_id": camera_id,
-            "timestamp": timestamp,
+            "timestamp_utc": utc_now.isoformat(),
+            "timestamp_local": local_now.isoformat(),
             "frame_id": frame_id,
             "image_format": "jpeg",
             "image_shape": rgb_array.shape,
