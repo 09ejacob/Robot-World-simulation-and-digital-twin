@@ -16,6 +16,7 @@ from ..global_variables import (
     BOTTLEGRIPPER_JOINT_PATH_LEFT,
     BOTTLEGRIPPER_OPEN,
     BOTTLEGRIPPER_CLOSE,
+    BOTTLEGRIPPER_IDLE,
 )
 
 
@@ -66,6 +67,22 @@ class RobotController:
             attr = node.get_attribute("state:enableImpulse")
             attr.set(1)
             node.request_compute()
+
+    def set_bottlegripper_to_idle_pos(self):
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_IDLE,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_IDLE,
+            )
+        else:
+            print("Bottlegripper is not active")
 
     def set_angular_drive_target(self, joint_prim_path, target_position):
         stage = get_current_stage()
