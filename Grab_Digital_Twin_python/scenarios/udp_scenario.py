@@ -191,16 +191,30 @@ class UDPScenario:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
     def _handle_capture_command(self, parts):
-        if self.allow_udp_capture:
-            self._robot_controller.capture_cameras(
-                cameras=["baseCamera", "boxCamera1", "boxCamera2"],
-                udp_controller=self.udp,
-                host=self.broadcast_target_host,
-                port=self.broadcast_target_port,
-                stream=True,
+        print(f"[DEBUG] Received capture command with cameras: {parts[1:]}")
+
+        if not self.allow_udp_capture:
+            print("[INFO] Camera capture is disabled.")
+            return
+
+        if len(parts) < 2:
+            print(
+                "[ERROR] No cameras specified. Use format: capture:camera1:camera2:camera3"
             )
-        else:
-            print("[INFO] Camera is disabled.")
+            return
+
+        cameras = parts[1:]
+        if not all(cameras):
+            print(f"[ERROR] Invalid camera names detected in: {parts}")
+            return
+
+        self._robot_controller.capture_cameras(
+            cameras=cameras,
+            udp_controller=self.udp,
+            host=self.broadcast_target_host,
+            port=self.broadcast_target_port,
+            stream=True,
+        )
 
     def nudge_box(self, prim_path, offset):
         stage = omni.usd.get_context().get_stage()

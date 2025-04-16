@@ -217,6 +217,7 @@ class RobotController:
         results = {}
 
         for cam_id in cameras:
+            print(f"[DEBUG] Capturing from camera: {cam_id}")
             if stream and udp_controller and host and port:
                 result = self.camera_capture.capture_and_stream(
                     cam_id, udp_controller, host, port
