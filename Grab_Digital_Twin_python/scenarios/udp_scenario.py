@@ -107,6 +107,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
+            "bottlegripper_idle": lambda p: self._robot_controller.set_bottlegripper_to_idle_pos(),
             "capture": lambda p: self._handle_capture_command(p),
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True),
