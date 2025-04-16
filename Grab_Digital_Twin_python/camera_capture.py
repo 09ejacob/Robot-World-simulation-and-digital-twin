@@ -71,22 +71,44 @@ class CameraCapture:
 
         return rgb_array.astype(np.uint8)
 
+    def _generate_capture_metadata(self, camera_id, rgb_array):
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        frame_id = self.capture_counters[camera_id]
+        filename_base = f"{camera_id}_{timestamp.replace(':', '-').replace('T', '_').replace('Z', '')}_{frame_id:04d}"
+
+        metadata = {
+            "camera_id": camera_id,
+            "timestamp": timestamp,
+            "frame_id": frame_id,
+            "image_format": "jpeg",
+            "image_shape": rgb_array.shape,
+            "scenario_id": self.scenario_start,
+        }
+
+        return filename_base, metadata
+
     def _save_image(self, camera_id, rgb_array):
         try:
             image = Image.fromarray(rgb_array, mode="RGB")
-            counter = self.capture_counters[camera_id]
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{camera_id}_{timestamp}_{counter:04d}.jpg"
+            filename_base, metadata = self._generate_capture_metadata(
+                camera_id, rgb_array
+            )
+
             self.capture_counters[camera_id] += 1
 
             camera_dir = os.path.join(
                 self.base_save_dir, camera_id, self.scenario_start
             )
             os.makedirs(camera_dir, exist_ok=True)
-            save_path = os.path.join(camera_dir, filename)
 
-            image.save(save_path)
-            return save_path
+            image_path = os.path.join(camera_dir, f"{filename_base}.jpg")
+            metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
+
+            image.save(image_path)
+            with open(metadata_path, "w") as f:
+                json.dump(metadata, f, indent=4)
+
+            return image_path
 
         except Exception as e:
             print(f"[ERROR] Failed to save image for {camera_id}: {e}")
@@ -107,28 +129,14 @@ class CameraCapture:
         save_path = self._save_image(camera_id, rgb_array)
 
         try:
-            # Compress the image to JPEG
             success, jpeg_data = cv2.imencode(".jpg", rgb_array)
             if not success:
                 print(f"[ERROR] Failed to compress image from {camera_id}")
                 return save_path
 
-            timestamp = datetime.utcnow().isoformat() + "Z"
-            frame_id = self.capture_counters[camera_id]
-            metadata = {
-                "camera_id": camera_id,
-                "timestamp": timestamp,
-                "frame_id": frame_id,
-                "image_format": "jpeg",
-                "image_shape": rgb_array.shape,
-            }
-
+            _, metadata = self._generate_capture_metadata(camera_id, rgb_array)
             metadata_bytes = json.dumps(metadata).encode("utf-8")
-            metadata_length = struct.pack(
-                "!I", len(metadata_bytes)
-            )  # 4-byte unsigned int
-
-            # packet = [4-byte length][metadata JSON][JPEG data]
+            metadata_length = struct.pack("!I", len(metadata_bytes))
             packet = metadata_length + metadata_bytes + jpeg_data.tobytes()
 
             udp_controller.send(packet, host, port)
