@@ -215,6 +215,13 @@ class UIBuilder:
                     clicked_fn=self._capture_from_all_cameras,
                 )
 
+                ui.Separator()
+                ui.Label("Stereo Camera Controls:")
+                ui.Button(
+                    "Test Stereo Cameras",
+                    clicked_fn=self._test_stereo_cameras
+                )
+
         self.frames.append(camera_controls_frame)
         self.frames.append(world_controls_frame)
         self.frames.append(scenario_frame)
@@ -396,3 +403,12 @@ class UIBuilder:
             self._capture_button.destroy()
             del self._capture_button
             print("Removed capture button")
+
+    def _test_stereo_cameras(self):
+        """Test the stereo camera setup."""
+        from ..scenes.setup_scene import test_stereo_cameras
+        success = test_stereo_cameras()
+        if success:
+            print("✅ Stereo test complete! Check output files.")
+        else:
+            print("❌ Stereo test failed!")

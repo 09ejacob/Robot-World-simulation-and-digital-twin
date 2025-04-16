@@ -10,6 +10,8 @@ from .camera import register_existing_camera
 from .camera import register_stereo_pair
 from .camera import get_camera_baseline
 from ..camera_capture import CameraCapture
+import omni.replicator.core as rep
+
 
 
 from ..global_variables import (
@@ -112,8 +114,6 @@ def addstereo_camera():
         right_prim_path=BOX_CAMERA_1,
         pair_id="stereo_pair",
     )
-    
-
 
 def load_grab_usd():
     current_dir = dirname(abspath(__file__))
@@ -133,7 +133,45 @@ def _add_light():
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
 
-def setup_scene(enable_cameras=True):
+def setup_stereo_cameras():
+    """Setup stereo camera configuration using existing box cameras."""
+    # Register the stereo pair
+    stereo_pair = register_stereo_pair(
+        left_prim_path=BOX_CAMERA_2,
+        right_prim_path=BOX_CAMERA_1,
+        pair_id="main_stereo"  # Use consistent ID
+    )
+    
+    # Get the baseline from the cameras
+    baseline = get_camera_baseline(BOX_CAMERA_2, BOX_CAMERA_1)
+    
+    return stereo_pair, baseline
+
+def test_stereo_cameras():
+    """Test the stereo camera setup by capturing and processing images."""
+    camera_capture = CameraCapture()
+    
+    try:
+        # Setup stereo cameras if not already setup
+        stereo_pair = camera_capture.stereo_pairs.get("main_stereo")
+        if not stereo_pair:
+            stereo_pair, baseline = setup_stereo_cameras()
+        else:
+            baseline = get_camera_baseline(BOX_CAMERA_2, BOX_CAMERA_1)
+        
+        # Run the stereo pipeline
+        disparity_map, depth_map = camera_capture.run_stereo_pipeline(stereo_pair, baseline)
+        print("✅ Stereo test complete!")
+        print("📁 Results saved as:")
+        print("   - disparity_map.jpg")
+        print("   - depth_map.jpg")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Stereo test failed: {str(e)}")
+        return False
+
+def setup_scene(enable_cameras=False):
     stage = get_current_stage()
 
     # Define PhysicsScene if it doesn't exist
@@ -165,11 +203,10 @@ def setup_scene(enable_cameras=True):
     BASE_CAMERA_PATH: (1280, 720),
     }
     #create_camera3(custom_resolutions)
-    # addstereo_camera()
-    # get_camera_baseline(
-    #     left_prim_path=BOX_CAMERA_2,
-    #     right_prim_path=BOX_CAMERA_1,
-    # )
+    
+    # Setup stereo cameras once
+    stereo_pair, baseline = setup_stereo_cameras()
+
     if enable_cameras:
         custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
         create_camera(custom_resolutions)

@@ -180,7 +180,9 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
         "left_prim_path": left_prim_path,
         "right_prim_path": right_prim_path,
     }
-    
+
+    camera_capture.stereo_pairs[pair_id] = stereo_pair
+
     print(f"✅ Successfully registered stereo pair '{pair_id}' with baseline , stereo pair: {stereo_pair}")
     return stereo_pair
 
@@ -220,12 +222,13 @@ def get_camera_baseline(left_prim_path, right_prim_path):
     right_position = right_matrix.ExtractTranslation()
     
     # Calculate Euclidean distance between cameras
+    # Note: In Isaac Sim, the position values are halved compared to the actual scene units
     import math
     baseline = math.sqrt(
         (right_position[0] - left_position[0])**2 +
         (right_position[1] - left_position[1])**2 +
         (right_position[2] - left_position[2])**2
-    )
+    ) * 2  # Adjust for halved units
     
     print(f"Detected baseline between cameras: {baseline:.4f} scene units")
     return baseline

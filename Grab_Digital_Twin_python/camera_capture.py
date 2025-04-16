@@ -3,6 +3,9 @@ import subprocess
 import time
 from datetime import datetime
 from PIL import Image
+import numpy as np
+import cv2
+
 
 
 class CameraCapture:
@@ -22,6 +25,7 @@ class CameraCapture:
         self.base_save_dir = "camera_captures"
         self.camera_registry = {}
         self.capture_counters = {}
+        self.stereo_pairs = {}  # Stores registered stereo pairs
         self.last_capture_time = {}
 
         self.scenario_start = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
@@ -185,7 +189,7 @@ class CameraCapture:
             f"✅ Camera {camera_id} found in registry.",
             list(self.camera_registry.keys()),
         )
-
+        
         camera = self.camera_registry[camera_id]
 
         # Get the latest frame
@@ -285,3 +289,105 @@ class CameraCapture:
             print(f"❌ Error saving pointcloud from {camera_id}: {e}")
             return None
     
+
+    def compute_depth_from_disparity(self, disparity_map, focal_length, baseline):
+        """
+        Convert disparity map to depth map
+
+        Args:
+            disparity_map: Numpy array of disparity values
+            focal_length: Camera focal length in pixels
+            baseline: Distance between cameras in scene units
+
+        Returns:
+            depth_map: Numpy array of depth values
+        """
+        # Avoid division by zero
+        valid_disparities = disparity_map > 0
+
+        # Initialize depth map with zeros
+        depth_map = np.zeros_like(disparity_map, dtype=np.float32)
+
+        # Calculate depth using the formula: depth = (baseline * focal_length) / disparity
+        depth_map[valid_disparities] = (baseline * focal_length) / disparity_map[valid_disparities]
+        print(f"Depth map computed with shape: {depth_map}")
+
+        return depth_map
+    
+    def capture_stereo_images(self, stereo_pair):
+            """Capture images from both stereo cameras"""
+            # Get frames from both cameras
+            left_path = self.capture_image(stereo_pair["left"])
+            right_path = self.capture_image(stereo_pair["right"])
+
+            # Load the images
+            left_img = cv2.imread(left_path)
+            right_img = cv2.imread(right_path)
+
+            # Convert to grayscale for disparity calculation
+            left_gray = cv2.cvtColor(left_img, cv2.COLOR_BGR2GRAY)
+            right_gray = cv2.cvtColor(right_img, cv2.COLOR_BGR2GRAY)
+            print(f"Captured stereo images from {stereo_pair['left']} and {stereo_pair['right']}")
+            print(f"Left image shape: {left_img.shape}, Right image shape: {right_img.shape}")
+
+            return left_gray, right_gray, left_img, right_img
+
+    def compute_disparity(self, left_img, right_img):
+            """Compute disparity map from stereo images"""
+            # Create a stereo matcher
+            stereo = cv2.StereoSGBM_create(
+            minDisparity=0,
+            numDisparities=16*10,  # Must be divisible by 16
+            blockSize=5,
+         )
+        
+            # Compute disparity
+            disparity = stereo.compute(left_img, right_img)
+            print(f"Disparity map computed with shape: {disparity}")
+
+            return disparity
+    
+    def run_stereo_pipeline(self, stereo_pair, baseline):
+        """
+        Run the stereo pipeline to compute disparity and depth maps.
+
+        Args:
+            stereo_pair (dict): Dictionary with keys "left" and "right" for stereo camera IDs.
+            baseline (float): Distance between the stereo cameras in scene units.
+
+        Returns:
+            tuple: Disparity map and depth map.
+        """
+        # 1. Capture stereo images
+        left_gray, right_gray, left_color, right_color = self.capture_stereo_images(stereo_pair)
+        print(f"Captured images from {stereo_pair['left']} and {stereo_pair['right']}")
+
+        # 2. Compute disparity map
+        disparity_map = self.compute_disparity(left_gray, right_gray)
+        print(f"Disparity map shape: {disparity_map.shape}")
+
+        # 3. Get camera parameters
+        left_camera = self.camera_registry[stereo_pair["left"]]
+        focal_length = left_camera.get_focal_length() * 10  # Convert cm to mm
+        resolution_width = left_camera.get_resolution()[0]
+        horizontal_aperture_mm = left_camera.get_horizontal_aperture() * 10  # Convert cm to mm
+
+        # Calculate focal length in pixels
+        focal_length_pixels = (focal_length * resolution_width) / horizontal_aperture_mm
+
+        print(f"   - Focal Length (cm): {focal_length:.2f}")
+        print(f"   - Horizontal Aperture (cm): {horizontal_aperture_mm:.2f}")
+        print(f"   - Computed Focal Length (pixels): {focal_length_pixels:.2f}")
+
+        # 4. Compute depth map
+        depth_map = self.compute_depth_from_disparity(disparity_map, focal_length_pixels, baseline)
+        print(f"Depth map shape: {depth_map.shape}")
+
+        # 5. Visualize or use the results
+        norm_disparity = cv2.normalize(disparity_map, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        cv2.imwrite("disparity_map.jpg", norm_disparity)
+
+        normalized_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        cv2.imwrite("depth_map.jpg", normalized_depth)
+
+        return disparity_map, depth_map
