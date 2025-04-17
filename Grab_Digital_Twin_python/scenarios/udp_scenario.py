@@ -109,7 +109,7 @@ class UDPScenario:
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
             "bottlegripper_idle": lambda p: self._robot_controller.set_bottlegripper_to_idle_pos(),
             "capture": lambda p: self._handle_capture_command(p),
-            "reload": lambda p: self._reload_scene(),
+            "reload": lambda p: self._reload_scene_with_model(p),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
         }
@@ -538,16 +538,19 @@ class UDPScenario:
             if prim.IsValid():
                 stage.RemovePrim(prim_path)
 
-    def _reload_scene(self):
-        """Reload the entire scene to mirror the headless runner startup process."""
+    def _reload_scene_with_model(self, parts):
+        if len(parts) < 2:
+            print("[ERROR] reload command must be: reload:<grab_usd_filename>")
+            return
+        
+        grab_usd = parts[1]
+
         self.unload()
+
         create_new_stage()
-        setup_scene(enable_cameras=self.allow_udp_capture, grab_usd="Grab.usd")
+        setup_scene(enable_cameras=self.allow_udp_capture, grab_usd=grab_usd)
+        
         self.setup()
-
-    #def _reload_scene_with_specific_model(self, grab_usd):
-
-
 
 if __name__ == "__main__":
     robot_controller = ...
