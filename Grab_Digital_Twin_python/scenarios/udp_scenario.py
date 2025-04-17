@@ -540,12 +540,13 @@ class UDPScenario:
 
     def _reload_scene(self):
         """Reload the entire scene to mirror the headless runner startup process."""
-        print("Reloading scene with UDP scenario...")
         self.unload()
         create_new_stage()
-        setup_scene(enable_cameras=self.allow_udp_capture)
+        setup_scene(enable_cameras=self.allow_udp_capture, grab_usd="Grab.usd")
         self.setup()
-        print("Scene reloaded and UDP scenario started.")
+
+    #def _reload_scene_with_specific_model(self, grab_usd):
+
 
 
 if __name__ == "__main__":

@@ -69,7 +69,7 @@ def main():
     create_new_stage()
 
     print("Setting up Scene...")
-    setup_scene(enable_cameras=not args.disable_cameras)
+    setup_scene(enable_cameras=not args.disable_cameras, grab_usd="Grab.usd") # Need a flag for setting up scene with specifyed usd model.
 
     wait_for_condition(
         lambda: get_current_stage().GetRootLayer() is not None,

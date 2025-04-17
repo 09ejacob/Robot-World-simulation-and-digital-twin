@@ -34,6 +34,8 @@ class UIBuilder:
         # UI elements created using a UIElementWrapper instance
         self.wrapped_ui_elements = []
 
+        self._grab_usd_options = ["Grab.usd", "Grab-bottlegripper.usd"]
+
         # Get access to the timeline to control stop/pause/play programmatically
         self._timeline = omni.timeline.get_timeline_interface()
 
@@ -102,6 +104,9 @@ class UIBuilder:
         world_controls_frame = CollapsableFrame("World Controls", collapsed=False)
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
+                ui.Label("Select Grab USD:")
+                self._grab_dropdown = ui.ComboBox(0, *self._grab_usd_options)
+
                 self._load_btn = LoadButton(
                     "Load Button",
                     "LOAD",
@@ -109,7 +114,7 @@ class UIBuilder:
                     setup_post_load_fn=self._setup_scenario,
                 )
                 self._load_btn.set_world_settings(
-                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
+                    physics_dt=1/60.0, rendering_dt=1/60.0
                 )
                 self.wrapped_ui_elements.append(self._load_btn)
 
@@ -257,20 +262,16 @@ class UIBuilder:
         self._setup_scenario()
 
     def _setup_scene(self):
-        """
-        This function is attached to the Load Button as the setup_scene_fn callback.
-        On pressing the Load Button, a new instance of World() is created and then this function is called.
-        The user should now load their assets onto the stage and add them to the World Scene.
-        """
+        usd_idx = self._grab_dropdown.model.get_item_value_model().as_int
+        usd_file = self._grab_usd_options[usd_idx] if 0 <= usd_idx < len(self._grab_usd_options) else self._grab_usd_options[0]
 
         self._camera_capture.initialize()
         create_new_stage()
-        setup_scene()
+        setup_scene(grab_usd=usd_file)
 
-        timeline_iface = omni.timeline.get_timeline_interface()
-        timeline_iface.set_auto_update(False)
+        omni.timeline.get_timeline_interface().set_auto_update(False)
+        print(f"Scene setup complete with grab asset: {usd_file}")
 
-        print("Scene setup complete.")
 
     def _setup_scenario(self):
         """

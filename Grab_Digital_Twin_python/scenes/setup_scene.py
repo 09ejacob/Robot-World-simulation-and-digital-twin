@@ -79,8 +79,7 @@ def create_camera(resolutions=None):
         OVERVIEW_CAMERA, resolution=resolutions.get(OVERVIEW_CAMERA)
     )
 
-
-def load_grab_usd():
+def load_grab_usd(grab_usd):
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
         join(
@@ -89,12 +88,10 @@ def load_grab_usd():
             "..",
             "Grab_Digital_Twin_python",
             "usd",
-            "Grab-bottlegripper.usd",
+            grab_usd,
         )
     )
-
     add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
-
 
 def _add_light():
     sphereLight = UsdLux.SphereLight.Define(
@@ -105,16 +102,15 @@ def _add_light():
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
 
-def setup_scene(enable_cameras=True):
+def setup_scene(enable_cameras=True, grab_usd="Grab.usd"):
     stage = get_current_stage()
 
-    # Define PhysicsScene if it doesn't exist
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
         print(f"[setup_scene] Defining physics scene at: {PHYSICS_SCENE_PATH}")
         UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
-    # Apply PhysxSceneAPI to the PhysicsScene prim
     physics_scene_prim = stage.GetPrimAtPath(PHYSICS_SCENE_PATH)
+
     if not physics_scene_prim.HasAPI(PhysxSchema.PhysxSceneAPI):
         PhysxSchema.PhysxSceneAPI.Apply(physics_scene_prim)
         print("[setup_scene] Applied PhysxSceneAPI to PhysicsScene prim")
@@ -123,10 +119,11 @@ def setup_scene(enable_cameras=True):
 
     create_ground_plane(GROUND_PLANE_PATH)
 
-    load_grab_usd()
+    load_grab_usd(grab_usd)
 
     if enable_cameras:
         custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
         create_camera(custom_resolutions)
+
     create_additional_joints()
     _add_light()
