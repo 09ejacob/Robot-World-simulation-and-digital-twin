@@ -213,6 +213,8 @@ class RobotController:
         """
         if cameras is None:
             cameras = self.camera_capture.get_registered_cameras()
+        elif isinstance(cameras, str):
+            cameras = [cameras]
 
         results = {}
 
