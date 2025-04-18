@@ -61,7 +61,7 @@ class UDPScenario:
         self.allow_udp_capture = allow_udp_capture
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
-        self.overview_capture_interval = 0.2
+        self.overview_capture_interval = 0.2  # Deafult, can be set with UDP command
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
@@ -109,22 +109,39 @@ class UDPScenario:
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
             "capture": lambda p: self._handle_capture_command(p),
             "reload": lambda p: self._reload_scene(),
-            "start_overview_camera": lambda p: self._toggle_overview_camera(True),
+            "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
         }
 
-    def _toggle_overview_camera(self, start):
+    def _toggle_overview_camera(self, start, parts=None):
         if self.allow_udp_capture:
+            if start:
+                # Parse interval from command if provided
+                if parts and len(parts) > 1:
+                    try:
+                        interval = float(parts[1])
+                        if interval > 0:
+                            self.overview_capture_interval = interval
+                            print(
+                                f"[INFO] Set overview camera interval to {interval:.3f} seconds"
+                            )
+                        else:
+                            print(
+                                f"[WARN] Interval must be > 0 to activate overview camera. Got: {interval}"
+                            )
+                            return
+                    except ValueError:
+                        print(f"[WARN] Invalid overview camera interval: {parts[1]}")
+                        return
+
             self.overview_camera_active = start
             state = "started" if start else "stopped"
-
             print(f"Overview-camera capturing {state}.")
 
             if not start:
                 self._robot_controller.generate_video(
                     3 / self.overview_capture_interval
                 )
-
         else:
             print("[INFO] Overview camera is disabled.")
 
