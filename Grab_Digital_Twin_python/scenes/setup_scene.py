@@ -101,7 +101,6 @@ def _add_light():
     sphereLight.CreateIntensityAttr(100000)
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
-
 def setup_scene(enable_cameras=True, grab_usd="Grab.usd"):
     stage = get_current_stage()
 
