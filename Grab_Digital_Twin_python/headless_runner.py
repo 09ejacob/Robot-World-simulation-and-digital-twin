@@ -42,6 +42,12 @@ def parse_args():
         action="store_true",
         help="Print UDP and command execution stats",
     )
+    parser.add_argument(
+        "--overview_capture_interval",
+        type=float,
+        default=0.2,
+        help="Interval (in seconds) between overview camera captures. e.g., 0.2 = 5 fps",
+    )
     return parser.parse_args()
 
 
@@ -133,6 +139,7 @@ def main():
         print_positions=args.print_positions,
         print_performance_stats=args.print_performance_stats,
         allow_udp_capture=not args.disable_cameras,
+        overview_capture_interval=args.overview_capture_interval,
     )
     scenario.setup()
 

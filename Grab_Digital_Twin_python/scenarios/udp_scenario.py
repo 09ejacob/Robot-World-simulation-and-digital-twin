@@ -35,6 +35,7 @@ class UDPScenario:
         print_positions=False,
         print_performance_stats=False,
         allow_udp_capture=True,
+        overview_capture_interval=0.2,
     ):
         self._robot_controller = robot_controller
 
@@ -61,7 +62,7 @@ class UDPScenario:
         self.allow_udp_capture = allow_udp_capture
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
-        self.overview_capture_interval = 0.2
+        self.overview_capture_interval = overview_capture_interval
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
