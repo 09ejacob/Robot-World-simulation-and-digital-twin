@@ -1,15 +1,17 @@
 import time
+import os
 import queue
 import threading
 import psutil
 import numpy as np
 from os.path import dirname, abspath, join
-from pxr import UsdGeom, Gf
+from pxr import UsdGeom, Gf, UsdPhysics
 import omni.usd
 from omni.isaac.core import World
 from isaacsim.core.utils.stage import add_reference_to_stage, create_new_stage
 from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
 from omni.isaac.core.objects import DynamicCuboid
+from pxr.UsdGeom import Tokens as UsdGeomTokens
 
 from ..global_variables import (
     AXIS1_JOINT_PATH,
@@ -107,6 +109,7 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.print_contact_force(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
+            "bottlegripper_idle": lambda p: self._robot_controller.set_bottlegripper_to_idle_pos(),
             "capture": lambda p: self._handle_capture_command(p),
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
@@ -340,6 +343,83 @@ class UDPScenario:
 
         return boxes
 
+    def create_bottles(
+        self,
+        path,
+        num_boxes,
+        position=(2.0, 0.0, 0.072),
+        stack_id=1,
+        reverse=False,
+    ):
+        stack_path = f"{path}/stack{stack_id}"
+        self.create_xform(stack_path, translate=(0, 0, 0))
+
+        module_dir = dirname(abspath(__file__))
+        usd_path = abspath(
+            join(
+                module_dir,
+                "..",
+                "..",
+                "Grab_Digital_Twin_python",
+                "usd",
+                "BottlePack.usd",
+            )
+        )
+        if not os.path.exists(usd_path):
+            print(f"[ERROR] Box USD asset not found at {usd_path}")
+            return
+
+        bx, by, bz = position
+
+        start_x = bx + 0.45
+        x_inc = 0.3
+        x_positions = [start_x - i * x_inc for i in range(4)]
+
+        if reverse:
+            x_positions = x_positions[::-1]
+
+        y_positions = [by + 0.3 - j * 0.2 for j in range(4)]
+        z_base = bz + 0.073
+        z_inc = 0.320
+
+        stage = omni.usd.get_context().get_stage()
+        self.boxes = []
+
+        for i in range(num_boxes):
+            layer = i // 16
+            idx = i % 16
+            col = idx // 4
+            row = idx % 4
+
+            x = x_positions[col]
+            y = y_positions[row]
+            z = z_base + layer * z_inc
+
+            prim_path = f"{stack_path}/box_{stack_id}_{i + 1}"
+
+            add_reference_to_stage(usd_path=usd_path, prim_path=prim_path)
+            prim = stage.GetPrimAtPath(prim_path)
+            if not prim.IsValid():
+                print(f"[WARN] failed to reference box at {prim_path}")
+                continue
+
+            xform = UsdGeom.Xformable(prim)
+            xform.ClearXformOpOrder()
+            xform.AddTranslateOp().Set(Gf.Vec3d(x, y, z))
+
+            color = Gf.Vec3f(*self.random_color())
+            gprim = UsdGeom.Gprim(prim)
+            pv = gprim.CreateDisplayColorPrimvar(UsdGeomTokens.constant, 3)
+            pv.Set([color])
+
+            UsdPhysics.RigidBodyAPI.Apply(prim)
+            UsdPhysics.CollisionAPI.Apply(prim)
+            mass_api = UsdPhysics.MassAPI.Apply(prim)
+            mass_attr = mass_api.GetMassAttr() or mass_api.CreateMassAttr()
+            mass_attr.Set(9.0)
+
+            self.boxes.append(prim_path)
+
     def create_pick_stack(
         self,
         path,
@@ -347,6 +427,7 @@ class UDPScenario:
         number_of_boxes=1,
         stack_id=1,
         reverse=False,
+        isBottles=False,
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
         pallet = DynamicCuboid(
@@ -359,13 +440,22 @@ class UDPScenario:
 
         self.pallets.append(pallet)
 
-        self.create_boxes(
-            f"{path}/stack{stack_id}",
-            number_of_boxes,
-            pallet_position,
-            stack_id,
-            reverse,
-        )
+        if isBottles:
+            self.create_bottles(
+                f"{path}/stack{stack_id}",
+                number_of_boxes,
+                pallet_position,
+                stack_id,
+                reverse,
+            )
+        else:
+            self.create_boxes(
+                f"{path}/stack{stack_id}",
+                number_of_boxes,
+                pallet_position,
+                stack_id,
+                reverse,
+            )
 
     def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
         current_dir = dirname(abspath(__file__))
@@ -532,6 +622,7 @@ class UDPScenario:
             number_of_boxes=19,
             stack_id=1,
             reverse=True,
+            isBottles=False,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -539,6 +630,7 @@ class UDPScenario:
             number_of_boxes=20,
             stack_id=2,
             reverse=True,
+            isBottles=False,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -546,6 +638,7 @@ class UDPScenario:
             number_of_boxes=35,
             stack_id=3,
             reverse=True,
+            isBottles=True,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -553,6 +646,7 @@ class UDPScenario:
             number_of_boxes=30,
             stack_id=4,
             reverse=True,
+            isBottles=False,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -560,13 +654,15 @@ class UDPScenario:
             number_of_boxes=27,
             stack_id=5,
             reverse=True,
+            isBottles=True,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 1.872),
-            number_of_boxes=12,
+            number_of_boxes=22,
             stack_id=6,
             reverse=True,
+            isBottles=True,
         )
 
         self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
@@ -603,9 +699,12 @@ class UDPScenario:
     def _reload_scene(self):
         """Reload the entire scene to mirror the headless runner startup process."""
         print("Reloading scene with UDP scenario...")
+
         self.unload()
+
         create_new_stage()
         setup_scene(enable_cameras=self.allow_udp_capture)
+
         self.setup()
         print("Scene reloaded and UDP scenario started.")
 
