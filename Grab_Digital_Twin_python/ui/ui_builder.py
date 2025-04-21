@@ -134,7 +134,7 @@ class UIBuilder:
                 )
 
                 ui.Button(
-                    "Select Scenario",
+                    "Load Scenario",
                     clicked_fn=self._select_scenario,
                 )
 
@@ -243,7 +243,7 @@ class UIBuilder:
 
     def _select_scenario(self):
         """
-        Selects the scenario from the dropdown when the "Select Scenario" button is clicked.
+        Selects the scenario from the dropdown when the "Load Scenario" button is clicked.
         """
         value_model = self._scenario_dropdown.model.get_item_value_model()
         selected_index = value_model.as_int
