@@ -73,7 +73,7 @@ class UDPScenario:
         ]
         self.axis_dofs = []
 
-        self.boxes = []
+        self.boxes_paths = []
         self.pallets = []
 
     def _udp_callback(self, message):
@@ -339,7 +339,7 @@ class UDPScenario:
             )
 
             boxes.append(box)
-            self.boxes.append(box)
+            self.boxes_paths.append(prim_path)
 
         return boxes
 
@@ -383,7 +383,6 @@ class UDPScenario:
         z_inc = 0.320
 
         stage = omni.usd.get_context().get_stage()
-        self.boxes = []
 
         for i in range(num_boxes):
             layer = i // 16
@@ -418,7 +417,7 @@ class UDPScenario:
             mass_attr = mass_api.GetMassAttr() or mass_api.CreateMassAttr()
             mass_attr.Set(9.0)
 
-            self.boxes.append(prim_path)
+            self.boxes_paths.append(prim_path)
 
     def create_pick_stack(
         self,
@@ -604,9 +603,6 @@ class UDPScenario:
             else:
                 self.axis_dofs.append((name, dof_index, is_angular))
 
-        self.pallets = []
-        self.boxes = []
-
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 0.072),
@@ -677,7 +673,7 @@ class UDPScenario:
         stage = omni.usd.get_context().get_stage()
 
         prim_paths = (
-            [box.prim_path for box in self.boxes]
+            self.boxes_paths
             + [pallet.prim_path for pallet in self.pallets]
             + [SHELF_PATH]
         )
