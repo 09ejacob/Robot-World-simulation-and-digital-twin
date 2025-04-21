@@ -572,6 +572,34 @@ class UDPScenario:
         self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
         self.start_udp_server()
 
+    def unload(self):
+        """Tear down the current simulation: stop UDP, reset world, and remove scene objects."""
+        self._did_run = False
+
+        self.udp.stop()
+
+        self.stop_broadcasting()
+
+        if self._world is not None:
+            self._world.reset()
+
+        self.remove_scenario_specific_prims()
+
+    def remove_scenario_specific_prims(self):
+        """Remove objects created by this scenario from the stage."""
+        stage = omni.usd.get_context().get_stage()
+
+        prim_paths = (
+            [box.prim_path for box in self.boxes]
+            + [pallet.prim_path for pallet in self.pallets]
+            + [SHELF_PATH]
+        )
+
+        for prim_path in prim_paths:
+            prim = stage.GetPrimAtPath(prim_path)
+            if prim.IsValid():
+                stage.RemovePrim(prim_path)
+
     def _reload_scene(self):
         """Reload the entire scene to mirror the headless runner startup process."""
         print("Reloading scene with UDP scenario...")
