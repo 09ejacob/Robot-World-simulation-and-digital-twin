@@ -11,7 +11,7 @@ An extension for [Isaac Sim](https://developer.nvidia.com/isaac/sim) for creatin
 
 NOTE: ***Make sure that the folder for the extension does not contain any triple-dashes (`---`), since these will cause an error in Isaac Sim and make the import unsuccessful.***
 
-## Using the Extension
+## Usage
 
 1. After opening `Grab Digital Twin` from the toolbar, a new tab should appear.
 2. Pressing the `LOAD` button under *World Controls* should make the robot appear with no scenario selected.

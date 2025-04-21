@@ -44,7 +44,6 @@ class UIBuilder:
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
         }
-        self._current_scenario_name = "UDP"  # Default scenario
 
         self._scenario = None
 
@@ -102,6 +101,12 @@ class UIBuilder:
         world_controls_frame = CollapsableFrame("World Controls", collapsed=False)
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
+                self._enable_cameras_model = ui.SimpleBoolModel(True)
+                with ui.HStack():
+                    ui.Label("Enable Cameras")
+                    self._enable_cameras_model = ui.SimpleBoolModel(True)
+                    ui.CheckBox(model=self._enable_cameras_model)
+
                 self._load_btn = LoadButton(
                     "Load Button",
                     "LOAD",
@@ -249,7 +254,11 @@ class UIBuilder:
             self._scenario.unload()
 
         scenario_cls = self._scenarios[selected_scenario]
-        self._scenario = scenario_cls(robot_controller=self._robot_controller)
+        enable_cameras = self._enable_cameras_model.get_value_as_bool()
+        self._scenario = scenario_cls(
+            robot_controller=self._robot_controller,
+            allow_udp_capture=enable_cameras,  # Pass to UDPScenario
+        )
         self._setup_scenario()
 
     def _setup_scene(self):
@@ -258,10 +267,10 @@ class UIBuilder:
         On pressing the Load Button, a new instance of World() is created and then this function is called.
         The user should now load their assets onto the stage and add them to the World Scene.
         """
-      
+
         self._camera_capture.initialize()
         create_new_stage()
-        setup_scene()
+        setup_scene(enable_cameras=self._enable_cameras_model.get_value_as_bool())
 
         timeline_iface = omni.timeline.get_timeline_interface()
         timeline_iface.set_auto_update(False)
@@ -345,17 +354,17 @@ class UIBuilder:
 
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
-        image_path = self._robot_controller.capture_from_camera(camera_id)
+        image_path = self._robot_controller.capture_cameras(camera_id)
         print(f"Captured image from {camera_id}: {image_path}")
 
     def _capture_from_all_cameras(self):
         """Capture images from all registered cameras."""
-        image_paths = self._robot_controller.capture_from_all_cameras()
+        image_paths = self._robot_controller.capture_cameras()
         print(f"Captured images: {image_paths}")
 
     def _capture_all_images(self):
         """Capture images from all registered cameras."""
-        image_paths = self._robot_controller.capture_from_all_cameras()
+        image_paths = self._robot_controller.capture_cameras()
         if image_paths:
             print("Captured images from all cameras:", image_paths)
         else:

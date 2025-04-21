@@ -119,7 +119,12 @@ def setup_scene(enable_cameras=True):
     load_grab_usd()
 
     if enable_cameras:
-        custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
+        custom_resolutions = {  # 720x480 is safe max for UDP transmission
+            BASE_CAMERA_PATH: (720, 480),
+            BOX_CAMERA_1: (720, 480),
+            BOX_CAMERA_2: (720, 480),
+            OVERVIEW_CAMERA: (1280, 820),  # Not sent over UDP
+        }
         create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
