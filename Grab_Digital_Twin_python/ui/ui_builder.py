@@ -123,15 +123,6 @@ class UIBuilder:
                 )
                 self.wrapped_ui_elements.append(self._load_btn)
 
-                self._unload_btn = ResetButton(
-                    "Unload Button",
-                    "UNLOAD SCENARIO",
-                    pre_reset_fn=None,
-                    post_reset_fn=self._on_post_unload_btn,
-                )
-                self._unload_btn.enabled = False
-                self.wrapped_ui_elements.append(self._unload_btn)
-
         scenario_frame = CollapsableFrame("Scenario", collapsed=False)
         with scenario_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
@@ -157,6 +148,15 @@ class UIBuilder:
                 )
                 self._scenario_state_btn.enabled = False
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
+
+                self._unload_btn = ResetButton(
+                    "Unload Button",
+                    "UNLOAD SCENARIO",
+                    pre_reset_fn=None,
+                    post_reset_fn=self._on_post_unload_btn,
+                )
+                self._unload_btn.enabled = False
+                self.wrapped_ui_elements.append(self._unload_btn)
 
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
         with robot_controls_frame:
