@@ -11,6 +11,7 @@ from omni.isaac.core import World
 from isaacsim.core.utils.stage import add_reference_to_stage, create_new_stage
 from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
 from omni.isaac.core.objects import DynamicCuboid
+from pxr.UsdGeom import Tokens as UsdGeomTokens
 
 from ..global_variables import (
     AXIS1_JOINT_PATH,
@@ -314,12 +315,12 @@ class UDPScenario:
 
         start_x = bx + 0.45
         x_inc = 0.3
-        x_positions = [start_x - i * x_inc for i in range(4)] 
+        x_positions = [start_x - i * x_inc for i in range(4)]
+
         if reverse:
             x_positions = x_positions[::-1]
 
         y_positions = [by + 0.3 - j * 0.2 for j in range(4)]
-
         z_base = bz + 0.073
         z_inc = 0.320
 
@@ -348,9 +349,13 @@ class UDPScenario:
             xform.ClearXformOpOrder()
             xform.AddTranslateOp().Set(Gf.Vec3d(x, y, z))
 
+            color = Gf.Vec3f(*self.random_color())
+            gprim = UsdGeom.Gprim(prim)
+            pv = gprim.CreateDisplayColorPrimvar(UsdGeomTokens.constant, 3)
+            pv.Set([color])
+
             UsdPhysics.RigidBodyAPI.Apply(prim)
             UsdPhysics.CollisionAPI.Apply(prim)
-
             mass_api = UsdPhysics.MassAPI.Apply(prim)
             mass_attr = mass_api.GetMassAttr() or mass_api.CreateMassAttr()
             mass_attr.Set(9.0)
