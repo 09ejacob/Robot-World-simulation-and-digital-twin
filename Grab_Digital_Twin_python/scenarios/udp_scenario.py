@@ -622,7 +622,7 @@ class UDPScenario:
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 0.072),
-            number_of_boxes=35,
+            number_of_boxes=15,
             stack_id=3,
             reverse=True,
             isBottles=True,
@@ -638,7 +638,7 @@ class UDPScenario:
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, -0.9, 1.872),
-            number_of_boxes=27,
+            number_of_boxes=16,
             stack_id=5,
             reverse=True,
             isBottles=True,
@@ -646,7 +646,7 @@ class UDPScenario:
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 1.872),
-            number_of_boxes=22,
+            number_of_boxes=16,
             stack_id=6,
             reverse=True,
             isBottles=True,
