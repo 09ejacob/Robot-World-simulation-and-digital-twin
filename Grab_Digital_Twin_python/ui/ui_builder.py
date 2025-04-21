@@ -119,7 +119,7 @@ class UIBuilder:
                     setup_post_load_fn=self._setup_scenario,
                 )
                 self._load_btn.set_world_settings(
-                    physics_dt=1/60.0, rendering_dt=1/60.0
+                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
                 )
                 self.wrapped_ui_elements.append(self._load_btn)
 
@@ -277,15 +277,21 @@ class UIBuilder:
         The user should now load their assets onto the stage and add them to the World Scene.
         """
         usd_idx = self._grab_dropdown.model.get_item_value_model().as_int
-        usd_file = self._grab_usd_options[usd_idx] if 0 <= usd_idx < len(self._grab_usd_options) else self._grab_usd_options[0]
+        usd_file = (
+            self._grab_usd_options[usd_idx]
+            if 0 <= usd_idx < len(self._grab_usd_options)
+            else self._grab_usd_options[0]
+        )
 
         self._camera_capture.initialize()
         create_new_stage()
-        setup_scene(enable_cameras=self._enable_cameras_model.get_value_as_bool(), grab_usd=usd_file)
+        setup_scene(
+            enable_cameras=self._enable_cameras_model.get_value_as_bool(),
+            grab_usd=usd_file,
+        )
 
         omni.timeline.get_timeline_interface().set_auto_update(False)
         print(f"Scene setup complete with grab asset: {usd_file}")
-
 
     def _setup_scenario(self):
         """
