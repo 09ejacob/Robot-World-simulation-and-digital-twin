@@ -113,7 +113,7 @@ class UIBuilder:
                 self._grab_dropdown = ui.ComboBox(0, *self._grab_usd_options)
 
                 self._load_btn = LoadButton(
-                    "Load Button",
+                    "Load Grab USD",
                     "LOAD",
                     setup_scene_fn=self._setup_scene,
                     setup_post_load_fn=self._setup_scenario,
@@ -150,7 +150,7 @@ class UIBuilder:
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
 
                 self._unload_btn = ResetButton(
-                    "Unload Button",
+                    "Unload Scenario",
                     "UNLOAD SCENARIO",
                     pre_reset_fn=None,
                     post_reset_fn=self._on_post_unload_btn,
