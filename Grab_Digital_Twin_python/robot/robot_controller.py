@@ -8,7 +8,16 @@ from pxr import UsdGeom
 from pxr import Gf
 from ..camera_capture import CameraCapture
 
-from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH, ROBOT_PATH
+from ..global_variables import (
+    GRIPPER_CLOSE_PATH,
+    GRIPPER_OPEN_PATH,
+    ROBOT_PATH,
+    BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+    BOTTLEGRIPPER_JOINT_PATH_LEFT,
+    BOTTLEGRIPPER_OPEN,
+    BOTTLEGRIPPER_CLOSE,
+    BOTTLEGRIPPER_IDLE,
+)
 
 
 class RobotController:
@@ -22,16 +31,58 @@ class RobotController:
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
     def open_gripper(self):
-        node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
-        attr = node.get_attribute("state:enableImpulse")
-        attr.set(1)
-        node.request_compute()
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_OPEN,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_OPEN * (-1),
+            )
+        else:
+            node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
+            attr = node.get_attribute("state:enableImpulse")
+            attr.set(1)
+            node.request_compute()
 
     def close_gripper(self):
-        node = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
-        attr = node.get_attribute("state:enableImpulse")
-        attr.set(1)
-        node.request_compute()
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_CLOSE,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_CLOSE * (-1),
+            )
+        else:
+            node = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
+            attr = node.get_attribute("state:enableImpulse")
+            attr.set(1)
+            node.request_compute()
+
+    def set_bottlegripper_to_idle_pos(self):
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_IDLE,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_IDLE,
+            )
+        else:
+            print("Bottlegripper is not active")
 
     def set_angular_drive_target(self, joint_prim_path, target_position):
         stage = get_current_stage()

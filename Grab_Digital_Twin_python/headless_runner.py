@@ -42,6 +42,13 @@ def parse_args():
         action="store_true",
         help="Print UDP and command execution stats",
     )
+    parser.add_argument(
+        "--grab_usd",
+        type=str,
+        default="Grab.usd",
+        choices=["Grab.usd", "Grab-bottlegripper.usd"],
+        help="USD file to load for the Grab robot model",
+    )
     return parser.parse_args()
 
 
@@ -69,7 +76,9 @@ def main():
     create_new_stage()
 
     print("Setting up Scene...")
-    setup_scene(enable_cameras=not args.disable_cameras)
+    setup_scene(
+        enable_cameras=not args.disable_cameras, grab_usd=args.grab_usd
+    )  # Need a flag for setting up scene with specifyed usd model.
 
     wait_for_condition(
         lambda: get_current_stage().GetRootLayer() is not None,
