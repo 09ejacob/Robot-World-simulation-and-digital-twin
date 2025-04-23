@@ -108,7 +108,6 @@ class UIBuilder:
                 self._enable_cameras_model = ui.SimpleBoolModel(True)
                 with ui.HStack():
                     ui.Label("Enable Cameras")
-                    self._enable_cameras_model = ui.SimpleBoolModel(True)
                     ui.CheckBox(model=self._enable_cameras_model)
 
                 ui.Label("Select Grab USD:")
