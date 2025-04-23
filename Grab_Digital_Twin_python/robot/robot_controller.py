@@ -6,6 +6,7 @@ import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
 from pxr import UsdGeom
 from pxr import Gf
+from omni.isaac.core.articulations import ArticulationView
 from ..camera_capture import CameraCapture
 from omni.isaac.sensor import ContactSensor
 
@@ -132,12 +133,14 @@ class RobotController:
         clamped_position = max(lower_limit, min(position, upper_limit))
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
-    def get_contact_force_reading(self):
-        sensor = ContactSensor(
-            prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
-            name="Contact_Sensor",
-        )
-        return sensor.get_current_frame()
+    def get_force_sensor_data(self):
+        try:
+            print(f"{self.articulation_view.get_measured_joint_efforts()}")
+        except AttributeError:
+            self.articulation_view = ArticulationView(prim_paths_expr=ROBOT_PATH)
+            self.articulation_view.initialize()
+
+            print(f"{self.articulation_view.get_measured_joint_efforts()}")
 
     def print_contact_force(self):
         sensor = ContactSensor(

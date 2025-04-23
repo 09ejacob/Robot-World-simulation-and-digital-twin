@@ -106,7 +106,6 @@ class UDPScenario:
         return {
             "tp_robot": self._handle_tp_robot,
             "nudge_box": self._handle_nudge_box,
-            "force_data": lambda p: self._robot_controller.print_contact_force(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
             "bottlegripper_idle": lambda p: self._robot_controller.set_bottlegripper_to_idle_pos(),
@@ -114,6 +113,7 @@ class UDPScenario:
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
+            "force_data": lambda p: self._get_force(),
         }
 
     def _toggle_overview_camera(self, start, parts=None):
@@ -253,6 +253,9 @@ class UDPScenario:
             port=self.broadcast_target_port,
             stream=stream,
         )
+
+    def _get_force(self):
+        self._robot_controller.get_force_sensor_data()
 
     def nudge_box(self, prim_path, offset):
         stage = omni.usd.get_context().get_stage()
@@ -523,14 +526,14 @@ class UDPScenario:
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
 
-            try:
-                reading = self._robot_controller.get_contact_force_reading()
-                force_n = reading.get("force", 0)
-                force_kgf = force_n / 9.81
-                data.append(f"force_N:{force_n:.2f}")
-                data.append(f"force_kgf:{force_kgf:.2f}")
-            except Exception as e:
-                print(f"[WARN] Could not read force sensor: {e}")
+            # try:
+            #     reading = self._robot_controller.get_contact_force_reading()
+            #     force_n = reading.get("force", 0)
+            #     force_kgf = force_n / 9.81
+            #     data.append(f"force_N:{force_n:.2f}")
+            #     data.append(f"force_kgf:{force_kgf:.2f}")
+            # except Exception as e:
+            #     print(f"[WARN] Could not read force sensor: {e}")
 
             if data:
                 self.udp.send(
