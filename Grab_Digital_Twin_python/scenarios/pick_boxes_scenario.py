@@ -19,7 +19,7 @@ class PickBoxesScenario:
     A minimal scenario class that runs a single sequence of robot actions.
     """
 
-    def __init__(self, robot_controller):
+    def __init__(self, robot_controller, allow_udp_capture):
         self._robot_controller = robot_controller
         self._world = None
         self._did_run = False

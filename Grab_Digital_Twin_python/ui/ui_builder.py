@@ -46,7 +46,9 @@ class UIBuilder:
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
         }
-
+        self._scenario_options = ["-- Select Scenario --"] + list(
+            self._scenarios.keys()
+        )
         self._scenario = None
 
         self._on_init()
@@ -106,31 +108,42 @@ class UIBuilder:
                 self._enable_cameras_model = ui.SimpleBoolModel(True)
                 with ui.HStack():
                     ui.Label("Enable Cameras")
-                    self._enable_cameras_model = ui.SimpleBoolModel(True)
                     ui.CheckBox(model=self._enable_cameras_model)
 
                 ui.Label("Select Grab USD:")
                 self._grab_dropdown = ui.ComboBox(0, *self._grab_usd_options)
 
+                ui.Label("Physics Rate (Hz):")
+                self._physics_rate_model = ui.SimpleFloatModel(60.0)
+                ui.FloatField(model=self._physics_rate_model)
+
+                ui.Label("Rendering Rate (Hz):")
+                self._rendering_rate_model = ui.SimpleFloatModel(60.0)
+                ui.FloatField(model=self._rendering_rate_model)
+
                 self._load_btn = LoadButton(
-                    "Load Button",
+                    "Load Grab USD",
                     "LOAD",
                     setup_scene_fn=self._setup_scene,
                     setup_post_load_fn=self._setup_scenario,
                 )
-                self._load_btn.set_world_settings(
-                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
-                )
-                self.wrapped_ui_elements.append(self._load_btn)
 
-                self._unload_btn = ResetButton(
-                    "Unload Button",
-                    "UNLOAD SCENARIO",
-                    pre_reset_fn=None,
-                    post_reset_fn=self._on_post_unload_btn,
-                )
-                self._unload_btn.enabled = False
-                self.wrapped_ui_elements.append(self._unload_btn)
+                def _on_rate_changed(model):
+                    hz_phys = max(0.1, self._physics_rate_model.get_value_as_float())
+                    hz_rend = max(0.1, self._rendering_rate_model.get_value_as_float())
+                    self._load_btn.set_world_settings(
+                        physics_dt=1.0 / hz_phys,
+                        rendering_dt=1.0 / hz_rend,
+                    )
+
+                # subscribe to both models:
+                self._physics_rate_model.add_value_changed_fn(_on_rate_changed)
+                self._rendering_rate_model.add_value_changed_fn(_on_rate_changed)
+
+                # set initial values immediately
+                _on_rate_changed(None)
+
+                self.wrapped_ui_elements.append(self._load_btn)
 
         scenario_frame = CollapsableFrame("Scenario", collapsed=False)
         with scenario_frame:
@@ -138,12 +151,12 @@ class UIBuilder:
                 ui.Label("Select Scenario:")
 
                 self._scenario_dropdown = ui.ComboBox(
-                    -1,
-                    *list(self._scenarios.keys()),
+                    0,
+                    *self._scenario_options,
                 )
 
                 ui.Button(
-                    "Select Scenario",
+                    "Load Scenario",
                     clicked_fn=self._select_scenario,
                 )
 
@@ -157,6 +170,15 @@ class UIBuilder:
                 )
                 self._scenario_state_btn.enabled = False
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
+
+                self._unload_btn = ResetButton(
+                    "Unload Scenario",
+                    "UNLOAD SCENARIO",
+                    pre_reset_fn=None,
+                    post_reset_fn=self._on_post_unload_btn,
+                )
+                self._unload_btn.enabled = False
+                self.wrapped_ui_elements.append(self._unload_btn)
 
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
         with robot_controls_frame:
@@ -243,22 +265,18 @@ class UIBuilder:
 
     def _select_scenario(self):
         """
-        Selects the scenario from the dropdown when the "Select Scenario" button is clicked.
+        Selects the scenario from the dropdown when the "Load Scenario" button is clicked.
         """
-        value_model = self._scenario_dropdown.model.get_item_value_model()
-        selected_index = value_model.as_int
+        idx = self._scenario_dropdown.model.get_item_value_model().as_int
 
-        scenario_names = list(self._scenarios.keys())
-
-        if selected_index < 0 or selected_index >= len(scenario_names):
-            print(f"⚠️ Error: Invalid scenario index {selected_index}")
+        if idx <= 0 or idx >= len(self._scenario_options):
+            print("Please select a real scenario from the dropdown")
             return
 
-        selected_scenario = scenario_names[selected_index]
+        selected_scenario = self._scenario_options[idx]
         print(f"Switching to scenario: {selected_scenario}")
         self._current_scenario_name = selected_scenario
 
-        # Unload the previous scenario
         if self._scenario is not None:
             self._scenario.unload()
 
@@ -266,7 +284,7 @@ class UIBuilder:
         enable_cameras = self._enable_cameras_model.get_value_as_bool()
         self._scenario = scenario_cls(
             robot_controller=self._robot_controller,
-            allow_udp_capture=enable_cameras,  # Pass to UDPScenario
+            allow_udp_capture=enable_cameras,
         )
         self._setup_scenario()
 

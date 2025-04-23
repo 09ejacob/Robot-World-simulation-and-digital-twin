@@ -109,8 +109,10 @@ class CameraCapture:
             metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
 
             image.save(image_path)
-            with open(metadata_path, "w") as f:
-                json.dump(metadata, f, indent=4)
+            if camera_id != "OverviewCamera":
+                metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
+                with open(metadata_path, "w") as f:
+                    json.dump(metadata, f, indent=4)
 
             return image_path
 
