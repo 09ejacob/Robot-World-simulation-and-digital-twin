@@ -46,7 +46,9 @@ class UIBuilder:
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
         }
-
+        self._scenario_options = ["-- Select Scenario --"] + list(
+            self._scenarios.keys()
+        )
         self._scenario = None
 
         self._on_init()
@@ -129,8 +131,8 @@ class UIBuilder:
                 ui.Label("Select Scenario:")
 
                 self._scenario_dropdown = ui.ComboBox(
-                    -1,
-                    *list(self._scenarios.keys()),
+                    0,
+                    *self._scenario_options,
                 )
 
                 ui.Button(
@@ -245,20 +247,16 @@ class UIBuilder:
         """
         Selects the scenario from the dropdown when the "Load Scenario" button is clicked.
         """
-        value_model = self._scenario_dropdown.model.get_item_value_model()
-        selected_index = value_model.as_int
+        idx = self._scenario_dropdown.model.get_item_value_model().as_int
 
-        scenario_names = list(self._scenarios.keys())
-
-        if selected_index < 0 or selected_index >= len(scenario_names):
-            print(f"⚠️ Error: Invalid scenario index {selected_index}")
+        if idx <= 0 or idx >= len(self._scenario_options):
+            print("Please select a real scenario from the dropdown")
             return
 
-        selected_scenario = scenario_names[selected_index]
+        selected_scenario = self._scenario_options[idx]
         print(f"Switching to scenario: {selected_scenario}")
         self._current_scenario_name = selected_scenario
 
-        # Unload the previous scenario
         if self._scenario is not None:
             self._scenario.unload()
 
@@ -266,7 +264,7 @@ class UIBuilder:
         enable_cameras = self._enable_cameras_model.get_value_as_bool()
         self._scenario = scenario_cls(
             robot_controller=self._robot_controller,
-            allow_udp_capture=enable_cameras,  # Pass to UDPScenario
+            allow_udp_capture=enable_cameras,
         )
         self._setup_scenario()
 
