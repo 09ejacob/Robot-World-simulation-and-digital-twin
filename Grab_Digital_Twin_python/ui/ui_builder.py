@@ -113,15 +113,36 @@ class UIBuilder:
                 ui.Label("Select Grab USD:")
                 self._grab_dropdown = ui.ComboBox(0, *self._grab_usd_options)
 
+                ui.Label("Physics Rate (Hz):")
+                self._physics_rate_model = ui.SimpleFloatModel(60.0)
+                ui.FloatField(model=self._physics_rate_model)
+
+                ui.Label("Rendering Rate (Hz):")
+                self._rendering_rate_model = ui.SimpleFloatModel(60.0)
+                ui.FloatField(model=self._rendering_rate_model)
+
                 self._load_btn = LoadButton(
                     "Load Grab USD",
                     "LOAD",
                     setup_scene_fn=self._setup_scene,
                     setup_post_load_fn=self._setup_scenario,
                 )
-                self._load_btn.set_world_settings(
-                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
-                )
+
+                def _on_rate_changed(model):
+                    hz_phys = max(0.1, self._physics_rate_model.get_value_as_float())
+                    hz_rend = max(0.1, self._rendering_rate_model.get_value_as_float())
+                    self._load_btn.set_world_settings(
+                        physics_dt=1.0 / hz_phys,
+                        rendering_dt=1.0 / hz_rend,
+                    )
+
+                # subscribe to both models:
+                self._physics_rate_model.add_value_changed_fn(_on_rate_changed)
+                self._rendering_rate_model.add_value_changed_fn(_on_rate_changed)
+
+                # set initial values immediately
+                _on_rate_changed(None)
+
                 self.wrapped_ui_elements.append(self._load_btn)
 
         scenario_frame = CollapsableFrame("Scenario", collapsed=False)
