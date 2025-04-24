@@ -15,7 +15,7 @@ class StackBoxScenario:
     A scenario where the robot picks up multiple boxes and stacks them.
     """
 
-    def __init__(self, robot_controller):
+    def __init__(self, robot_controller, allow_udp_capture):
         self._robot_controller = robot_controller
         self._world = None
         self._did_run = False
@@ -127,20 +127,20 @@ class StackBoxScenario:
             # Raise
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 1.0
+                    AXIS2_JOINT_PATH, 1.0 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=1.0,
+                    target_position=1.0 + 0.144,
                     pos_threshold=0.1,
                 )
             else:
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.8
+                    AXIS2_JOINT_PATH, 0.8 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.8,
+                    target_position=0.8 + 0.144,
                     pos_threshold=0.1,
                 )
 
@@ -172,20 +172,20 @@ class StackBoxScenario:
             # Lower
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.9
+                    AXIS2_JOINT_PATH, 0.9 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.9,
+                    target_position=0.9 + 0.144,
                     pos_threshold=0.01,
                 )
             else:
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.58
+                    AXIS2_JOINT_PATH, 0.58 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.58,
+                    target_position=0.58 + 0.144,
                     pos_threshold=0.01,
                 )
 
@@ -195,20 +195,20 @@ class StackBoxScenario:
             # Raise
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 1.1
+                    AXIS2_JOINT_PATH, 1.1 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=1.1,
+                    target_position=1.1 + 0.144,
                     pos_threshold=0.1,
                 )
             else:
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.8
+                    AXIS2_JOINT_PATH, 0.8 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.8,
+                    target_position=0.8 + 0.144,
                     pos_threshold=0.1,
                 )
 

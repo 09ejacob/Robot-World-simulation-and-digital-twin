@@ -34,6 +34,8 @@ class UIBuilder:
         # UI elements created using a UIElementWrapper instance
         self.wrapped_ui_elements = []
 
+        self._grab_usd_options = ["Grab.usd", "Grab-bottlegripper.usd"]
+
         # Get access to the timeline to control stop/pause/play programmatically
         self._timeline = omni.timeline.get_timeline_interface()
 
@@ -44,8 +46,9 @@ class UIBuilder:
             "Pick Boxes": PickBoxesScenario,
             "Stack Box": StackBoxScenario,
         }
-        self._current_scenario_name = "UDP"  # Default scenario
-
+        self._scenario_options = ["-- Select Scenario --"] + list(
+            self._scenarios.keys()
+        )
         self._scenario = None
 
         self._on_init()
@@ -102,25 +105,45 @@ class UIBuilder:
         world_controls_frame = CollapsableFrame("World Controls", collapsed=False)
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
+                self._enable_cameras_model = ui.SimpleBoolModel(True)
+                with ui.HStack():
+                    ui.Label("Enable Cameras")
+                    ui.CheckBox(model=self._enable_cameras_model)
+
+                ui.Label("Select Grab USD:")
+                self._grab_dropdown = ui.ComboBox(0, *self._grab_usd_options)
+
+                ui.Label("Physics Rate (Hz):")
+                self._physics_rate_model = ui.SimpleFloatModel(60.0)
+                ui.FloatField(model=self._physics_rate_model)
+
+                ui.Label("Rendering Rate (Hz):")
+                self._rendering_rate_model = ui.SimpleFloatModel(60.0)
+                ui.FloatField(model=self._rendering_rate_model)
+
                 self._load_btn = LoadButton(
-                    "Load Button",
+                    "Load Grab USD",
                     "LOAD",
                     setup_scene_fn=self._setup_scene,
                     setup_post_load_fn=self._setup_scenario,
                 )
-                self._load_btn.set_world_settings(
-                    physics_dt=1 / 60.0, rendering_dt=1 / 60.0
-                )
-                self.wrapped_ui_elements.append(self._load_btn)
 
-                self._unload_btn = ResetButton(
-                    "Unload Button",
-                    "UNLOAD SCENARIO",
-                    pre_reset_fn=None,
-                    post_reset_fn=self._on_post_unload_btn,
-                )
-                self._unload_btn.enabled = False
-                self.wrapped_ui_elements.append(self._unload_btn)
+                def _on_rate_changed(model):
+                    hz_phys = max(0.1, self._physics_rate_model.get_value_as_float())
+                    hz_rend = max(0.1, self._rendering_rate_model.get_value_as_float())
+                    self._load_btn.set_world_settings(
+                        physics_dt=1.0 / hz_phys,
+                        rendering_dt=1.0 / hz_rend,
+                    )
+
+                # subscribe to both models:
+                self._physics_rate_model.add_value_changed_fn(_on_rate_changed)
+                self._rendering_rate_model.add_value_changed_fn(_on_rate_changed)
+
+                # set initial values immediately
+                _on_rate_changed(None)
+
+                self.wrapped_ui_elements.append(self._load_btn)
 
         scenario_frame = CollapsableFrame("Scenario", collapsed=False)
         with scenario_frame:
@@ -128,12 +151,12 @@ class UIBuilder:
                 ui.Label("Select Scenario:")
 
                 self._scenario_dropdown = ui.ComboBox(
-                    -1,
-                    *list(self._scenarios.keys()),
+                    0,
+                    *self._scenario_options,
                 )
 
                 ui.Button(
-                    "Select Scenario",
+                    "Load Scenario",
                     clicked_fn=self._select_scenario,
                 )
 
@@ -148,6 +171,15 @@ class UIBuilder:
                 self._scenario_state_btn.enabled = False
                 self.wrapped_ui_elements.append(self._scenario_state_btn)
 
+                self._unload_btn = ResetButton(
+                    "Unload Scenario",
+                    "UNLOAD SCENARIO",
+                    pre_reset_fn=None,
+                    post_reset_fn=self._on_post_unload_btn,
+                )
+                self._unload_btn.enabled = False
+                self.wrapped_ui_elements.append(self._unload_btn)
+
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
         with robot_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
@@ -156,6 +188,10 @@ class UIBuilder:
                 )
                 ui.Button(
                     "Close Gripper", clicked_fn=self._robot_controller.close_gripper
+                )
+                ui.Button(
+                    "Set bottlegripper to idle",
+                    clicked_fn=self._robot_controller.set_bottlegripper_to_idle_pos,
                 )
 
                 ui.Label("Set Axis1 position:")
@@ -236,27 +272,27 @@ class UIBuilder:
 
     def _select_scenario(self):
         """
-        Selects the scenario from the dropdown when the "Select Scenario" button is clicked.
+        Selects the scenario from the dropdown when the "Load Scenario" button is clicked.
         """
-        value_model = self._scenario_dropdown.model.get_item_value_model()
-        selected_index = value_model.as_int
+        idx = self._scenario_dropdown.model.get_item_value_model().as_int
 
-        scenario_names = list(self._scenarios.keys())
-
-        if selected_index < 0 or selected_index >= len(scenario_names):
-            print(f"⚠️ Error: Invalid scenario index {selected_index}")
+        if idx <= 0 or idx >= len(self._scenario_options):
+            print("Please select a real scenario from the dropdown")
             return
 
-        selected_scenario = scenario_names[selected_index]
+        selected_scenario = self._scenario_options[idx]
         print(f"Switching to scenario: {selected_scenario}")
         self._current_scenario_name = selected_scenario
 
-        # Unload the previous scenario
         if self._scenario is not None:
             self._scenario.unload()
 
         scenario_cls = self._scenarios[selected_scenario]
-        self._scenario = scenario_cls(robot_controller=self._robot_controller)
+        enable_cameras = self._enable_cameras_model.get_value_as_bool()
+        self._scenario = scenario_cls(
+            robot_controller=self._robot_controller,
+            allow_udp_capture=enable_cameras,
+        )
         self._setup_scenario()
 
     def _setup_scene(self):
@@ -265,15 +301,22 @@ class UIBuilder:
         On pressing the Load Button, a new instance of World() is created and then this function is called.
         The user should now load their assets onto the stage and add them to the World Scene.
         """
-      
+        usd_idx = self._grab_dropdown.model.get_item_value_model().as_int
+        usd_file = (
+            self._grab_usd_options[usd_idx]
+            if 0 <= usd_idx < len(self._grab_usd_options)
+            else self._grab_usd_options[0]
+        )
+
         self._camera_capture.initialize()
         create_new_stage()
-        setup_scene()
+        setup_scene(
+            enable_cameras=self._enable_cameras_model.get_value_as_bool(),
+            grab_usd=usd_file,
+        )
 
-        timeline_iface = omni.timeline.get_timeline_interface()
-        timeline_iface.set_auto_update(False)
-
-        print("Scene setup complete.")
+        omni.timeline.get_timeline_interface().set_auto_update(False)
+        print(f"Scene setup complete with grab asset: {usd_file}")
 
     def _setup_scenario(self):
         """
@@ -352,7 +395,7 @@ class UIBuilder:
 
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
-        image_path = self._robot_controller.capture_from_camera(camera_id)
+        image_path = self._robot_controller.capture_cameras(camera_id)
         print(f"Captured image from {camera_id}: {image_path}")
 
     def _capture_3d_from_camera(self, camera_id):
@@ -362,12 +405,12 @@ class UIBuilder:
 
     def _capture_from_all_cameras(self):
         """Capture images from all registered cameras."""
-        image_paths = self._robot_controller.capture_from_all_cameras()
+        image_paths = self._robot_controller.capture_cameras()
         print(f"Captured images: {image_paths}")
 
     def _capture_all_images(self):
         """Capture images from all registered cameras."""
-        image_paths = self._robot_controller.capture_from_all_cameras()
+        image_paths = self._robot_controller.capture_cameras()
         if image_paths:
             print("Captured images from all cameras:", image_paths)
         else:

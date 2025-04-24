@@ -8,9 +8,7 @@ from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from isaacsim.core.prims import SingleXFormPrim
 from .camera import register_existing_camera
 from .camera import register_stereo_pair
-from .camera import get_camera_baseline
-from ..camera_capture import CameraCapture
-import omni.replicator.core as rep
+
 
 
 
@@ -115,14 +113,19 @@ def addstereo_camera():
         pair_id="stereo_pair",
     )
 
-def load_grab_usd():
+def load_grab_usd(grab_usd):
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
-        join(current_dir, "..", "..", "Grab_Digital_Twin_python", "usd", "Grab.usd")
+        join(
+            current_dir,
+            "..",
+            "..",
+            "Grab_Digital_Twin_python",
+            "usd",
+            grab_usd,
+        )
     )
-
     add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
-
 
 def _add_light():
     sphereLight = UsdLux.SphereLight.Define(
@@ -132,31 +135,15 @@ def _add_light():
     sphereLight.CreateIntensityAttr(100000)
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
-
-def setup_stereo_cameras():
-    """Setup stereo camera configuration using existing box cameras."""
-    # Register the stereo pair
-    stereo_pair = register_stereo_pair(
-        left_prim_path=BOX_CAMERA_2,
-        right_prim_path=BOX_CAMERA_1,
-        pair_id="main_stereo"  # Use consistent ID
-    )
-    
-    # Get the baseline from the cameras
-    baseline = get_camera_baseline(BOX_CAMERA_2, BOX_CAMERA_1)
-    
-    return stereo_pair, baseline
-
-def setup_scene(enable_cameras=False):
+def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
     stage = get_current_stage()
 
-    # Define PhysicsScene if it doesn't exist
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
         print(f"[setup_scene] Defining physics scene at: {PHYSICS_SCENE_PATH}")
         UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
-    # Apply PhysxSceneAPI to the PhysicsScene prim
     physics_scene_prim = stage.GetPrimAtPath(PHYSICS_SCENE_PATH)
+
     if not physics_scene_prim.HasAPI(PhysxSchema.PhysxSceneAPI):
         PhysxSchema.PhysxSceneAPI.Apply(physics_scene_prim)
         print("[setup_scene] Applied PhysxSceneAPI to PhysicsScene prim")
@@ -166,26 +153,17 @@ def setup_scene(enable_cameras=False):
     create_ground_plane(GROUND_PLANE_PATH)
 
 
-    load_grab_usd()
-
-    # Add sensor cameras
-    #hawk_sensor_path = add_sensor_asset('hawk_stereo', parent_prim_path=ROBOT_PATH, sensor_name="Hawk_Stereo")
-    
-
-    #create_camera2()
-    custom_resolutions = {
-    BOX_CAMERA_1: (1280, 720),
-    BOX_CAMERA_2: (1280, 720),
-    BASE_CAMERA_PATH: (1280, 720),
-    }
-    #create_camera3(custom_resolutions)
-    
-    # Setup stereo cameras once
-    stereo_pair, baseline = setup_stereo_cameras()
+    load_grab_usd(grab_usd)
 
     if enable_cameras:
-        custom_resolutions = {BOX_CAMERA_1: (1280, 720), OVERVIEW_CAMERA: (1280, 820)}
+        custom_resolutions = {  # 720x480 is safe max for UDP transmission
+            BASE_CAMERA_PATH: (720, 480),
+            BOX_CAMERA_1: (720, 480),
+            BOX_CAMERA_2: (720, 480),
+            OVERVIEW_CAMERA: (1280, 820),  # Not sent over UDP
+        }
         create_camera(custom_resolutions)
+
     create_additional_joints()
     _add_light()
     

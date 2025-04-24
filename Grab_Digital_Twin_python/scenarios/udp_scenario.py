@@ -1,15 +1,17 @@
 import time
+import os
 import queue
 import threading
 import psutil
 import numpy as np
 from os.path import dirname, abspath, join
-from pxr import UsdGeom, Gf
+from pxr import UsdGeom, Gf, UsdPhysics
 import omni.usd
 from omni.isaac.core import World
 from isaacsim.core.utils.stage import add_reference_to_stage, create_new_stage
 from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
 from omni.isaac.core.objects import DynamicCuboid
+from pxr.UsdGeom import Tokens as UsdGeomTokens
 
 from ..global_variables import (
     AXIS1_JOINT_PATH,
@@ -61,7 +63,7 @@ class UDPScenario:
         self.allow_udp_capture = allow_udp_capture
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
-        self.overview_capture_interval = 0.2
+        self.overview_capture_interval = 0.2  # Deafult, can be set with UDP command
 
         self.axis_config = [
             ("axis1", AXIS1_JOINT_PATH, True),
@@ -71,7 +73,7 @@ class UDPScenario:
         ]
         self.axis_dofs = []
 
-        self.boxes = []
+        self.boxes_paths = []
         self.pallets = []
 
     def _udp_callback(self, message):
@@ -107,24 +109,42 @@ class UDPScenario:
             "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
+            "bottlegripper_idle": lambda p: self._robot_controller.set_bottlegripper_to_idle_pos(),
             "capture": lambda p: self._handle_capture_command(p),
             "reload": lambda p: self._reload_scene(),
-            "start_overview_camera": lambda p: self._toggle_overview_camera(True),
+            "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
         }
 
-    def _toggle_overview_camera(self, start):
+    def _toggle_overview_camera(self, start, parts=None):
         if self.allow_udp_capture:
+            if start:
+                # Parse interval from command if provided
+                if parts and len(parts) > 1:
+                    try:
+                        interval = float(parts[1])
+                        if interval > 0:
+                            self.overview_capture_interval = interval
+                            print(
+                                f"[INFO] Set overview camera interval to {interval:.3f} seconds"
+                            )
+                        else:
+                            print(
+                                f"[WARN] Interval must be > 0 to activate overview camera. Got: {interval}"
+                            )
+                            return
+                    except ValueError:
+                        print(f"[WARN] Invalid overview camera interval: {parts[1]}")
+                        return
+
             self.overview_camera_active = start
             state = "started" if start else "stopped"
-
             print(f"Overview-camera capturing {state}.")
 
             if not start:
                 self._robot_controller.generate_video(
                     3 / self.overview_capture_interval
                 )
-
         else:
             print("[INFO] Overview camera is disabled.")
 
@@ -191,11 +211,48 @@ class UDPScenario:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
     def _handle_capture_command(self, parts):
-        if self.allow_udp_capture:
-            self._robot_controller.capture_from_all_cameras()
+        print(f"[DEBUG] Received capture command with parts: {parts}")
 
+        if not self.allow_udp_capture:
+            print("[INFO] Camera capture is disabled.")
+            return
+
+        if len(parts) < 2:
+            print(
+                "[ERROR] No cameras specified. Use format: capture:cam1:cam2[:...][:stream=true|false]"
+            )
+            return
+
+        # Check if the last part is a stream directive
+        stream = True
+        if "stream=" in parts[-1].lower():
+            stream_arg = parts[-1].lower()
+            if stream_arg == "stream=true":
+                stream = True
+            elif stream_arg == "stream=false":
+                stream = False
+            else:
+                print(
+                    f"[ERROR] Invalid stream value: {parts[-1]}. Use stream=true or stream=false."
+                )
+                return
+            cameras = parts[1:-1]  # exclude the stream parameter
         else:
-            print("[INFO] Camera is disabled.")
+            cameras = parts[1:]
+
+        if not cameras or not all(cameras):
+            print(f"[ERROR] Invalid or missing camera names in command: {parts}")
+            return
+
+        print(f"[INFO] Capturing from cameras: {cameras} | stream={stream}")
+
+        self._robot_controller.capture_cameras(
+            cameras=cameras,
+            udp_controller=self.udp,
+            host=self.broadcast_target_host,
+            port=self.broadcast_target_port,
+            stream=stream,
+        )
 
     def nudge_box(self, prim_path, offset):
         stage = omni.usd.get_context().get_stage()
@@ -282,9 +339,85 @@ class UDPScenario:
             )
 
             boxes.append(box)
-            self.boxes.append(box)
+            self.boxes_paths.append(prim_path)
 
         return boxes
+
+    def create_bottles(
+        self,
+        path,
+        num_boxes,
+        position=(2.0, 0.0, 0.072),
+        stack_id=1,
+        reverse=False,
+    ):
+        stack_path = f"{path}/stack{stack_id}"
+        self.create_xform(stack_path, translate=(0, 0, 0))
+
+        module_dir = dirname(abspath(__file__))
+        usd_path = abspath(
+            join(
+                module_dir,
+                "..",
+                "..",
+                "Grab_Digital_Twin_python",
+                "usd",
+                "BottlePack.usd",
+            )
+        )
+        if not os.path.exists(usd_path):
+            print(f"[ERROR] Box USD asset not found at {usd_path}")
+            return
+
+        bx, by, bz = position
+
+        start_x = bx + 0.45
+        x_inc = 0.3
+        x_positions = [start_x - i * x_inc for i in range(4)]
+
+        if reverse:
+            x_positions = x_positions[::-1]
+
+        y_positions = [by + 0.3 - j * 0.2 for j in range(4)]
+        z_base = bz + 0.073
+        z_inc = 0.320
+
+        stage = omni.usd.get_context().get_stage()
+
+        for i in range(num_boxes):
+            layer = i // 16
+            idx = i % 16
+            col = idx // 4
+            row = idx % 4
+
+            x = x_positions[col]
+            y = y_positions[row]
+            z = z_base + layer * z_inc
+
+            prim_path = f"{stack_path}/box_{stack_id}_{i + 1}"
+
+            add_reference_to_stage(usd_path=usd_path, prim_path=prim_path)
+            prim = stage.GetPrimAtPath(prim_path)
+            if not prim.IsValid():
+                print(f"[WARN] failed to reference box at {prim_path}")
+                continue
+
+            xform = UsdGeom.Xformable(prim)
+            xform.ClearXformOpOrder()
+            xform.AddTranslateOp().Set(Gf.Vec3d(x, y, z))
+
+            color = Gf.Vec3f(*self.random_color())
+            gprim = UsdGeom.Gprim(prim)
+            pv = gprim.CreateDisplayColorPrimvar(UsdGeomTokens.constant, 3)
+            pv.Set([color])
+
+            UsdPhysics.RigidBodyAPI.Apply(prim)
+            UsdPhysics.CollisionAPI.Apply(prim)
+            mass_api = UsdPhysics.MassAPI.Apply(prim)
+            mass_attr = mass_api.GetMassAttr() or mass_api.CreateMassAttr()
+            mass_attr.Set(9.0)
+
+            self.boxes_paths.append(prim_path)
 
     def create_pick_stack(
         self,
@@ -293,6 +426,7 @@ class UDPScenario:
         number_of_boxes=1,
         stack_id=1,
         reverse=False,
+        isBottles=False,
     ):
         self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
         pallet = DynamicCuboid(
@@ -305,13 +439,22 @@ class UDPScenario:
 
         self.pallets.append(pallet)
 
-        self.create_boxes(
-            f"{path}/stack{stack_id}",
-            number_of_boxes,
-            pallet_position,
-            stack_id,
-            reverse,
-        )
+        if isBottles:
+            self.create_bottles(
+                f"{path}/stack{stack_id}",
+                number_of_boxes,
+                pallet_position,
+                stack_id,
+                reverse,
+            )
+        else:
+            self.create_boxes(
+                f"{path}/stack{stack_id}",
+                number_of_boxes,
+                pallet_position,
+                stack_id,
+                reverse,
+            )
 
     def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
         current_dir = dirname(abspath(__file__))
@@ -460,15 +603,13 @@ class UDPScenario:
             else:
                 self.axis_dofs.append((name, dof_index, is_angular))
 
-        self.pallets = []
-        self.boxes = []
-
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 0.072),
             number_of_boxes=19,
             stack_id=1,
             reverse=True,
+            isBottles=False,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -476,13 +617,15 @@ class UDPScenario:
             number_of_boxes=20,
             stack_id=2,
             reverse=True,
+            isBottles=False,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 0.072),
-            number_of_boxes=35,
+            number_of_boxes=15,
             stack_id=3,
             reverse=True,
+            isBottles=True,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
@@ -490,20 +633,23 @@ class UDPScenario:
             number_of_boxes=30,
             stack_id=4,
             reverse=True,
+            isBottles=False,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, -0.9, 1.872),
-            number_of_boxes=27,
+            number_of_boxes=16,
             stack_id=5,
             reverse=True,
+            isBottles=True,
         )
         self.create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 1.872),
-            number_of_boxes=12,
+            number_of_boxes=16,
             stack_id=6,
             reverse=True,
+            isBottles=True,
         )
 
         self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
@@ -527,7 +673,7 @@ class UDPScenario:
         stage = omni.usd.get_context().get_stage()
 
         prim_paths = (
-            [box.prim_path for box in self.boxes]
+            self.boxes_paths
             + [pallet.prim_path for pallet in self.pallets]
             + [SHELF_PATH]
         )
@@ -540,9 +686,12 @@ class UDPScenario:
     def _reload_scene(self):
         """Reload the entire scene to mirror the headless runner startup process."""
         print("Reloading scene with UDP scenario...")
+
         self.unload()
+
         create_new_stage()
         setup_scene(enable_cameras=self.allow_udp_capture)
+
         self.setup()
         print("Scene reloaded and UDP scenario started.")
 

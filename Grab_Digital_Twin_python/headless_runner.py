@@ -1,19 +1,5 @@
 import time
 import argparse
-from omni.isaac.kit import SimulationApp
-
-simulation_app = SimulationApp({"headless": True})
-
-import omni.timeline
-import omni.physx as _physx
-
-from omni.isaac.core import World
-from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
-
-from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
-from Grab_Digital_Twin_python.robot.robot_controller import RobotController
-from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
-from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
 
 
 def parse_args():
@@ -42,7 +28,33 @@ def parse_args():
         action="store_true",
         help="Print UDP and command execution stats",
     )
+    parser.add_argument(
+        "--grab_usd",
+        type=str,
+        default="Grab.usd",
+        choices=["Grab.usd", "Grab-bottlegripper.usd"],
+        help="USD file to load for the Grab robot model",
+    )
     return parser.parse_args()
+
+
+args = parse_args()
+
+
+from omni.isaac.kit import SimulationApp
+
+simulation_app = SimulationApp({"headless": True})
+
+import omni.timeline
+import omni.physx as _physx
+
+from omni.isaac.core import World
+from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
+
+from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
+from Grab_Digital_Twin_python.robot.robot_controller import RobotController
+from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
+from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
 
 
 def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
@@ -55,8 +67,6 @@ def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
 
 
 def main():
-    args = parse_args()
-
     physics_dt = 1.0 / args.physics_fps
     rendering_dt = 1.0 / args.rendering_fps
 
@@ -69,7 +79,9 @@ def main():
     create_new_stage()
 
     print("Setting up Scene...")
-    setup_scene(enable_cameras=not args.disable_cameras)
+    setup_scene(
+        enable_cameras=not args.disable_cameras, grab_usd=args.grab_usd
+    )  # Need a flag for setting up scene with specifyed usd model.
 
     wait_for_condition(
         lambda: get_current_stage().GetRootLayer() is not None,

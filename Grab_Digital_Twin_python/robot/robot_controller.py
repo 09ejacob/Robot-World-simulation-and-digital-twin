@@ -8,7 +8,16 @@ from pxr import UsdGeom
 from pxr import Gf
 from ..camera_capture import CameraCapture
 
-from ..global_variables import GRIPPER_CLOSE_PATH, GRIPPER_OPEN_PATH, ROBOT_PATH
+from ..global_variables import (
+    GRIPPER_CLOSE_PATH,
+    GRIPPER_OPEN_PATH,
+    ROBOT_PATH,
+    BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+    BOTTLEGRIPPER_JOINT_PATH_LEFT,
+    BOTTLEGRIPPER_OPEN,
+    BOTTLEGRIPPER_CLOSE,
+    BOTTLEGRIPPER_IDLE,
+)
 
 
 class RobotController:
@@ -22,16 +31,58 @@ class RobotController:
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
     def open_gripper(self):
-        node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
-        attr = node.get_attribute("state:enableImpulse")
-        attr.set(1)
-        node.request_compute()
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_OPEN,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_OPEN * (-1),
+            )
+        else:
+            node = og2.core.get_node_by_path(GRIPPER_OPEN_PATH)
+            attr = node.get_attribute("state:enableImpulse")
+            attr.set(1)
+            node.request_compute()
 
     def close_gripper(self):
-        node = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
-        attr = node.get_attribute("state:enableImpulse")
-        attr.set(1)
-        node.request_compute()
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_CLOSE,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_CLOSE * (-1),
+            )
+        else:
+            node = og2.core.get_node_by_path(GRIPPER_CLOSE_PATH)
+            attr = node.get_attribute("state:enableImpulse")
+            attr.set(1)
+            node.request_compute()
+
+    def set_bottlegripper_to_idle_pos(self):
+        stage = get_current_stage()
+        left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
+        right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
+        if left.IsValid() and right.IsValid():
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_RIGHT,
+                BOTTLEGRIPPER_IDLE,
+            )
+            self.set_prismatic_joint_position(
+                BOTTLEGRIPPER_JOINT_PATH_LEFT,
+                BOTTLEGRIPPER_IDLE,
+            )
+        else:
+            print("Bottlegripper is not active")
 
     def set_angular_drive_target(self, joint_prim_path, target_position):
         stage = get_current_stage()
@@ -195,44 +246,43 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
 
-    def capture_from_camera(self, camera_id):
+    def capture_cameras(
+        self, cameras=None, udp_controller=None, host=None, port=None, stream=False
+    ):
         """
-        Capture an image from a specific camera
+        Capture images from specified cameras, with optional UDP streaming.
 
         Args:
-            camera_id (str): ID of the camera to capture from
+            cameras (list[str], optional): Camera IDs to capture from. Defaults to all registered.
+            udp_controller (UDPController, optional): Used for streaming
+            host (str, optional): Target host for UDP
+            port (int, optional): Target port for UDP
+            stream (bool): Whether to stream over UDP
 
         Returns:
-            str: Path to the saved image file, or None if capture failed
+            dict: Map of camera ID to saved image path (or None if failed)
         """
-        # Make sure timeline is playing to update frames
+        if cameras is None:
+            cameras = self.camera_capture.get_registered_cameras()
+        elif isinstance(cameras, str):
+            cameras = [cameras]
 
-        # Capture the image
-        result = self.camera_capture.capture_image(camera_id)
-        return result
+        results = {}
 
-    def capture_from_all_cameras(self):
-        """
-        Capture images from all registered cameras
+        for cam_id in cameras:
+            print(f"[DEBUG] Capturing from camera: {cam_id}")
+            if stream and udp_controller and host and port:
+                result = self.camera_capture.capture_and_stream(
+                    cam_id, udp_controller, host, port
+                )
+            else:
+                result = self.camera_capture.capture_image(cam_id)
 
-        Returns:
-            dict: Map of camera IDs to saved image paths
-        """
-        # Make sure timeline is playing to update frames
-
-        # Capture from all cameras
-        results = self.camera_capture.capture_all_cameras()
+            results[cam_id] = result
 
         return results
 
-    def get_registered_cameras(self):
-        """
-        Get list of registered camera IDs
-
-        Returns:
-            list: Camera IDs
-        """
-        return self.camera_capture.get_registered_cameras()
+    
     
     def capture_stereo_pointcloud(self,stereo_pair="main_stereo"):
         """

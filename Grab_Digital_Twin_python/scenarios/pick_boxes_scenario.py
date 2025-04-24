@@ -19,7 +19,7 @@ class PickBoxesScenario:
     A minimal scenario class that runs a single sequence of robot actions.
     """
 
-    def __init__(self, robot_controller):
+    def __init__(self, robot_controller, allow_udp_capture):
         self._robot_controller = robot_controller
         self._world = None
         self._did_run = False
@@ -168,10 +168,10 @@ class PickBoxesScenario:
         self._robot_controller.close_gripper()
 
         # Raise axis2
-        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.7)
+        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
         yield from self._robot_controller.wait_for_joint_position(
             axis2_dof_index,
-            target_position=0.7,
+            target_position=0.8,
             pos_threshold=0.1,
         )
 
@@ -212,20 +212,22 @@ class PickBoxesScenario:
         )
 
         # Lower axis2
-        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.5)
+        self._robot_controller.set_prismatic_joint_position(
+            AXIS2_JOINT_PATH, 0.5 + 0.144
+        )
         yield from self._robot_controller.wait_for_joint_position(
             axis2_dof_index,
-            target_position=0.5,
+            target_position=0.5 + 0.144,
             pos_threshold=0.0185,
         )
 
         self._robot_controller.open_gripper()
 
         # Raise axis2
-        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.7)
+        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.8)
         yield from self._robot_controller.wait_for_joint_position(
             axis2_dof_index,
-            target_position=0.7,
+            target_position=0.8,
             pos_threshold=0.1,
         )
 
@@ -338,10 +340,10 @@ class PickBoxesScenario:
         )
 
         # Raise axis2
-        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.9)
+        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 1)
         yield from self._robot_controller.wait_for_joint_position(
             axis2_dof_index,
-            target_position=0.9,
+            target_position=1,
             pos_threshold=0.1,
         )
 
@@ -354,10 +356,12 @@ class PickBoxesScenario:
         )
 
         # Lower axis2
-        self._robot_controller.set_prismatic_joint_position(AXIS2_JOINT_PATH, 0.7)
+        self._robot_controller.set_prismatic_joint_position(
+            AXIS2_JOINT_PATH, 0.7 + 0.144
+        )
         yield from self._robot_controller.wait_for_joint_position(
             axis2_dof_index,
-            target_position=0.7,
+            target_position=0.7 + 0.144,
             pos_threshold=0.0185,
         )
 

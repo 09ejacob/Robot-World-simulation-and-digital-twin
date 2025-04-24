@@ -1,10 +1,13 @@
 import os
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from PIL import Image
 from pxr import UsdGeom  # Import missing module
 import numpy as np
+import cv2
+import json
+import struct
 import omni.usd
 import open3d as o3d
 from pxr import Gf
@@ -52,67 +55,106 @@ class CameraCapture:
 
         return camera_dir
 
-    def capture_image(self, camera_id, filename=None):
-        """
-        Capture an image from the specified camera with debugging.
-        """
-
-        # Check if the camera exists
+    def capture_image_array(self, camera_id):
         if camera_id not in self.camera_registry:
-            print(f"❌ Error: Camera with ID {camera_id} not registered.")
+            print(f"[ERROR] Camera {camera_id} not registered.")
             return None
 
-        camera = self.camera_registry[camera_id]
-
-        # Ensure we have the latest frame
-        frame = camera.get_current_frame()
-        print(f"🔄 Fetching latest frame from {camera_id}..."
-              f" Frame data: {frame}")
-
-        # Check if frame has RGBA data
-        if frame is None or "rgba" not in frame:
-            print(f"❌ Error: No valid frame data from camera {camera_id}")
+        frame = self.camera_registry[camera_id].get_current_frame()
+        if not frame or "rgba" not in frame:
+            print(f"[ERROR] No 'rgba' frame for {camera_id}")
             return None
 
-        # Extract RGB from RGBA
         rgba = frame["rgba"]
         if rgba is None or rgba.size == 0:
-            print(f"❌ Error: Empty RGBA data from camera {camera_id}")
+            print(f"[ERROR] Empty RGBA data from {camera_id}")
             return None
 
-        rgb_img = rgba[:, :, :3]
-        if rgb_img is None or rgb_img.size == 0:
-            print(f"❌ Error: Failed to extract RGB data from camera {camera_id}")
+        rgb_array = rgba[:, :, :3]
+        if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
+            print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
             return None
 
-        if len(rgb_img.shape) != 3 or rgb_img.shape[2] != 3:
-            print(
-                f"❌ Error: Invalid image shape {rgb_img.shape} from camera {camera_id}"
-            )
-            return None
+        return rgb_array.astype(np.uint8)
 
+    def _generate_capture_metadata(self, camera_id, rgb_array):
+        utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        local_now = datetime.now().astimezone()
+
+        frame_id = self.capture_counters[camera_id]
+        timestamp = utc_now.isoformat()
+        filename_base = f"{camera_id}_{timestamp.replace(':', '-').replace('T', '_').replace('Z', '')}_{frame_id:04d}"
+
+        metadata = {
+            "camera_id": camera_id,
+            "timestamp_utc": utc_now.isoformat(),
+            "timestamp_local": local_now.isoformat(),
+            "frame_id": frame_id,
+            "image_format": "jpeg",
+            "image_shape": rgb_array.shape,
+            "scenario_id": self.scenario_start,
+        }
+
+        return filename_base, metadata
+
+    def _save_image(self, camera_id, rgb_array):
         try:
-            image = Image.fromarray(rgb_img, mode="RGB")
-        except Exception as e:
-            print(f"❌ Error converting image to PIL format: {e}")
-            return None
+            image = Image.fromarray(rgb_array, mode="RGB")
+            filename_base, metadata = self._generate_capture_metadata(
+                camera_id, rgb_array
+            )
 
-        if filename is None:
-            counter = self.capture_counters[camera_id]
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{camera_id}_{timestamp}_{counter:04d}.jpg"
             self.capture_counters[camera_id] += 1
 
-        # Use the registered camera folder (which now includes the scenario start subfolder)
-        camera_dir = os.path.join(self.base_save_dir, camera_id, self.scenario_start)
-        os.makedirs(camera_dir, exist_ok=True)
-        save_path = os.path.join(camera_dir, filename)
+            camera_dir = os.path.join(
+                self.base_save_dir, camera_id, self.scenario_start
+            )
+            os.makedirs(camera_dir, exist_ok=True)
+
+            image_path = os.path.join(camera_dir, f"{filename_base}.jpg")
+            metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
+
+            image.save(image_path)
+            if camera_id != "OverviewCamera":
+                metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
+                with open(metadata_path, "w") as f:
+                    json.dump(metadata, f, indent=4)
+
+            return image_path
+
+        except Exception as e:
+            print(f"[ERROR] Failed to save image for {camera_id}: {e}")
+            return None
+
+    def capture_image(self, camera_id):
+        rgb_array = self.capture_image_array(camera_id)
+        if rgb_array is None:
+            return None
+        return self._save_image(camera_id, rgb_array)
+
+    def capture_and_stream(self, camera_id, udp_controller, host, port):
+        rgb_array = self.capture_image_array(camera_id)
+        if rgb_array is None:
+            print(f"[ERROR] Could not capture image from {camera_id}")
+            return None
+
+        save_path = self._save_image(camera_id, rgb_array)
 
         try:
-            image.save(save_path)
+            success, jpeg_data = cv2.imencode(".jpg", rgb_array)
+            if not success:
+                print(f"[ERROR] Failed to compress image from {camera_id}")
+                return save_path
+
+            _, metadata = self._generate_capture_metadata(camera_id, rgb_array)
+            metadata_bytes = json.dumps(metadata).encode("utf-8")
+            metadata_length = struct.pack("!I", len(metadata_bytes))
+            packet = metadata_length + metadata_bytes + jpeg_data.tobytes()
+
+            udp_controller.send(packet, host, port)
+
         except Exception as e:
-            print(f"❌ Error saving image from {camera_id}: {e}")
-            return None
+            print(f"[ERROR] Streaming image failed for {camera_id}: {e}")
 
         return save_path
 
