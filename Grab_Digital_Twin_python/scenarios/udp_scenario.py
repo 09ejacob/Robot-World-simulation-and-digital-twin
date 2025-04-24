@@ -245,7 +245,8 @@ class UDPScenario:
         )
 
     def _get_force(self):
-        self._robot_controller.get_force_sensor_data()
+        force_sensor_data = self._robot_controller.get_force_sensor_data()
+        print(f"Force data: {force_sensor_data}")
 
     def create_xform(
         self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
