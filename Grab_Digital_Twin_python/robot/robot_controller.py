@@ -153,7 +153,7 @@ class RobotController:
         # on the motion direction) of the joint forces for all the joints and articulations."
         # This is not the same as measuring the force, but might still give some useful
         # information if needed.
-        print(f"{self.articulation_view._physics_view.get_dof_projected_joint_forces()}")
+        return self.articulation_view._physics_view.get_dof_projected_joint_forces()
 
     def print_contact_force(self):
         sensor = ContactSensor(

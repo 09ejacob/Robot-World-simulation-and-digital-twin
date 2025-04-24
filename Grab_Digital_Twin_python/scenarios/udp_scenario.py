@@ -255,7 +255,8 @@ class UDPScenario:
         )
 
     def _get_force(self):
-        self._robot_controller.get_force_sensor_data()
+        force_sensor_data = self._robot_controller.get_force_sensor_data()
+        print(f"Force data: {force_sensor_data}")
 
     def nudge_box(self, prim_path, offset):
         stage = omni.usd.get_context().get_stage()
