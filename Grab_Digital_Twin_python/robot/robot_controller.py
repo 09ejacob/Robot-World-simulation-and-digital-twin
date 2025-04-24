@@ -136,26 +136,13 @@ class RobotController:
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
     def get_force_sensor_data(self):
-        if not hasattr(self, "articulation_view"):
+        try:
+            print(f"{self.articulation_view.get_measured_joint_efforts()}")
+        except AttributeError:
             self.articulation_view = ArticulationView(prim_paths_expr=ROBOT_PATH)
             self.articulation_view.initialize()
 
-        # Different functions can be called on the articulation view to get data about the joints.
-        # https://docs.isaacsim.omniverse.nvidia.com/latest/sensors/isaacsim_sensors_physics_articulation_force.html
-        # Some alternatives for the following code:
-        # - self.articulation_view.get_measured_joint_forces() - Which returns a matrix containing
-        # various data. However, these tend to fluctuate a lot and have very small changes in
-        # values when measuring the weight of boxes that are picked up. It is hard to make
-        # sense of what these values represent.
-        # From the documentation: "Returns a tensor that specifies 6-dimensional spatial forces per
-        # joints for all articulations (total overall joint forces). To mimic force-torque sensors,
-        # this API can be used to retrieve forces from a fixed joint."
-        # - self.articulation_view.get_measured_joint_efforts() - From the documentation: "Returns
-        # a tensor which specifies the active components (the projection of the joint forces
-        # on the motion direction) of the joint forces for all the joints and articulations."
-        # This is not the same as measuring the force, but might still give some useful
-        # information if needed.
-        return self.articulation_view._physics_view.get_dof_projected_joint_forces()
+            print(f"{self.articulation_view.get_measured_joint_efforts()}")
 
     # def print_contact_force(self):
     #     sensor = ContactSensor(
@@ -276,6 +263,8 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
 
+    from isaacsim.sensors.physics import _sensor
+
     def print_colliding_prim(self):
         sensor_path = "/World/Robot/Tower/Axis2/gripper/Contact_Sensor"
         contact_sensor_interface = self._sensor.acquire_contact_sensor_interface()
@@ -288,6 +277,7 @@ class RobotController:
             print("No contact reading available or sensor is invalid.")
             return
 
+        # Debug print the type and content of reading.value
         print(f"[DEBUG] Sensor reading value type: {type(reading.value)}")
         print(f"[DEBUG] Sensor reading value: {reading.value}")
 
