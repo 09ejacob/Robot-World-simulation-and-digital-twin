@@ -406,9 +406,5 @@ class UIBuilder:
 
     def _test_stereo_cameras(self):
         """Test the stereo camera setup."""
-        from ..scenes.setup_scene import test_stereo_cameras
-        success = test_stereo_cameras()
-        if success:
-            print("✅ Stereo test complete! Check output files.")
-        else:
-            print("❌ Stereo test failed!")
+        self._camera_capture.capture_stereo_pointcloud_pair("main_stereo")
+    

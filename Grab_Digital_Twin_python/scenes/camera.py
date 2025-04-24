@@ -3,6 +3,7 @@ import isaacsim.core.utils.numpy.rotations as rot_utils
 import omni.usd
 from isaacsim.sensors.camera import Camera
 import omni.replicator.core as rep
+from pxr import UsdGeom
 from pxr import UsdPhysics, PhysxSchema
 from ..camera_capture import CameraCapture
 from ..global_variables import CAMERA_PATH
@@ -124,7 +125,6 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
 
         # Register with camera capture system
         camera_capture.register_camera(camera_id, camera)
-        
 
         print(f"Successfully registered camera: {camera_id}")
         return camera
@@ -161,14 +161,14 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     # Check if both cameras are registered
     if left_camera_id not in camera_capture.camera_registry:
         print(f"Left camera '{left_camera_id}' not registered. Attempting to register...")
-        left_camera = register_existing_camera(left_prim_path)
+        left_camera = register_existing_camera(left_prim_path,add_3d_features=True,resolution=(480,480))
         if left_camera is None:
             print(f"Failed to register left camera '{left_camera_id}'")
             return None
     
     if right_camera_id not in camera_capture.camera_registry:
         print(f"Right camera '{right_camera_id}' not registered. Attempting to register...")
-        right_camera = register_existing_camera(right_prim_path)
+        right_camera = register_existing_camera(right_prim_path,add_3d_features=True,resolution=(480,480))
         if right_camera is None:
             print(f"Failed to register right camera '{right_camera_id}'")
             return None
@@ -182,6 +182,7 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     }
 
     camera_capture.stereo_pairs[pair_id] = stereo_pair
+    
 
     print(f"✅ Successfully registered stereo pair '{pair_id}' with baseline , stereo pair: {stereo_pair}")
     return stereo_pair
@@ -209,7 +210,6 @@ def get_camera_baseline(left_prim_path, right_prim_path):
         return None
     
     # Get world transforms for both cameras
-    from pxr import UsdGeom
     left_xform = UsdGeom.Xformable(left_prim)
     right_xform = UsdGeom.Xformable(right_prim)
     

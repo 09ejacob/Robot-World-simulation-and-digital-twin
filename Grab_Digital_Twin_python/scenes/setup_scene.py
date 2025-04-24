@@ -77,7 +77,7 @@ def create_camera(resolutions=None):
     register_existing_camera(BASE_CAMERA_PATH, 
                             resolutions.get(BASE_CAMERA_PATH))
     register_existing_camera(BOX_CAMERA_1, 
-                            resolutions.get(BOX_CAMERA_1),add_3d_features=True)
+                            resolutions.get(BOX_CAMERA_1))
     register_existing_camera(BOX_CAMERA_2, 
                             resolutions.get(BOX_CAMERA_2))
 
@@ -212,3 +212,4 @@ def setup_scene(enable_cameras=False):
         create_camera(custom_resolutions)
     create_additional_joints()
     _add_light()
+    

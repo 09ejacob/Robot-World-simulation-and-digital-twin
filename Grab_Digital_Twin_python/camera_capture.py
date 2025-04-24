@@ -3,7 +3,11 @@ import subprocess
 import time
 from datetime import datetime
 from PIL import Image
+from pxr import UsdGeom  # Import missing module
 import numpy as np
+import omni.usd
+import open3d as o3d
+from pxr import Gf
 import cv2
 
 
@@ -206,89 +210,94 @@ class CameraCapture:
             return None
 
         # Extract pointcloud components
-        pointcloud_data = frame["pointcloud"]["data"]  # XYZ coordinates
-        point_colors = frame["pointcloud"]["pointRgb"]  # RGB colors
+        print("Frame data:", frame.keys())
+        pc = frame["pointcloud"]
+        pointcloud_data = np.array(pc["data"])  # Shape: (N, 3)
+        point_colors =  np.array(pc["pointRgb"]).reshape(-1, 4)[:, :3]
+        print("🔍 First 5 colors (raw):", point_colors[:5])
+        print("The length of point colors:", len(point_colors))
+    
         point_normals = frame["pointcloud"]["pointNormals"]  # Normal vectors
 
-        # Check if we have valid data
-        if pointcloud_data is None or len(pointcloud_data) == 0:
-            print(f"❌ Error: Empty pointcloud data from camera {camera_id}")
-            return None
-
-        print(
-            f"✅ Captured pointcloud from {camera_id} with {len(pointcloud_data)} points"
-        )
-
-        # Generate filename if not provided
+        # After extracting components
+        if point_colors is not None:
+            print(f"Color data shape: {np.array(point_colors).shape}")
+         # If it's a 2D array, it might be an image
+    
         if filename is None:
-            counter = self.capture_counters.get(camera_id, 0)
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{camera_id}_pointcloud_{timestamp}_{counter:04d}.ply"
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            counter = self.capture_counters[camera_id]
+            filename = os.path.join(
+            self.base_save_dir,
+            camera_id,
+            "pointclouds",
+            f"{camera_id}_pointcloud_{timestamp}_{counter:04d}.npz"
+           )
             self.capture_counters[camera_id] = counter + 1
 
-        # Ensure file has .ply extension
-        if not filename.lower().endswith(".ply"):
-            filename += ".ply"
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        # Create directory for pointcloud
-        camera_dir = os.path.join(self.base_save_dir, camera_id, "pointclouds")
-        os.makedirs(camera_dir, exist_ok=True)
-        save_path = os.path.join(camera_dir, filename)
-
+    # Save data
         try:
-            # Write to PLY file
-            print(f"💾 Saving pointcloud at: {save_path}")
-            with open(save_path, "w") as f:
-                # Write header
-                f.write("ply\n")
-                f.write("format ascii 1.0\n")
-                f.write(f"element vertex {len(pointcloud_data)}\n")
-                f.write("property float x\n")
-                f.write("property float y\n")
-                f.write("property float z\n")
-
-                # Include color properties if available
-                if point_colors is not None and len(point_colors) == len(
-                    pointcloud_data
-                ):
-                    f.write("property uchar red\n")
-                    f.write("property uchar green\n")
-                    f.write("property uchar blue\n")
-
-                # Include normal properties if available
-                has_normals = point_normals is not None and len(point_normals) == len(
-                    pointcloud_data
-                )
-                if has_normals:
-                    f.write("property float nx\n")
-                    f.write("property float ny\n")
-                    f.write("property float nz\n")
-
-                f.write("end_header\n")
-
-                # Write vertex data
-                for i in range(len(pointcloud_data)):
-                    line = f"{pointcloud_data[i][0]} {pointcloud_data[i][1]} {pointcloud_data[i][2]}"
-
-                    # Add color if available
-                    if point_colors is not None and len(point_colors) == len(
-                        pointcloud_data
-                    ):
-                        line += f" {point_colors[i][0]} {point_colors[i][1]} {point_colors[i][2]}"
-
-                    # Add normals if available
-                    if has_normals:
-                        line += f" {point_normals[i][0]} {point_normals[i][1]} {point_normals[i][2]}"
-
-                    f.write(line + "\n")
-
-            print(f"✅ Pointcloud saved successfully: {save_path}")
-            return save_path
-
+            np.savez_compressed(
+            filename,
+            points=pointcloud_data,
+            colors=point_colors,
+            normals=point_normals if point_normals.size > 0 else None
+        )
+            print(f"✅ Saved to {filename}")
+            return filename
         except Exception as e:
-            print(f"❌ Error saving pointcloud from {camera_id}: {e}")
+               print(f"❌ Save failed: {e}")
+        return None
+
+
+    def capture_stereo_pointcloud_pair(self, pair_id, pair_name=None):
+        """
+        Capture synchronized stereo pair and save to timestamped directory.
+
+        Args:
+            pair_id (str): Registered stereo pair ID
+            pair_name (str): Optional custom directory name
+
+        Returns:
+            dict: Paths to saved NPZ files and directory
+        """
+        print(f"\n🔄 Capturing stereo pair {pair_id}...")
+
+        if pair_id not in self.stereo_pairs:
+            print(f"❌ Pair {pair_id} not registered")
             return None
-    
+
+        # Directory setup
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        pair_name = pair_name or f"{pair_id}_{timestamp}"
+        stereo_dir = os.path.join(self.base_save_dir, "stereo_pairs", pair_name)
+        os.makedirs(stereo_dir, exist_ok=True)
+
+        # Camera IDs
+        left_id = self.stereo_pairs[pair_id]["left"]
+        right_id = self.stereo_pairs[pair_id]["right"]
+
+        # Capture both cameras
+        results = {
+            "left_npz": self.capture_pointcloud(
+                left_id,
+                filename=os.path.join(stereo_dir, f"{left_id}.npz")
+            ),
+            "right_npz": self.capture_pointcloud(
+                right_id,
+                filename=os.path.join(stereo_dir, f"{right_id}.npz")
+            ),
+            "pair_dir": stereo_dir
+        }
+
+        if all(results.values()):
+            print(f"✅ Stereo pair saved to {stereo_dir}")
+        else:
+            print("⚠️ Partial capture - check individual cameras")
+
+        return results
 
     def compute_depth_from_disparity(self, disparity_map, focal_length, baseline):
         """
@@ -347,7 +356,26 @@ class CameraCapture:
 
             return disparity
     
-    def run_stereo_pipeline(self, stereo_pair, baseline):
+    def depth_to_point_cloud(self, depth_map, K):
+        """
+        Convert depth map to point cloud using camera intrinsics.
+        Args:
+            depth_map (np.ndarray): HxW array of depth values.
+            K (np.ndarray): 3x3 camera intrinsic matrix.
+        Returns:
+            points (np.ndarray): Nx3 array of 3D points.
+        """
+        h, w = depth_map.shape
+        i, j = np.indices((h, w))
+        z = depth_map
+        x = (j - K[0, 2]) * z / K[0, 0]
+        y = (i - K[1, 2]) * z / K[1, 1]
+        points = np.stack((x, y, z), axis=-1)
+        mask = z > 0
+        return points[mask]
+
+    
+    def run_stereo_pipeline(self, stereo_pair, baseline,filename=None):
         """
         Run the stereo pipeline to compute disparity and depth maps.
 
@@ -369,8 +397,10 @@ class CameraCapture:
         # 3. Get camera parameters
         left_camera = self.camera_registry[stereo_pair["left"]]
         focal_length = left_camera.get_focal_length() * 10  # Convert cm to mm
+        resolution_height = left_camera.get_resolution()[1]
         resolution_width = left_camera.get_resolution()[0]
         horizontal_aperture_mm = left_camera.get_horizontal_aperture() * 10  # Convert cm to mm
+        vertical_aperture_mm = left_camera.get_vertical_aperture() * 10
 
         # Calculate focal length in pixels
         focal_length_pixels = (focal_length * resolution_width) / horizontal_aperture_mm
@@ -379,9 +409,49 @@ class CameraCapture:
         print(f"   - Horizontal Aperture (cm): {horizontal_aperture_mm:.2f}")
         print(f"   - Computed Focal Length (pixels): {focal_length_pixels:.2f}")
 
+        fx = (focal_length * resolution_width) / horizontal_aperture_mm
+        fy = (focal_length * resolution_height) / vertical_aperture_mm
+        cx = resolution_width / 2
+        cy = resolution_height / 2
+
         # 4. Compute depth map
         depth_map = self.compute_depth_from_disparity(disparity_map, focal_length_pixels, baseline)
         print(f"Depth map shape: {depth_map.shape}")
+
+        # 5. Construct intrinsic matrix
+        K = np.array([
+            [fx, 0, cx],
+            [0, fy, cy],
+            [0,  0,  1]
+        ])
+        print(f"Intrinsic matrix K:\n{K}")
+
+
+        point_cloud = self.depth_to_point_cloud(depth_map, K)
+        print(f"Generated point cloud with {point_cloud.shape[0]} points")
+    
+
+        # 7. Save the point cloud
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"stereo_pointcloud_{timestamp}.ply"
+
+        save_dir = os.path.join(self.base_save_dir, "stereo_pointclouds")
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, filename)
+
+        try:
+            with open(save_path, "w") as f:
+                f.write("ply\nformat ascii 1.0\n")
+                f.write(f"element vertex {point_cloud.shape[0]}\n")
+                f.write("property float x\nproperty float y\nproperty float z\n")
+                f.write("end_header\n")
+                for pt in point_cloud:
+                    f.write(f"{pt[0]} {pt[1]} {pt[2]}\n")
+            print(f"💾 Stereo pointcloud saved to: {save_path}")
+        except Exception as e:
+            print(f"❌ Failed to save stereo pointcloud: {e}")
+            return None
 
         # 5. Visualize or use the results
         norm_disparity = cv2.normalize(disparity_map, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -390,4 +460,159 @@ class CameraCapture:
         normalized_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         cv2.imwrite("depth_map.jpg", normalized_depth)
 
-        return disparity_map, depth_map
+        return point_cloud
+    
+    def extract_rgb_from_rgba(rgba_image):
+        """
+        Extract the RGB channels from an RGBA image.
+        
+        Args:
+            rgba_image (np.ndarray): Input image with shape (H, W, 4).
+        
+        Returns:
+            np.ndarray: Output image with shape (H, W, 3) containing only RGB channels.
+        """
+        # Slice along the last dimension to ignore the alpha channel
+        rgb_image = rgba_image[..., :3]
+        return rgb_image
+    
+    def refine_with_icp(self,left_pc, right_pc_transformed, voxel_size=0.01, icp_threshold=0.05):
+        """
+        Refine alignment between two point clouds using ICP.
+
+        Args:
+            left_pc (np.ndarray): Left point cloud (Nx3) in left camera (reference) frame.
+            right_pc_transformed (np.ndarray): Right camera point cloud, already transformed into left frame (Nx3).
+            voxel_size (float): Voxel size for downsampling.
+            icp_threshold (float): Maximum correspondence distance (in meters) for ICP.
+
+        Returns:
+            np.ndarray: Transformation matrix (4x4) from right to left refinement.
+        """
+        # Convert numpy arrays into open3d point clouds
+        left_pcd = o3d.geometry.PointCloud()
+        left_pcd.points = o3d.utility.Vector3dVector(left_pc)
+
+        right_pcd = o3d.geometry.PointCloud()
+        right_pcd.points = o3d.utility.Vector3dVector(right_pc_transformed)
+
+        # Optional: Downsample for speed (adjust the voxel size as appropEngasjementriate)
+        left_down = left_pcd.voxel_down_sample(voxel_size)
+        right_down = right_pcd.voxel_down_sample(voxel_size)
+        print(f"Downsampled point clouds to voxel size: {left_down}")
+
+        left_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2.0, max_nn=30))
+        right_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2.0, max_nn=30))
+
+        # Run ICP (point-to-plane works well on organized, smooth clouds)
+        # You can choose point-to-point as well.
+        icp_result = o3d.pipelines.registration.registration_icp(
+            right_down, left_down, icp_threshold, np.eye(4),
+            o3d.pipelines.registration.TransformationEstimationPointToPlane()
+        )
+
+        print("Fitness:", icp_result.fitness)
+        print("Refinement transformation:\n", icp_result.transformation)
+
+        return icp_result.transformation
+
+    
+    def capture_combined_pointcloud(self, pair_id, filename=None, save=True):
+        """
+        Capture and merge point clouds from a registered stereo camera pair.
+
+        Args:
+            pair_id (str): ID of the stereo pair (as registered via register_stereo_pair)
+            filename (str, optional): Custom filename to save the merged point cloud
+            save (bool): Whether to save the merged point cloud to a PLY file
+
+        Returns:
+            np.ndarray: Combined point cloud (Nx3), or None if failure
+        """
+        if pair_id not in self.stereo_pairs:
+            print(f"❌ Stereo pair '{pair_id}' not found.")
+            return None
+
+        stereo = self.stereo_pairs[pair_id]
+        left_id = stereo["left"]
+        right_id = stereo["right"]
+        left_path = stereo["left_prim_path"]
+        right_path = stereo["right_prim_path"]
+
+        # Fetch point clouds
+        left_cam = self.camera_registry[left_id]
+        right_cam = self.camera_registry[right_id]
+
+        left_frame = left_cam.get_current_frame()
+        right_frame = right_cam.get_current_frame()
+
+        if not left_frame or "pointcloud" not in left_frame or "data" not in left_frame["pointcloud"]:
+            print(f"❌ No pointcloud from left camera '{left_id}'")
+            return None
+        if not right_frame or "pointcloud" not in right_frame or "data" not in right_frame["pointcloud"]:
+            print(f"❌ No pointcloud from right camera '{right_id}'")
+            return None
+
+        left_pc = np.array(left_frame["pointcloud"]["data"])
+        right_pc = np.array(right_frame["pointcloud"]["data"])
+      
+        stage = omni.usd.get_context().get_stage()
+        left_xform = UsdGeom.Xformable(stage.GetPrimAtPath(left_path))
+        right_xform = UsdGeom.Xformable(stage.GetPrimAtPath(right_path))
+        left_matrix = left_xform.ComputeLocalToWorldTransform(0)
+        right_matrix = right_xform.ComputeLocalToWorldTransform(0)
+        # Validate transformation matrix components
+        print("Left camera world matrix:\n", np.array(left_matrix))
+        print("Right camera world matrix:\n", np.array(right_matrix))
+        print(Gf.Transform(left_matrix)) 
+        print(Gf.Transform(left_matrix).GetTranslation())
+
+
+        # Compute right->left transformation
+        right_to_left_matrix = left_matrix.GetInverse() * right_matrix
+        print("Right-to-left transformation:\n", np.array(right_to_left_matrix))
+        
+
+        def transform_pointcloud(points, matrix):
+            points_hom = np.hstack([points, np.ones((points.shape[0], 1))])
+            mat_np = np.array(matrix).reshape(4, 4).T  # USD uses column-major
+            transformed = np.dot(points_hom, mat_np)
+            return transformed[:, :3]
+
+        right_pc_transformed = transform_pointcloud(right_pc, right_to_left_matrix)
+        icp_transformation = self.refine_with_icp(left_pc, right_pc_transformed, 1,1)
+        right_pc_refined = transform_pointcloud(right_pc_transformed, icp_transformation)
+
+        merged_pc = np.vstack([left_pc, right_pc_refined])
+
+        # Merge
+        combined_pc = merged_pc  # left_pc + right_pc_refined
+
+
+        print(f"✅ Merged pointcloud has {combined_pc.shape[0]} points")
+
+        # Save if requested
+        if save:
+            if filename is None:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{pair_id}_merged_pointcloud_{timestamp}.ply"
+
+            save_dir = os.path.join(self.base_save_dir, pair_id, "pointclouds")
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, filename)
+
+            try:
+                with open(save_path, "w") as f:
+                    f.write("ply\nformat ascii 1.0\n")
+                    f.write(f"element vertex {combined_pc.shape[0]}\n")
+                    f.write("property float x\nproperty float y\nproperty float z\n")
+                    f.write("end_header\n")
+                    for pt in combined_pc:
+                        f.write(f"{pt[0]} {pt[1]} {pt[2]}\n")
+                print(f"💾 Combined pointcloud saved to: {save_path}")
+            except Exception as e:
+                print(f"❌ Failed to save merged pointcloud: {e}")
+                return None
+
+        return merged_pc
+
