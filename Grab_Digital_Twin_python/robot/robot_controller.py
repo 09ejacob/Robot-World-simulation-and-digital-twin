@@ -134,13 +134,11 @@ class RobotController:
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
     def get_force_sensor_data(self):
-        try:
-            print(f"{self.articulation_view.get_measured_joint_efforts()}")
-        except AttributeError:
+        if not hasattr(self, "articulation_view"):
             self.articulation_view = ArticulationView(prim_paths_expr=ROBOT_PATH)
             self.articulation_view.initialize()
 
-            print(f"{self.articulation_view.get_measured_joint_efforts()}")
+        print(f"{self.articulation_view.get_measured_joint_efforts()}")
 
     def print_contact_force(self):
         sensor = ContactSensor(
