@@ -406,5 +406,5 @@ class UIBuilder:
 
     def _test_stereo_cameras(self):
         """Test the stereo camera setup."""
-        self._camera_capture.capture_stereo_pointcloud_pair("main_stereo")
+        self._robot_controller.capture_stereo_pointcloud()
     
