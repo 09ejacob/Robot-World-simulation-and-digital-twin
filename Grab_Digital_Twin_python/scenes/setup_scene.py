@@ -147,30 +147,6 @@ def setup_stereo_cameras():
     
     return stereo_pair, baseline
 
-def test_stereo_cameras():
-    """Test the stereo camera setup by capturing and processing images."""
-    camera_capture = CameraCapture()
-    
-    try:
-        # Setup stereo cameras if not already setup
-        stereo_pair = camera_capture.stereo_pairs.get("main_stereo")
-        if not stereo_pair:
-            stereo_pair, baseline = setup_stereo_cameras()
-        else:
-            baseline = get_camera_baseline(BOX_CAMERA_2, BOX_CAMERA_1)
-        
-        # Run the stereo pipeline
-        disparity_map, depth_map = camera_capture.run_stereo_pipeline(stereo_pair, baseline)
-        print("✅ Stereo test complete!")
-        print("📁 Results saved as:")
-        print("   - disparity_map.jpg")
-        print("   - depth_map.jpg")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Stereo test failed: {str(e)}")
-        return False
-
 def setup_scene(enable_cameras=False):
     stage = get_current_stage()
 
