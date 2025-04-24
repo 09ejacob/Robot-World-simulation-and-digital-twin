@@ -7,8 +7,9 @@ from omni.isaac.dynamic_control import _dynamic_control
 from pxr import UsdGeom
 from pxr import Gf
 from omni.isaac.core.articulations import ArticulationView
+from isaacsim.sensors.physics import ContactSensor
+
 from ..camera_capture import CameraCapture
-from omni.isaac.sensor import ContactSensor
 
 from ..global_variables import (
     GRIPPER_CLOSE_PATH,
@@ -19,6 +20,7 @@ from ..global_variables import (
     BOTTLEGRIPPER_OPEN,
     BOTTLEGRIPPER_CLOSE,
     BOTTLEGRIPPER_IDLE,
+    GRIPPER_PATH,
 )
 
 
@@ -142,18 +144,18 @@ class RobotController:
 
             print(f"{self.articulation_view.get_measured_joint_efforts()}")
 
-    def print_contact_force(self):
-        sensor = ContactSensor(
-            prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
-            name="Contact_Sensor",
-        )
+    # def print_contact_force(self):
+    #     sensor = ContactSensor(
+    #         prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
+    #         name="Contact_Sensor",
+    #     )
 
-        reading = sensor.get_current_frame()
+    #     reading = sensor.get_current_frame()
 
-        force_n = reading.get("force", 0)
-        force_kgf = force_n / 9.81
+    #     force_n = reading.get("force", 0)
+    #     force_kgf = force_n / 9.81
 
-        print("Force: {} N ({} kgf)".format(force_n, force_kgf))
+    #     print("Force: {} N ({} kgf)".format(force_n, force_kgf))
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
@@ -260,6 +262,33 @@ class RobotController:
         xformable.ClearXformOpOrder()
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
+
+    def print_colliding_prim(self):
+        sensor_path = "/World/Robot/Tower/Axis2/gripper/Contact_Sensor"
+        contact_sensor_interface = self._sensor.acquire_contact_sensor_interface()
+
+        reading = contact_sensor_interface.get_sensor_reading(
+            sensor_path, use_latest_data=True
+        )
+
+        if not reading or not reading.is_valid:
+            print("No contact reading available or sensor is invalid.")
+            return
+
+        print(f"[DEBUG] Sensor reading value type: {type(reading.value)}")
+        print(f"[DEBUG] Sensor reading value: {reading.value}")
+
+        if isinstance(reading.value, dict) and "contacts" in reading.value:
+            contacts = reading.value["contacts"]
+            if contacts:
+                for contact in contacts:
+                    body0 = contact.get("body0", "Unknown")
+                    body1 = contact.get("body1", "Unknown")
+                    print(f"Contact between: {body0} and {body1}")
+            else:
+                print("Contact detected, but no specific prim paths available.")
+        else:
+            print("Reading does not contain 'contacts' or is not in expected format.")
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False
