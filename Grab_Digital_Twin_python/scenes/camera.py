@@ -161,14 +161,14 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     # Check if both cameras are registered
     if left_camera_id not in camera_capture.camera_registry:
         print(f"Left camera '{left_camera_id}' not registered. Attempting to register...")
-        left_camera = register_existing_camera(left_prim_path,add_3d_features=True,resolution=(480,480))
+        left_camera = register_existing_camera(left_prim_path,add_3d_features=True)
         if left_camera is None:
             print(f"Failed to register left camera '{left_camera_id}'")
             return None
     
     if right_camera_id not in camera_capture.camera_registry:
         print(f"Right camera '{right_camera_id}' not registered. Attempting to register...")
-        right_camera = register_existing_camera(right_prim_path,add_3d_features=True,resolution=(480,480))
+        right_camera = register_existing_camera(right_prim_path,add_3d_features=True)
         if right_camera is None:
             print(f"Failed to register right camera '{right_camera_id}'")
             return None
