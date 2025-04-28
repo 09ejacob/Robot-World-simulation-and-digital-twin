@@ -8,6 +8,9 @@ from pxr import UsdGeom
 from pxr import Gf
 from omni.isaac.core.articulations import ArticulationView
 from isaacsim.sensors.physics import ContactSensor
+from omni.physx import get_physx_simulation_interface
+from omni.physx.bindings._physx import IPhysxSimulation
+from omni.physx.scripts.physicsUtils import PhysicsSchemaTools
 
 from ..camera_capture import CameraCapture
 
@@ -291,6 +294,18 @@ class RobotController:
         data = self._contact_sensor.get_current_frame()
         force_n = data.get("force", 0.0)
         print(f"Net force: {force_n:.3f} N")
+
+    def print_colliding_prim(self):
+        sim = get_physx_simulation_interface()
+
+        contact_headers, contact_data = sim.get_contact_report()
+        for header in contact_headers:
+            primA = PhysicsSchemaTools.intToSdfPath(header.actor0)
+            primB = PhysicsSchemaTools.intToSdfPath(header.actor1)
+            if primA == GRIPPER_PATH:
+                print("Gripper colliding with:", primB)
+            elif primB == GRIPPER_PATH:
+                print("Gripper colliding with:", primA)
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False
