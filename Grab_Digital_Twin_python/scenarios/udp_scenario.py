@@ -113,7 +113,7 @@ class UDPScenario:
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
             "force_data": lambda p: self.get_force_sensor_data(),
-            "colliding_box": lambda p: self.get_colliding_box(),
+            "add_colliding_item": lambda p: self.add_colliding_item(),
         }
 
     def _toggle_overview_camera(self, start, parts=None):
@@ -151,8 +151,8 @@ class UDPScenario:
     def get_force_sensor_data(self):
         self._robot_controller.print_force_sensor_value()
 
-    def get_colliding_box(self):
-        self._robot_controller.get_colliding_box()
+    def add_colliding_item(self):
+        self._robot_controller.add_colliding_item()
 
     def _handle_tp_robot(self, parts):
         if len(parts) != 4:
