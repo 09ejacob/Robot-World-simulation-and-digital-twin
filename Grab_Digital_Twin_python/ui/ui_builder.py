@@ -319,6 +319,9 @@ class UIBuilder:
         """
         if self._scenario:
             self._scenario.setup()
+
+            self._robot_controller._ensure_contact_sensor()
+
             self._scenario_state_btn.reset()
             self._scenario_state_btn.enabled = True
             self._unload_btn.enabled = True

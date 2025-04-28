@@ -31,15 +31,24 @@ class RobotController:
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
-        self._contact_sensor = ContactSensor(
-            prim_path=f"{GRIPPER_PATH}/Contact_Sensor",
-            name="Contact_Sensor",
-            frequency=1,
-            translation=np.zeros(3),
-            radius=-1.0,
-            min_threshold=0.0,
-            max_threshold=1e6,
-        )
+        self._contact_sensor = None
+
+    def _ensure_contact_sensor(self):
+        if self._contact_sensor is None:
+            try:
+                self._contact_sensor = ContactSensor(
+                    prim_path=f"{GRIPPER_PATH}/Contact_Sensor",
+                    name="Contact_Sensor",
+                    frequency=1,
+                    translation=np.zeros(3),
+                    radius=-1.0,
+                    min_threshold=0.0,
+                    max_threshold=1e6,
+                )
+            except Exception as e:
+                print(f"[WARN] couldn’t create ContactSensor yet: {e}")
+                return False
+        return True
 
     def refresh_handles(self):
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
@@ -277,6 +286,8 @@ class RobotController:
         """
         Prints the net force reading from the contact sensor (scalar value).
         """
+        if not self._ensure_contact_sensor():
+            return
         data = self._contact_sensor.get_current_frame()
         force_n = data.get("force", 0.0)
         print(f"Net force: {force_n:.3f} N")
