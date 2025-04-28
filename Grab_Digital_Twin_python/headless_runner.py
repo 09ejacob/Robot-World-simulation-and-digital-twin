@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument(
         "--print_positions",
         action="store_true",
-        help="Print joint and object positions",
+        help="Print joint positions and position of robot when teleporting",
     )
     parser.add_argument(
         "--print_performance_stats",

@@ -577,10 +577,6 @@ class UDPScenario:
                     dof_index, is_angular
                 )
 
-            self.print_box_position("/World/Environment/stack1/box_1_19")
-            self.print_box_position("/World/Environment/stack4/box_4_30")
-            self.print_box_position("/World/Environment/stack2/box_2_19")
-
             self.last_position_print_time = current_time
 
     def _capture_overview_camera(self, current_time):
