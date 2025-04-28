@@ -112,8 +112,7 @@ class UDPScenario:
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
-            "force_data": lambda p: self._get_force(),
-            "test": lambda p: self.print_colliding(),
+            "force_data": lambda p: self.get_force_sensor_data(),
         }
 
     def _toggle_overview_camera(self, start, parts=None):
@@ -148,8 +147,8 @@ class UDPScenario:
         else:
             print("[INFO] Overview camera is disabled.")
 
-    def print_colliding(self):
-        self._robot_controller.print_colliding_prim()
+    def get_force_sensor_data(self):
+        self._robot_controller.print_force_sensor_value()
 
     def _handle_tp_robot(self, parts):
         if len(parts) != 4:
@@ -243,10 +242,6 @@ class UDPScenario:
             port=self.broadcast_target_port,
             stream=stream,
         )
-
-    def _get_force(self):
-        force_sensor_data = self._robot_controller.get_force_sensor_data()
-        print(f"Force data: {force_sensor_data}")
 
     def create_xform(
         self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)

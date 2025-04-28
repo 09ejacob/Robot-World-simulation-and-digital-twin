@@ -31,6 +31,16 @@ class RobotController:
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
+        self._contact_sensor = ContactSensor(
+            prim_path=f"{GRIPPER_PATH}/Contact_Sensor",
+            name="Contact_Sensor",
+            frequency=1,
+            translation=np.zeros(3),
+            radius=-1.0,
+            min_threshold=0.0,
+            max_threshold=1e6,
+        )
+
     def refresh_handles(self):
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
@@ -263,35 +273,13 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
 
-    from isaacsim.sensors.physics import _sensor
-
-    def print_colliding_prim(self):
-        sensor_path = "/World/Robot/Tower/Axis2/gripper/Contact_Sensor"
-        contact_sensor_interface = self._sensor.acquire_contact_sensor_interface()
-
-        reading = contact_sensor_interface.get_sensor_reading(
-            sensor_path, use_latest_data=True
-        )
-
-        if not reading or not reading.is_valid:
-            print("No contact reading available or sensor is invalid.")
-            return
-
-        # Debug print the type and content of reading.value
-        print(f"[DEBUG] Sensor reading value type: {type(reading.value)}")
-        print(f"[DEBUG] Sensor reading value: {reading.value}")
-
-        if isinstance(reading.value, dict) and "contacts" in reading.value:
-            contacts = reading.value["contacts"]
-            if contacts:
-                for contact in contacts:
-                    body0 = contact.get("body0", "Unknown")
-                    body1 = contact.get("body1", "Unknown")
-                    print(f"Contact between: {body0} and {body1}")
-            else:
-                print("Contact detected, but no specific prim paths available.")
-        else:
-            print("Reading does not contain 'contacts' or is not in expected format.")
+    def print_force_sensor_value(self):
+        """
+        Prints the net force reading from the contact sensor (scalar value).
+        """
+        data = self._contact_sensor.get_current_frame()
+        force_n = data.get("force", 0.0)
+        print(f"Net force: {force_n:.3f} N")
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False
