@@ -428,20 +428,43 @@ class UDPScenario:
         reverse=False,
         isBottles=False,
     ):
-        self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
-        pallet = DynamicCuboid(
-            prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
-            position=pallet_position,
-            scale=np.array((1.2, 0.8, 0.144)),
-            color=np.array((0.2, 0.08, 0.05)),
-            mass=25.0,
-        )
+        stack_path = f"{path}/stack{stack_id}"
+        self.create_xform(stack_path, (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
-        self.pallets.append(pallet)
+        module_dir = dirname(abspath(__file__))
+        pallet_usd = abspath(
+            join(
+                module_dir,
+                "..",
+                "..",
+                "Grab_Digital_Twin_python",
+                "usd",
+                "Euro_Pallet.usd",
+            )
+        )
+        pallet_prim_path = f"{stack_path}/pallet{stack_id}"
+        add_reference_to_stage(usd_path=pallet_usd, prim_path=pallet_prim_path)
+
+        stage = omni.usd.get_context().get_stage()
+        pallet_prim = stage.GetPrimAtPath(pallet_prim_path)
+        if pallet_prim.IsValid():
+            xform = UsdGeom.Xformable(pallet_prim)
+            xform.ClearXformOpOrder()
+
+            xform.AddTranslateOp().Set(Gf.Vec3d(*pallet_position))
+
+            UsdPhysics.RigidBodyAPI.Apply(pallet_prim)
+            UsdPhysics.CollisionAPI.Apply(pallet_prim)
+            mass_api = UsdPhysics.MassAPI.Apply(pallet_prim)
+            mass_api.GetMassAttr().Set(25.0)
+
+            self.pallets.append(pallet_prim_path)
+        else:
+            print(f"[ERROR] Failed to reference pallet at {pallet_prim_path}")
 
         if isBottles:
             self.create_bottles(
-                f"{path}/stack{stack_id}",
+                stack_path,
                 number_of_boxes,
                 pallet_position,
                 stack_id,
@@ -449,7 +472,7 @@ class UDPScenario:
             )
         else:
             self.create_boxes(
-                f"{path}/stack{stack_id}",
+                stack_path,
                 number_of_boxes,
                 pallet_position,
                 stack_id,
