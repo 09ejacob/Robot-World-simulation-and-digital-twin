@@ -157,28 +157,6 @@ class RobotController:
         clamped_position = max(lower_limit, min(position, upper_limit))
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
-    def get_force_sensor_data(self):
-        try:
-            print(f"{self.articulation_view.get_measured_joint_efforts()}")
-        except AttributeError:
-            self.articulation_view = ArticulationView(prim_paths_expr=ROBOT_PATH)
-            self.articulation_view.initialize()
-
-            print(f"{self.articulation_view.get_measured_joint_efforts()}")
-
-    # def print_contact_force(self):
-    #     sensor = ContactSensor(
-    #         prim_path="/World/Robot/Tower/Axis2/forceSensor/contactForceSensor",
-    #         name="Contact_Sensor",
-    #     )
-
-    #     reading = sensor.get_current_frame()
-
-    #     force_n = reading.get("force", 0)
-    #     force_kgf = force_n / 9.81
-
-    #     print("Force: {} N ({} kgf)".format(force_n, force_kgf))
-
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
         for j in range(joint_count):
@@ -295,7 +273,7 @@ class RobotController:
         force_n = data.get("force", 0.0)
         print(f"Net force: {force_n:.3f} N")
 
-    def print_colliding_prim(self):
+    def get_colliding_prim(self):
         sim = get_physx_simulation_interface()
 
         contact_headers, contact_data = sim.get_contact_report()
@@ -306,6 +284,9 @@ class RobotController:
                 print("Gripper colliding with:", primB)
             elif primB == GRIPPER_PATH:
                 print("Gripper colliding with:", primA)
+
+    def add_colliding_box(self):
+        print("Test")
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False

@@ -152,7 +152,7 @@ class UDPScenario:
         self._robot_controller.print_force_sensor_value()
 
     def get_colliding_box(self):
-        self._robot_controller.print_colliding_prim()
+        self._robot_controller.get_colliding_box()
 
     def _handle_tp_robot(self, parts):
         if len(parts) != 4:
