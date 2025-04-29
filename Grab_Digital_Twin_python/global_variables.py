@@ -14,6 +14,7 @@ PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 SHELF_PATH = f"{ENVIRONMENT_PATH}/Shelf"
 
+
 # Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
@@ -32,6 +33,7 @@ ROBOT_BASE_PATH = f"{AXIS2_PATH}/robot_base"
 AXIS2_TOWER_PATH = f"{TOWER_PATH}/tower"
 PALLET_BASE_PATH = f"{ROBOT_BASE_GROUP_PATH}/pallet_base"
 CABINET_PATH = f"{ROBOT_BASE_GROUP_PATH}/cabinet"
+PALLET_STACK_PATH = f"{ROBOT_BASE_GROUP_PATH}/Euro_Pallet"
 
 # Sensors and cameras
 FORCE_SENSOR_PATH = f"{AXIS2_PATH}/forceSensor"
