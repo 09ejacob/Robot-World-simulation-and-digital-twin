@@ -417,11 +417,6 @@ class UDPScenario:
 
             xform.AddTranslateOp().Set(Gf.Vec3d(*pallet_position))
 
-            UsdPhysics.RigidBodyAPI.Apply(pallet_prim)
-            UsdPhysics.CollisionAPI.Apply(pallet_prim)
-            mass_api = UsdPhysics.MassAPI.Apply(pallet_prim)
-            mass_api.GetMassAttr().Set(25.0)
-
             self.pallets.append(pallet_prim_path)
         else:
             print(f"[ERROR] Failed to reference pallet at {pallet_prim_path}")
