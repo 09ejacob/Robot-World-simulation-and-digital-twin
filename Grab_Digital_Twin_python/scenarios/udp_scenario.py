@@ -74,7 +74,7 @@ class UDPScenario:
         self.axis_dofs = []
 
         self.boxes_paths = []
-        self.pallets = []
+        self.pallets_paths = []
 
     def _udp_callback(self, message):
         """Receive UDP messages and store them in a queue."""
@@ -417,7 +417,7 @@ class UDPScenario:
 
             xform.AddTranslateOp().Set(Gf.Vec3d(*pallet_position))
 
-            self.pallets.append(pallet_prim_path)
+            self.pallets_paths.append(pallet_prim_path)
         else:
             print(f"[ERROR] Failed to reference pallet at {pallet_prim_path}")
 
@@ -659,11 +659,7 @@ class UDPScenario:
         """Remove objects created by this scenario from the stage."""
         stage = omni.usd.get_context().get_stage()
 
-        prim_paths = (
-            self.boxes_paths
-            + [pallet.prim_path for pallet in self.pallets]
-            + [SHELF_PATH]
-        )
+        prim_paths = self.boxes_paths + self.pallets_paths + [SHELF_PATH]
 
         for prim_path in prim_paths:
             prim = stage.GetPrimAtPath(prim_path)
