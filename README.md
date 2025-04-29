@@ -28,6 +28,7 @@ NOTE: ***Make sure that the folder for the extension does not contain any triple
         - Pressing the `UNLOAD SCENARIO` button will reset the simulation and unload the currently loaded scenario.
     - Under the *Robot Controls* frame, it is possible to control various links and joints of the robot manually.
         - Pressing the `Open Gripper` and `Close Gripper` buttons will make the end effector of the robot grab onto and release an object respectively.
+        - The `Set bottlegripper to idle` button sets the bottle gripper to an idle state. This makes the it neither opened or closed, it gets put in a between state.
         - To change the robot's positioning configuration, set a value for one of the joints and then press the `Set position` button underneath to make it move to the specified value.
 4. Additionally, there are extra controls for the cameras under the *Camera Controls* frame.
         - Pressing the `Refresh Camera List` fetches the cameras that are loaded into the scene. After doing so, and the cameras are successfully fetched, buttons for capturing the individual cameras should show up under.

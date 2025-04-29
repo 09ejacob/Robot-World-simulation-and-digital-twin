@@ -74,7 +74,7 @@ class UDPScenario:
         self.axis_dofs = []
 
         self.boxes_paths = []
-        self.pallets = []
+        self.pallets_paths = []
 
     def _udp_callback(self, message):
         """Receive UDP messages and store them in a queue."""
@@ -105,8 +105,6 @@ class UDPScenario:
         """Return a dictionary that maps command strings to handlers."""
         return {
             "tp_robot": self._handle_tp_robot,
-            "nudge_box": self._handle_nudge_box,
-            "force_data": lambda p: self._robot_controller.read_force_sensor_value(),
             "close_gripper": lambda p: self._robot_controller.close_gripper(),
             "open_gripper": lambda p: self._robot_controller.open_gripper(),
             "bottlegripper_idle": lambda p: self._robot_controller.set_bottlegripper_to_idle_pos(),
@@ -114,6 +112,8 @@ class UDPScenario:
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
+            "force_data": lambda p: self.get_force_sensor_data(),
+            "add_colliding_item": lambda p: self.add_colliding_item(),
         }
 
     def _toggle_overview_camera(self, start, parts=None):
@@ -148,6 +148,12 @@ class UDPScenario:
         else:
             print("[INFO] Overview camera is disabled.")
 
+    def get_force_sensor_data(self):
+        self._robot_controller.print_force_sensor_value()
+
+    def add_colliding_item(self):
+        self._robot_controller.add_colliding_item()
+
     def _handle_tp_robot(self, parts):
         if len(parts) != 4:
             print("[ERROR] Invalid tp_robot format. Use: tp_robot:x:y:z")
@@ -161,19 +167,6 @@ class UDPScenario:
 
         except ValueError:
             print("[ERROR] tp_robot values must be floats.")
-
-    def _handle_nudge_box(self, parts):
-        if len(parts) != 5:
-            print("[ERROR] Invalid nudge_box format. Use: nudge_box:/path:x:y:z")
-            return
-
-        try:
-            prim_path = parts[1]
-            offset = tuple(map(float, parts[2:5]))
-            self.nudge_box(prim_path, offset)
-
-        except ValueError:
-            print("[ERROR] nudge_box values must be floats.")
 
     def _handle_axis_command(self, parts):
         if len(parts) != 2:
@@ -253,35 +246,6 @@ class UDPScenario:
             port=self.broadcast_target_port,
             stream=stream,
         )
-
-    def nudge_box(self, prim_path, offset):
-        stage = omni.usd.get_context().get_stage()
-        box_prim = stage.GetPrimAtPath(prim_path)
-
-        if not box_prim.IsValid():
-            print(f"Box prim not found at {prim_path}")
-            return
-
-        xformable = UsdGeom.Xformable(box_prim)
-        translate_op = next(
-            (
-                op
-                for op in xformable.GetOrderedXformOps()
-                if "translate" in op.GetOpName()
-            ),
-            None,
-        )
-        if translate_op is None:
-            translate_op = xformable.AddTranslateOp()
-
-        current_translation = translate_op.Get()
-        new_translation = current_translation + Gf.Vec3d(*offset)
-        translate_op.Set(new_translation)
-
-        if self.print_positions:
-            print(
-                f"Nudged box at {prim_path} by {offset}. New position: {new_translation}"
-            )
 
     def create_xform(
         self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
@@ -428,20 +392,38 @@ class UDPScenario:
         reverse=False,
         isBottles=False,
     ):
-        self.create_xform(f"{path}/stack{stack_id}", (0, 0, 0), (0, 0, 0), (1, 1, 1))
-        pallet = DynamicCuboid(
-            prim_path=f"{path}/stack{stack_id}/pallet{stack_id}",
-            position=pallet_position,
-            scale=np.array((1.2, 0.8, 0.144)),
-            color=np.array((0.2, 0.08, 0.05)),
-            mass=25.0,
-        )
+        stack_path = f"{path}/stack{stack_id}"
+        self.create_xform(stack_path, (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
-        self.pallets.append(pallet)
+        module_dir = dirname(abspath(__file__))
+        pallet_usd = abspath(
+            join(
+                module_dir,
+                "..",
+                "..",
+                "Grab_Digital_Twin_python",
+                "usd",
+                "Euro_Pallet.usd",
+            )
+        )
+        pallet_prim_path = f"{stack_path}/pallet{stack_id}"
+        add_reference_to_stage(usd_path=pallet_usd, prim_path=pallet_prim_path)
+
+        stage = omni.usd.get_context().get_stage()
+        pallet_prim = stage.GetPrimAtPath(pallet_prim_path)
+        if pallet_prim.IsValid():
+            xform = UsdGeom.Xformable(pallet_prim)
+            xform.ClearXformOpOrder()
+
+            xform.AddTranslateOp().Set(Gf.Vec3d(*pallet_position))
+
+            self.pallets_paths.append(pallet_prim_path)
+        else:
+            print(f"[ERROR] Failed to reference pallet at {pallet_prim_path}")
 
         if isBottles:
             self.create_bottles(
-                f"{path}/stack{stack_id}",
+                stack_path,
                 number_of_boxes,
                 pallet_position,
                 stack_id,
@@ -449,7 +431,7 @@ class UDPScenario:
             )
         else:
             self.create_boxes(
-                f"{path}/stack{stack_id}",
+                stack_path,
                 number_of_boxes,
                 pallet_position,
                 stack_id,
@@ -523,6 +505,15 @@ class UDPScenario:
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
 
+            # try:
+            #     reading = self._robot_controller.get_contact_force_reading()
+            #     force_n = reading.get("force", 0)
+            #     force_kgf = force_n / 9.81
+            #     data.append(f"force_N:{force_n:.2f}")
+            #     data.append(f"force_kgf:{force_kgf:.2f}")
+            # except Exception as e:
+            #     print(f"[WARN] Could not read force sensor: {e}")
+
             if data:
                 self.udp.send(
                     ";".join(data),
@@ -553,10 +544,6 @@ class UDPScenario:
                 self._robot_controller.print_joint_position_by_index(
                     dof_index, is_angular
                 )
-
-            self.print_box_position("/World/Environment/stack1/box_1_19")
-            self.print_box_position("/World/Environment/stack4/box_4_30")
-            self.print_box_position("/World/Environment/stack2/box_2_19")
 
             self.last_position_print_time = current_time
 
@@ -672,11 +659,7 @@ class UDPScenario:
         """Remove objects created by this scenario from the stage."""
         stage = omni.usd.get_context().get_stage()
 
-        prim_paths = (
-            self.boxes_paths
-            + [pallet.prim_path for pallet in self.pallets]
-            + [SHELF_PATH]
-        )
+        prim_paths = self.boxes_paths + self.pallets_paths + [SHELF_PATH]
 
         for prim_path in prim_paths:
             prim = stage.GetPrimAtPath(prim_path)

@@ -6,6 +6,13 @@ import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
 from pxr import UsdGeom
 from pxr import Gf
+from omni.isaac.core.articulations import ArticulationView
+from isaacsim.sensors.physics import ContactSensor
+from omni.physx import get_physx_simulation_interface
+from omni.physx.bindings._physx import IPhysxSimulation
+from omni.physx.scripts.physicsUtils import PhysicsSchemaTools
+import omni.kit.commands
+
 from ..camera_capture import CameraCapture
 
 from ..global_variables import (
@@ -17,6 +24,9 @@ from ..global_variables import (
     BOTTLEGRIPPER_OPEN,
     BOTTLEGRIPPER_CLOSE,
     BOTTLEGRIPPER_IDLE,
+    GRIPPER_PATH,
+    ENVIRONMENT_PATH,
+    PALLET_STACK_PATH,
 )
 
 
@@ -26,6 +36,25 @@ class RobotController:
         self.camera_capture = CameraCapture()
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
+
+        self._contact_sensor = None
+
+    def _ensure_contact_sensor(self):
+        if self._contact_sensor is None:
+            try:
+                self._contact_sensor = ContactSensor(
+                    prim_path=f"{GRIPPER_PATH}/Contact_Sensor",
+                    name="Contact_Sensor",
+                    frequency=1,
+                    translation=np.zeros(3),
+                    radius=-1.0,
+                    min_threshold=0.0,
+                    max_threshold=1e6,
+                )
+            except Exception as e:
+                print(f"[WARN] couldn’t create ContactSensor yet: {e}")
+                return False
+        return True
 
     def refresh_handles(self):
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
@@ -130,15 +159,6 @@ class RobotController:
         upper_limit = upper_limit_attr.Get()
         clamped_position = max(lower_limit, min(position, upper_limit))
         drive_api.GetTargetPositionAttr().Set(clamped_position)
-
-    def read_force_sensor_value(self):
-        dof_states = self.dc_interface.get_articulation_dof_states(
-            self.articulation, _dynamic_control.STATE_ALL
-        )
-        sensor_dof_index = 2
-        force_value = dof_states["effort"][sensor_dof_index]
-        print("Effort sensor reading:", force_value)
-        return force_value
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
@@ -245,6 +265,46 @@ class RobotController:
         xformable.ClearXformOpOrder()
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
+
+    def print_force_sensor_value(self):
+        """
+        Prints the net force reading from the contact sensor (scalar value).
+        """
+        if not self._ensure_contact_sensor():
+            return
+        data = self._contact_sensor.get_current_frame()
+        force_n = data.get("force", 0.0)
+        print(f"Net force: {force_n:.3f} N")
+
+    def get_colliding_prim(self) -> list[str]:
+        sim = get_physx_simulation_interface()
+        contact_headers, _ = sim.get_contact_report()
+
+        collided = set()
+        for hdr in contact_headers:
+            primA = PhysicsSchemaTools.intToSdfPath(hdr.actor0).pathString
+            primB = PhysicsSchemaTools.intToSdfPath(hdr.actor1).pathString
+
+            if primA == GRIPPER_PATH and not primB.startswith(GRIPPER_PATH):
+                collided.add(primB)
+            elif primB == GRIPPER_PATH and not primA.startswith(GRIPPER_PATH):
+                collided.add(primA)
+
+        return list(collided)
+
+    def add_colliding_item(self):
+        for p in self.get_colliding_prim():
+            if not p.startswith(ENVIRONMENT_PATH) or not p.rsplit("/", 1)[
+                -1
+            ].startswith("box_"):
+                continue
+
+            leaf = p.rsplit("/", 1)[-1]
+            dest = f"{PALLET_STACK_PATH}/{leaf}"
+
+            omni.kit.commands.execute(
+                "MovePrims", paths_to_move={p: dest}, keep_world_transform=True
+            )
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False
