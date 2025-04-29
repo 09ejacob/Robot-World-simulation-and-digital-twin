@@ -25,6 +25,8 @@ from ..global_variables import (
     BOTTLEGRIPPER_CLOSE,
     BOTTLEGRIPPER_IDLE,
     GRIPPER_PATH,
+    ENVIRONMENT_PATH,
+    PALLET_STACK_PATH,
 )
 
 
@@ -280,37 +282,30 @@ class RobotController:
 
         collided = set()
         for hdr in contact_headers:
-            # intToSdfPath(...) returns a pxr.Sdf.Path object
-            # convert it to a Python string via .pathString
             primA = PhysicsSchemaTools.intToSdfPath(hdr.actor0).pathString
             primB = PhysicsSchemaTools.intToSdfPath(hdr.actor1).pathString
 
-            # now safe to use startswith(), ==, etc.
             if primA == GRIPPER_PATH and not primB.startswith(GRIPPER_PATH):
                 collided.add(primB)
             elif primB == GRIPPER_PATH and not primA.startswith(GRIPPER_PATH):
                 collided.add(primA)
 
-        print(list(collided))
         return list(collided)
 
     def add_colliding_item(self):
         for p in self.get_colliding_prim():
-            # filter to only environment boxes...
-            if not p.startswith("/World/Environment/") or not p.rsplit("/", 1)[
+            if not p.startswith(ENVIRONMENT_PATH) or not p.rsplit("/", 1)[
                 -1
             ].startswith("box_"):
                 continue
 
-            # compute destination path under the pallet prim
             leaf = p.rsplit("/", 1)[-1]
-            dest = f"/World/Robot/Base/Euro_Pallet/{leaf}"
+            dest = f"{PALLET_STACK_PATH}/{leaf}"
 
-            # MovePrims expects a dict { old_path: new_path }
             omni.kit.commands.execute(
                 "MovePrims", paths_to_move={p: dest}, keep_world_transform=True
             )
-            print(f"Attached box {p} under Euro_Pallet")
+            # print(f"Attached box {p} under Euro_Pallet")
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False
