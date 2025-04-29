@@ -305,7 +305,6 @@ class RobotController:
             omni.kit.commands.execute(
                 "MovePrims", paths_to_move={p: dest}, keep_world_transform=True
             )
-            # print(f"Attached box {p} under Euro_Pallet")
 
     def capture_cameras(
         self, cameras=None, udp_controller=None, host=None, port=None, stream=False
