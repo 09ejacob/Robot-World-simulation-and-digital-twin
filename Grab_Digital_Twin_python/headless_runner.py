@@ -60,6 +60,7 @@ from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_
 
 
 def _wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
+    """Wait until "condition_fn()" returns True or "timeout" seconds elaps."""
     start_time = time.time()
     while not condition_fn():
         if update_fn is not None:
@@ -69,6 +70,7 @@ def _wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
 
 
 def _main():
+    """Entrypoint for running the UDP scenario in headless mode."""
     physics_dt = 1.0 / args.physics_fps
     rendering_dt = 1.0 / args.rendering_fps
 

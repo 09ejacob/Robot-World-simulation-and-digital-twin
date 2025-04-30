@@ -261,6 +261,7 @@ class UIBuilder:
     ######################################################################################
 
     def _on_init(self):
+        """Reset UIBuilders internal state."""
         self._scenario = None
 
     def _select_scenario(self):
