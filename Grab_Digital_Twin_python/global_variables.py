@@ -7,6 +7,7 @@ WORLD_PATH = "/World"
 GROUND_PLANE_PATH = f"{WORLD_PATH}/groundPlane"
 PHYSICS_SCENE_PATH = f"{WORLD_PATH}/PhysicsScene"
 ENVIRONMENT_PATH = f"{WORLD_PATH}/Environment"
+SPHERE_LIGHT = f"{WORLD_PATH}/SphereLight"
 
 PALLET_PATH = f"{WORLD_PATH}/Environment/pallet"
 PICK_BOX_1 = f"{WORLD_PATH}/Environment/pickBox1"

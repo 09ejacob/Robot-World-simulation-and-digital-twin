@@ -19,6 +19,7 @@ from ..global_variables import (
     BOX_CAMERA_1,
     BOX_CAMERA_2,
     OVERVIEW_CAMERA,
+    SPHERE_LIGHT,
 )
 
 
@@ -79,6 +80,7 @@ def create_camera(resolutions=None):
         OVERVIEW_CAMERA, resolution=resolutions.get(OVERVIEW_CAMERA)
     )
 
+
 def load_grab_usd(grab_usd):
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
@@ -93,13 +95,13 @@ def load_grab_usd(grab_usd):
     )
     add_reference_to_stage(usd_path=usd_path, prim_path=ROBOT_PATH)
 
+
 def _add_light():
-    sphereLight = UsdLux.SphereLight.Define(
-        get_current_stage(), Sdf.Path("/World/SphereLight")
-    )
+    sphereLight = UsdLux.SphereLight.Define(get_current_stage(), Sdf.Path(SPHERE_LIGHT))
     sphereLight.CreateRadiusAttr(2)
     sphereLight.CreateIntensityAttr(100000)
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
+
 
 def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
     stage = get_current_stage()
