@@ -24,6 +24,7 @@ from ..global_variables import (
 
 
 def create_ground_plane(path):
+    """Create a ground plane at a given prim path."""
     GroundPlane(prim_path=path, size=10, color=np.array([0.5, 0.5, 0.5]))
 
 
@@ -34,6 +35,16 @@ def create_joint(
     joint_type,
     hinge_axis,
 ):
+    """
+    Create and configure a joint between two given objects.
+
+    Args:
+        joint_prim_path (str): the prim path for the new joint prim.
+        object1_path (str): the prim path of the first object to create the joint between.
+        object2_path (str): the prim path of the second object to create the joint between.
+        joint_type (str): USD joint type.
+        hinge_axis (tuple or None): Axis vector for hinge joints. Can also be None.
+    """
     stage = get_current_stage()
 
     if hinge_axis is not None:
@@ -55,6 +66,8 @@ def create_joint(
 
 
 def create_additional_joints():
+    """Create any extra joints required by the robot setup."""
+
     # Base and groundplane joint
     create_joint(
         FIXED_JOINT_BASE_GROUND,
@@ -66,6 +79,8 @@ def create_additional_joints():
 
 
 def create_camera(resolutions=None):
+    """Register existing cameras for image capture or streaming."""
+
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
@@ -82,6 +97,7 @@ def create_camera(resolutions=None):
 
 
 def load_grab_usd(grab_usd):
+    """Load the grab USD model into the stage."""
     current_dir = dirname(abspath(__file__))
     usd_path = abspath(
         join(
@@ -97,6 +113,7 @@ def load_grab_usd(grab_usd):
 
 
 def _add_light():
+    """Add sphere light into the scene."""
     sphereLight = UsdLux.SphereLight.Define(get_current_stage(), Sdf.Path(SPHERE_LIGHT))
     sphereLight.CreateRadiusAttr(2)
     sphereLight.CreateIntensityAttr(100000)
@@ -104,6 +121,13 @@ def _add_light():
 
 
 def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
+    """
+    Setup the stage with physics scene, ground plane, robot model, optional cameras, joints, and lighting.
+
+    Args:
+        enable_cameras (bool): if True, register cameras for camera capture.
+        grab_usd (str): USD file to reference for the robot.
+    """
     stage = get_current_stage()
 
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():

@@ -495,7 +495,7 @@ class UDPScenario:
             )
 
     def _load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
-        """Load the shelf usd at a specific position at a specific scale."""
+        """Load the shelf USD at a specific position at a specific scale."""
         current_dir = dirname(abspath(__file__))
         usd_path = abspath(
             join(
