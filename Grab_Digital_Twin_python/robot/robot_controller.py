@@ -40,6 +40,12 @@ class RobotController:
         self._contact_sensor = None
 
     def _ensure_contact_sensor(self):
+        """
+        Ensure that the ContactSensor exists on the gripper prim.
+
+        Returns:
+            bool: True if the sensor is ready, False if not.
+        """
         if self._contact_sensor is None:
             try:
                 self._contact_sensor = ContactSensor(
@@ -57,9 +63,11 @@ class RobotController:
         return True
 
     def refresh_handles(self):
+        """Refresh the articulation handle."""
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
     def open_gripper(self):
+        """Open the gripper or bottlegripper."""
         stage = get_current_stage()
         left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
         right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
@@ -79,6 +87,7 @@ class RobotController:
             node.request_compute()
 
     def close_gripper(self):
+        """Close the gripper or bottlegripper."""
         stage = get_current_stage()
         left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
         right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
@@ -98,6 +107,7 @@ class RobotController:
             node.request_compute()
 
     def set_bottlegripper_to_idle_pos(self):
+        """Move the bottlegripper to its idle position."""
         stage = get_current_stage()
         left = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_LEFT)
         right = stage.GetPrimAtPath(BOTTLEGRIPPER_JOINT_PATH_RIGHT)
@@ -114,6 +124,13 @@ class RobotController:
             print("Bottlegripper is not active")
 
     def set_angular_drive_target(self, joint_prim_path, target_position):
+        """
+        Drive an angular joint to a target angle (degrees).
+
+        Args:
+            joint_prim_path (str): USD path of the joint.
+            target_position (float): desired angle in degrees.
+        """
         stage = get_current_stage()
         joint_prim = stage.GetPrimAtPath(joint_prim_path)
 
@@ -134,6 +151,13 @@ class RobotController:
         # )
 
     def set_prismatic_joint_position(self, joint_prim_path, position):
+        """
+        Drive a prismatic joint to a target linear position.
+
+        Args:
+            joint_prim_path (str): USD path of the joint.
+            position (float): desired position in meters.
+        """
         stage = get_current_stage()
         joint_prim = stage.GetPrimAtPath(joint_prim_path)
         if not joint_prim.IsValid():
@@ -161,6 +185,12 @@ class RobotController:
         drive_api.GetTargetPositionAttr().Set(clamped_position)
 
     def get_dof_index_for_joint(self, joint_prim_path) -> int:
+        """
+        Look up the DOF index in dynamic control for a given joint path.
+
+        Returns:
+            int: the DOF index, or -1 if it was not found.
+        """
         joint_count = self.dc_interface.get_articulation_joint_count(self.articulation)
         for j in range(joint_count):
             joint_handle = self.dc_interface.get_articulation_joint(
@@ -181,6 +211,16 @@ class RobotController:
         return -1
 
     def get_joint_position_by_index(self, dof_index, is_angular=False):
+        """
+        Read the current joint position from dynamic control.
+
+        Args:
+            dof_index (int): the DOF index.
+            is_angular (bool): if True, return degrees instead of meters.
+
+        Returns:
+            float or None: current position of the joint or None if invalid.
+        """
         if not self.articulation:
             return None
 
@@ -197,6 +237,7 @@ class RobotController:
         return current_pos
 
     def print_joint_position_by_index(self, dof_index, is_angular=False):
+        """Print the current joint position."""
         if not self.articulation:
             print("Articulation handle is invalid.")
             return
@@ -223,6 +264,9 @@ class RobotController:
         max_frames=1000,
         is_angular=False,
     ):
+        """
+        Yields until the joint reaches the target position within the threshold.
+        """
         frames = 0
         if is_angular:
             target_position = np.deg2rad(target_position)
@@ -248,6 +292,12 @@ class RobotController:
             yield
 
     def teleport_robot(self, position):
+        """
+        Teleport the robot to a given position.
+
+        Args:
+            position (tuple): (x, y, z) position for where to move the robot.
+        """
         stage = omni.usd.get_context().get_stage()
         robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
         if not robot_prim.IsValid():
@@ -261,7 +311,7 @@ class RobotController:
 
     def get_force_sensor_data(self):
         """
-        Prints the net force reading from the contact sensor (scalar value).
+        Returns the latest contact-sensor frame.
         """
         if not self._ensure_contact_sensor():
             return
@@ -270,6 +320,12 @@ class RobotController:
         return data
 
     def _get_colliding_prim(self) -> list[str]:
+        """
+        Query PhysX for all prims which are currently colliding with the gripper.
+
+        Returns:
+            list[str]: USD paths of colliding prims.
+        """
         sim = get_physx_simulation_interface()
         contact_headers, _ = sim.get_contact_report()
 
@@ -286,6 +342,7 @@ class RobotController:
         return list(collided)
 
     def add_colliding_item(self):
+        """For each item which is colliding with the gripper, move it into the under the pallet prim of the robot."""
         for p in self._get_colliding_prim():
             if not p.startswith(ENVIRONMENT_PATH) or not p.rsplit("/", 1)[
                 -1
@@ -336,4 +393,5 @@ class RobotController:
         return results
 
     def generate_video(self, fps):
+        """Convert previously captured frames into a video at a given framerate."""
         self.camera_capture.convert_video_from_images(fps)
