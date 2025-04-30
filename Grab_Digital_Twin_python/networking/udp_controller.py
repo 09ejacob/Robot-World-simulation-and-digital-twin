@@ -12,6 +12,14 @@ class UDPController:
         self._send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     def send(self, message, target_host, target_port):
+        """
+        Send UDP message to a specified target.
+
+        Args:
+            message (str or bytes): the message/payload to send.
+            target_host (str): destination IP address.
+            target_port (int): destination port number.
+        """
         try:
             if isinstance(message, str):
                 data = message.encode("utf-8")
@@ -32,6 +40,7 @@ class UDPController:
             print(f"[UDP Controller] Send error: {e}")
 
     def start(self):
+        """Start a background thread that listens for incoming UDP messages."""
         if self._thread is not None and self._thread.is_alive():
             print("[UDP Controller] Already running.")
             return
@@ -66,6 +75,7 @@ class UDPController:
         self._thread.start()
 
     def stop(self):
+        """Signal the listening thread to stop and wait for it to finish."""
         self._stop_event.set()
         if self._thread is not None:
             self._thread.join()
