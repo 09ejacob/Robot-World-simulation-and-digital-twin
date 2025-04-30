@@ -82,7 +82,18 @@ class UDPScenario:
         self.udp_message_count += 1
 
     def _parse_and_execute_command(self, message):
-        """Parse an incoming command and execute the corresponding handler."""
+        """Parse an incoming command and execute the corresponding handler.
+
+        Messages must be in a form like this:
+            "command:arg1:arg2:..."
+
+        This method will:
+            1. Split messages on ":", strip trailing colons, and drop empty parts.
+            2. Look up the command in the handler map.
+            3. Call the handler with the parts list if the command is found.
+            4. If command starts with "axis", route to the "_handle_axis_command".
+            5. If command is not recognized, print out an error.
+        """
         self.executed_command_count += 1
         parts = [p for p in message.rstrip(":").strip().split(":") if p]
         if not parts:
@@ -116,6 +127,14 @@ class UDPScenario:
         }
 
     def _toggle_overview_camera(self, start, parts=None):
+        """
+        Enable or disable overview-camera captures.
+
+        If "start" is True, it begins capturing at the current "overview_capture_interval" interval (in seconds).
+        You can override the interval by passing a new value as the second element of "parts".
+
+        If "start" becomes False, it stops capturing and then generates a video at 3 / interval fps.
+        """
         if self.allow_udp_capture:
             if start:
                 # Parse interval from command if provided
@@ -148,6 +167,7 @@ class UDPScenario:
             print("[INFO] Overview camera is disabled.")
 
     def _handle_tp_robot(self, parts):
+        """Parse and execute a "tp_robot:x:y:z" -command"""
         if len(parts) != 4:
             print("[ERROR] Invalid tp_robot format. Use: tp_robot:x:y:z")
             return
@@ -162,6 +182,7 @@ class UDPScenario:
             print("[ERROR] tp_robot values must be floats.")
 
     def _handle_axis_command(self, parts):
+        """Parse and execute a "axisX:value" -command."""
         if len(parts) != 2:
             print("[ERROR] axis command format must be: axisX:value")
             return
@@ -197,6 +218,16 @@ class UDPScenario:
             print(f"[ERROR] Axis {axis_id} not supported.")
 
     def _handle_capture_command(self, parts):
+        """
+        Parse and execute a "capture" UDP command.
+
+        The expected format is:
+            capture:cam1:cam2[:...][:stream=true|false]
+
+        - The first part is which camera IDs to capture images from.
+        - If the last part is "stream=True" or "stream=False", it toggles
+          the UDP streaming on/off.
+        """
         print(f"[DEBUG] Received capture command with parts: {parts}")
 
         if not self.allow_udp_capture:
@@ -243,6 +274,7 @@ class UDPScenario:
     def _create_xform(
         self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
     ):
+        """Create a xform at given path based on given translation, rotation, and scale"""
         stage = omni.usd.get_context().get_stage()
         xform_prim = stage.GetPrimAtPath(path)
 
@@ -264,6 +296,16 @@ class UDPScenario:
     def _create_boxes(
         self, path, num_boxes, position=(1, 1, 1), stack_id=1, reverse=False
     ):
+        """
+        Create a stack of simple DynamicCuboid boxes.
+
+        Args:
+            path (str): USD parent path to create the boxes.
+            num_boxes (int): how many boxes to create in the stack.
+            position (tuple): base (x, y, z) position for the stack.
+            stack_id (int): identifier which is used in each box's prim name.
+            reverse (bool): if this is True, flip the x-ordering of the stack.
+        """
         boxes = []
 
         base_x, base_y, base_z = position
@@ -303,11 +345,21 @@ class UDPScenario:
     def _create_bottles(
         self,
         path,
-        num_boxes,
+        num_bottles,
         position=(2.0, 0.0, 0.072),
         stack_id=1,
         reverse=False,
     ):
+        """
+        Create a stack of simple with BottlePack.usd objects.
+
+        Args:
+            path (str): USD parent path to create the bottles.
+            num_boxes (int): how many bottles to create in the stack.
+            position (tuple): base (x, y, z) position for the stack.
+            stack_id (int): identifier which is used in each bottles prim name.
+            reverse (bool): if this is True, flip the x-ordering of the stack.
+        """
         stack_path = f"{path}/stack{stack_id}"
         self._create_xform(stack_path, translate=(0, 0, 0))
 
@@ -341,7 +393,7 @@ class UDPScenario:
 
         stage = omni.usd.get_context().get_stage()
 
-        for i in range(num_boxes):
+        for i in range(num_bottles):
             layer = i // 16
             idx = i % 16
             col = idx // 4
@@ -380,11 +432,22 @@ class UDPScenario:
         self,
         path,
         pallet_position=(0, 0, 0),
-        number_of_boxes=1,
+        number_of_items=1,
         stack_id=1,
         reverse=False,
         isBottles=False,
     ):
+        """
+        Create a full pick stack. Use Euro_Pallet.usd as the pallet and fill the stack with boxes or bottles.
+
+        Args:
+            path (str): USD parent path.
+            pallet_position (tuple): the (x, y, z) position of the pallet.
+            number_of_items (int): the number of boxes or bottles to create on the stack.
+            stack_id (int): this is used to generate unique prim names.
+            reverse (bool): reverse the layout direction if True.
+            isBottles (bool): if True, make stack of bottles, else make it with boxes.
+        """
         stack_path = f"{path}/stack{stack_id}"
         self._create_xform(stack_path, (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
@@ -417,7 +480,7 @@ class UDPScenario:
         if isBottles:
             self._create_bottles(
                 stack_path,
-                number_of_boxes,
+                number_of_items,
                 pallet_position,
                 stack_id,
                 reverse,
@@ -425,13 +488,14 @@ class UDPScenario:
         else:
             self._create_boxes(
                 stack_path,
-                number_of_boxes,
+                number_of_items,
                 pallet_position,
                 stack_id,
                 reverse,
             )
 
     def _load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
+        """Load the shelf usd at a specific position at a specific scale."""
         current_dir = dirname(abspath(__file__))
         usd_path = abspath(
             join(
@@ -456,6 +520,13 @@ class UDPScenario:
             print(f"Failed to load shelf at prim path: {SHELF_PATH}")
 
     def _start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
+        """
+        Start the UDPController listening on the given host/port unless it is already in use.
+
+        Args:
+            host (str): IP to bind to.
+            port (str): UDP port to listen on.
+        """
         if self._port_in_use(port):
             print(f"Port {port} is already in use. Skipping server start.")
             return
@@ -465,6 +536,7 @@ class UDPScenario:
         self.udp.start()
 
     def _port_in_use(self, port):
+        """Check if the given UDP port is already in use locally."""
         for conn in psutil.net_connections(kind="udp"):
             if conn.laddr.port == port:
                 return True
@@ -472,7 +544,7 @@ class UDPScenario:
         return False
 
     def _update(self, step: float = 0.1):
-        """Process the queued commands, broadcast joint data, and log performance."""
+        """Process the queued commands, broadcast joint and force data, and log performance and print positions, capture overview camera if enabled."""
         start_time = time.time()
         self._process_command_queue()
 
@@ -483,11 +555,13 @@ class UDPScenario:
         self._capture_overview_camera(start_time)
 
     def _process_command_queue(self):
+        """Drain the UDP command queue, parsing and executing each message."""
         while not self.command_queue.empty():
             message = self.command_queue.get()
             self._parse_and_execute_command(message)
 
     def _broadcast_data(self):
+        """Get current joint and force data, format it and send over UDP."""
         if not self.broadcast_stop_event.is_set():
             data = []
 
@@ -515,6 +589,7 @@ class UDPScenario:
                 print("[WARN] No joint data to broadcast.")
 
     def _log_performance_stats(self, current_time):
+        """If this is enabled, print out how many UDP commands processed every second."""
         if self.print_performance_stats and (
             current_time - self.last_time_check >= 1.0
         ):
@@ -527,6 +602,7 @@ class UDPScenario:
             self.last_time_check = current_time
 
     def _print_joint_positions(self, current_time):
+        """Print joint positions once per second if enabled."""
         if self.print_positions and (
             current_time - self.last_position_print_time >= 1.0
         ):
@@ -539,6 +615,7 @@ class UDPScenario:
             self.last_position_print_time = current_time
 
     def _capture_overview_camera(self, current_time):
+        """ "If overview camera is enabled and time is gone by, capture image."""
         if self.overview_camera_active and (
             current_time - self.last_overview_capture_time
             >= self.overview_capture_interval
@@ -547,6 +624,7 @@ class UDPScenario:
             self.last_overview_capture_time = current_time
 
     def _print_box_position(self, box_path):
+        """Print the world position of a box at a given prim path."""
         stage = omni.usd.get_context().get_stage()
         box_prim = stage.GetPrimAtPath(box_path)
         if not box_prim.IsValid():
@@ -561,6 +639,7 @@ class UDPScenario:
         print(f"No translation op found for box at {box_path}")
 
     def _stop_broadcasting(self):
+        """Stop broadcasting."""
         self.broadcast_stop_event.set()
         if self.broadcast_thread:
             self.broadcast_thread.join()
@@ -584,7 +663,7 @@ class UDPScenario:
         self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 0.072),
-            number_of_boxes=19,
+            number_of_items=19,
             stack_id=1,
             reverse=True,
             isBottles=False,
@@ -592,7 +671,7 @@ class UDPScenario:
         self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, -0.9, 0.072),
-            number_of_boxes=20,
+            number_of_items=20,
             stack_id=2,
             reverse=True,
             isBottles=False,
@@ -600,7 +679,7 @@ class UDPScenario:
         self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 0.072),
-            number_of_boxes=15,
+            number_of_items=15,
             stack_id=3,
             reverse=True,
             isBottles=True,
@@ -608,7 +687,7 @@ class UDPScenario:
         self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 1.872),
-            number_of_boxes=30,
+            number_of_items=30,
             stack_id=4,
             reverse=True,
             isBottles=False,
@@ -616,7 +695,7 @@ class UDPScenario:
         self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, -0.9, 1.872),
-            number_of_boxes=16,
+            number_of_items=16,
             stack_id=5,
             reverse=True,
             isBottles=True,
@@ -624,7 +703,7 @@ class UDPScenario:
         self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 1.872),
-            number_of_boxes=16,
+            number_of_items=16,
             stack_id=6,
             reverse=True,
             isBottles=True,
