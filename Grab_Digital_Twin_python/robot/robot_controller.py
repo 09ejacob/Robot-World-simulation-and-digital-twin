@@ -266,15 +266,15 @@ class RobotController:
         translate_op = xformable.AddTranslateOp()
         translate_op.Set(Gf.Vec3d(*position))
 
-    def print_force_sensor_value(self):
+    def get_force_sensor_data(self):
         """
         Prints the net force reading from the contact sensor (scalar value).
         """
         if not self._ensure_contact_sensor():
             return
         data = self._contact_sensor.get_current_frame()
-        force_n = data.get("force", 0.0)
-        print(f"Net force: {force_n:.3f} N")
+
+        return data
 
     def get_colliding_prim(self) -> list[str]:
         sim = get_physx_simulation_interface()

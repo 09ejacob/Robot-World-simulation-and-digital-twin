@@ -112,7 +112,6 @@ class UDPScenario:
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
-            "force_data": lambda p: self.get_force_sensor_data(),
             "add_colliding_item": lambda p: self.add_colliding_item(),
         }
 
@@ -147,9 +146,6 @@ class UDPScenario:
                 )
         else:
             print("[INFO] Overview camera is disabled.")
-
-    def get_force_sensor_data(self):
-        self._robot_controller.print_force_sensor_value()
 
     def add_colliding_item(self):
         self._robot_controller.add_colliding_item()
@@ -483,7 +479,7 @@ class UDPScenario:
         start_time = time.time()
         self._process_command_queue()
 
-        self._broadcast_joint_data()
+        self._broadcast_data()
 
         self._log_performance_stats(start_time)
         self._print_joint_positions(start_time)
@@ -494,7 +490,7 @@ class UDPScenario:
             message = self.command_queue.get()
             self.parse_and_execute_command(message)
 
-    def _broadcast_joint_data(self):
+    def _broadcast_data(self):
         if not self.broadcast_stop_event.is_set():
             data = []
 
@@ -505,14 +501,12 @@ class UDPScenario:
                 if pos is not None:
                     data.append(f"{name}:{pos:.4f}")
 
-            # try:
-            #     reading = self._robot_controller.get_contact_force_reading()
-            #     force_n = reading.get("force", 0)
-            #     force_kgf = force_n / 9.81
-            #     data.append(f"force_N:{force_n:.2f}")
-            #     data.append(f"force_kgf:{force_kgf:.2f}")
-            # except Exception as e:
-            #     print(f"[WARN] Could not read force sensor: {e}")
+            try:
+                reading = self._robot_controller.get_force_sensor_data()
+                force_n = reading.get("force", 0)
+                data.append(f"force_N:{force_n:.2f}")
+            except Exception as e:
+                print(f"[WARN] Could not read force sensor: {e}")
 
             if data:
                 self.udp.send(
