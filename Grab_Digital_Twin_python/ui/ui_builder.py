@@ -194,40 +194,40 @@ class UIBuilder:
                     clicked_fn=self._robot_controller.set_bottlegripper_to_idle_pos,
                 )
 
-                ui.Label("Set Axis1 position:")
+                ui.Label("Set Axis1 position (-360, 360):")
                 self._angular_drive_input_axis1 = ui.FloatField()
                 ui.Button(
-                    "Set position (0, 360)",
+                    "Set position",
                     clicked_fn=lambda: self._robot_controller.set_angular_drive_target(
                         AXIS1_JOINT_PATH,
                         self._angular_drive_input_axis1.model.get_value_as_float(),
                     ),
                 )
 
-                ui.Label("Set Axis2 position:")
+                ui.Label("Set Axis2 position (0, 3.0):")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
                 ui.Button(
-                    "Set position (0, 3.0)",
+                    "Set position",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
                     ),
                 )
 
-                ui.Label("Set Axis3 position:")
+                ui.Label("Set Axis3 position (0, 2.0):")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
                 ui.Button(
-                    "Set position (0, 2.0)",
+                    "Set position",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
                     ),
                 )
 
-                ui.Label("Set Axis4 position:")
+                ui.Label("Set Axis4 position (-360, 360):")
                 self._angular_drive_input_axis4 = ui.FloatField()
                 ui.Button(
-                    "Set position (0, 360)",
+                    "Set position",
                     clicked_fn=lambda: self._robot_controller.set_angular_drive_target(
                         AXIS4_JOINT_PATH,
                         self._angular_drive_input_axis4.model.get_value_as_float(),
