@@ -38,7 +38,7 @@ class UDPController:
 
         self._stop_event.clear()
 
-        def udp_server():
+        def _udp_server():
             udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
@@ -62,7 +62,7 @@ class UDPController:
                     print(f"[UDP Controller] Exception: {e}")
             udp_sock.close()
 
-        self._thread = threading.Thread(target=udp_server, daemon=True)
+        self._thread = threading.Thread(target=_udp_server, daemon=True)
         self._thread.start()
 
     def stop(self):

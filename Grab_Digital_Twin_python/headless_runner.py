@@ -3,7 +3,7 @@ import argparse
 
 
 # Argument parsing happens before importing `SimulationApp` to allow `--help` to work.
-def parse_args():
+def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--rendering_fps",
@@ -39,7 +39,7 @@ def parse_args():
     return parser.parse_args()
 
 
-args = parse_args()
+args = _parse_args()
 
 # Delayed imports: SimulationApp must not start before argument parsing
 from omni.isaac.kit import SimulationApp
@@ -59,7 +59,7 @@ from Grab_Digital_Twin_python.scenarios.udp_scenario import UDPScenario
 from Grab_Digital_Twin_python.global_variables import PHYSICS_SCENE_PATH, ROBOT_PATH
 
 
-def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
+def _wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
     start_time = time.time()
     while not condition_fn():
         if update_fn is not None:
@@ -68,7 +68,7 @@ def wait_for_condition(condition_fn, timeout=5.0, update_fn=None):
             break
 
 
-def main():
+def _main():
     physics_dt = 1.0 / args.physics_fps
     rendering_dt = 1.0 / args.rendering_fps
 
@@ -85,7 +85,7 @@ def main():
         enable_cameras=not args.disable_cameras, grab_usd=args.grab_usd
     )  # Need a flag for setting up scene with specifyed usd model.
 
-    wait_for_condition(
+    _wait_for_condition(
         lambda: get_current_stage().GetRootLayer() is not None,
         timeout=5.0,
         update_fn=simulation_app.update,
@@ -97,7 +97,7 @@ def main():
         print("[MAIN] Physics scene not found in stage")
         return
 
-    wait_for_condition(lambda: False, timeout=1.0, update_fn=simulation_app.update)
+    _wait_for_condition(lambda: False, timeout=1.0, update_fn=simulation_app.update)
 
     physx_iface = _physx.acquire_physx_interface()
     print(f"[DEBUG] PhysX interface acquired: {physx_iface is not None}")
@@ -118,7 +118,7 @@ def main():
     for child in stage.GetPseudoRoot().GetChildren():
         print(f" - {child.GetPath()}")
 
-    wait_for_condition(
+    _wait_for_condition(
         lambda: stage.GetPrimAtPath(ROBOT_PATH).IsValid(),
         timeout=5.0,
         update_fn=simulation_app.update,
@@ -170,4 +170,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()

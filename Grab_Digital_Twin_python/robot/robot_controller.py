@@ -234,13 +234,6 @@ class RobotController:
             )
             current_pos = dof_states["pos"][dof_index]
 
-            # For debugging
-            # if frames % 10 == 0:
-            #     unit = "rad" if is_angular else "m"
-            #     print(
-            #         f"Frame {frames}: DOF {dof_index} position = {current_pos} {unit}, Target = {target_position} {unit}"
-            #     )
-
             if is_angular:
                 target_position = (target_position + np.pi) % (2 * np.pi) - np.pi
                 current_pos = (current_pos + np.pi) % (2 * np.pi) - np.pi
@@ -276,7 +269,7 @@ class RobotController:
 
         return data
 
-    def get_colliding_prim(self) -> list[str]:
+    def _get_colliding_prim(self) -> list[str]:
         sim = get_physx_simulation_interface()
         contact_headers, _ = sim.get_contact_report()
 
@@ -293,7 +286,7 @@ class RobotController:
         return list(collided)
 
     def add_colliding_item(self):
-        for p in self.get_colliding_prim():
+        for p in self._get_colliding_prim():
             if not p.startswith(ENVIRONMENT_PATH) or not p.rsplit("/", 1)[
                 -1
             ].startswith("box_"):

@@ -81,7 +81,7 @@ class UDPScenario:
         self.command_queue.put(message)
         self.udp_message_count += 1
 
-    def parse_and_execute_command(self, message):
+    def _parse_and_execute_command(self, message):
         """Parse an incoming command and execute the corresponding handler."""
         self.executed_command_count += 1
         parts = [p for p in message.rstrip(":").strip().split(":") if p]
@@ -112,7 +112,7 @@ class UDPScenario:
             "reload": lambda p: self._reload_scene(),
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
-            "add_colliding_item": lambda p: self.add_colliding_item(),
+            "add_colliding_item": lambda p: self._robot_controller.add_colliding_item(),
         }
 
     def _toggle_overview_camera(self, start, parts=None):
@@ -146,9 +146,6 @@ class UDPScenario:
                 )
         else:
             print("[INFO] Overview camera is disabled.")
-
-    def add_colliding_item(self):
-        self._robot_controller.add_colliding_item()
 
     def _handle_tp_robot(self, parts):
         if len(parts) != 4:
@@ -243,7 +240,7 @@ class UDPScenario:
             stream=stream,
         )
 
-    def create_xform(
+    def _create_xform(
         self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
     ):
         stage = omni.usd.get_context().get_stage()
@@ -261,10 +258,10 @@ class UDPScenario:
         xformable.AddRotateXYZOp().Set(Gf.Vec3f(*rotation))
         xformable.AddScaleOp().Set(Gf.Vec3f(*scale))
 
-    def random_color(self):
+    def _random_color(self):
         return np.random.rand(3)
 
-    def create_boxes(
+    def _create_boxes(
         self, path, num_boxes, position=(1, 1, 1), stack_id=1, reverse=False
     ):
         boxes = []
@@ -294,7 +291,7 @@ class UDPScenario:
                 prim_path=prim_path,
                 position=np.array((x, y, z)),
                 scale=np.array((0.3, 0.4, 0.2)),
-                color=self.random_color(),
+                color=self._random_color(),
                 mass=14.0,
             )
 
@@ -303,7 +300,7 @@ class UDPScenario:
 
         return boxes
 
-    def create_bottles(
+    def _create_bottles(
         self,
         path,
         num_boxes,
@@ -312,7 +309,7 @@ class UDPScenario:
         reverse=False,
     ):
         stack_path = f"{path}/stack{stack_id}"
-        self.create_xform(stack_path, translate=(0, 0, 0))
+        self._create_xform(stack_path, translate=(0, 0, 0))
 
         module_dir = dirname(abspath(__file__))
         usd_path = abspath(
@@ -366,7 +363,7 @@ class UDPScenario:
             xform.ClearXformOpOrder()
             xform.AddTranslateOp().Set(Gf.Vec3d(x, y, z))
 
-            color = Gf.Vec3f(*self.random_color())
+            color = Gf.Vec3f(*self._random_color())
             gprim = UsdGeom.Gprim(prim)
             pv = gprim.CreateDisplayColorPrimvar(UsdGeomTokens.constant, 3)
             pv.Set([color])
@@ -379,7 +376,7 @@ class UDPScenario:
 
             self.boxes_paths.append(prim_path)
 
-    def create_pick_stack(
+    def _create_pick_stack(
         self,
         path,
         pallet_position=(0, 0, 0),
@@ -389,7 +386,7 @@ class UDPScenario:
         isBottles=False,
     ):
         stack_path = f"{path}/stack{stack_id}"
-        self.create_xform(stack_path, (0, 0, 0), (0, 0, 0), (1, 1, 1))
+        self._create_xform(stack_path, (0, 0, 0), (0, 0, 0), (1, 1, 1))
 
         module_dir = dirname(abspath(__file__))
         pallet_usd = abspath(
@@ -418,7 +415,7 @@ class UDPScenario:
             print(f"[ERROR] Failed to reference pallet at {pallet_prim_path}")
 
         if isBottles:
-            self.create_bottles(
+            self._create_bottles(
                 stack_path,
                 number_of_boxes,
                 pallet_position,
@@ -426,7 +423,7 @@ class UDPScenario:
                 reverse,
             )
         else:
-            self.create_boxes(
+            self._create_boxes(
                 stack_path,
                 number_of_boxes,
                 pallet_position,
@@ -434,7 +431,7 @@ class UDPScenario:
                 reverse,
             )
 
-    def load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
+    def _load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
         current_dir = dirname(abspath(__file__))
         usd_path = abspath(
             join(
@@ -458,8 +455,8 @@ class UDPScenario:
         else:
             print(f"Failed to load shelf at prim path: {SHELF_PATH}")
 
-    def start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
-        if self.port_in_use(port):
+    def _start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
+        if self._port_in_use(port):
             print(f"Port {port} is already in use. Skipping server start.")
             return
 
@@ -467,14 +464,14 @@ class UDPScenario:
         self.udp.port = port
         self.udp.start()
 
-    def port_in_use(self, port):
+    def _port_in_use(self, port):
         for conn in psutil.net_connections(kind="udp"):
             if conn.laddr.port == port:
                 return True
 
         return False
 
-    def update(self, step: float = 0.1):
+    def _update(self, step: float = 0.1):
         """Process the queued commands, broadcast joint data, and log performance."""
         start_time = time.time()
         self._process_command_queue()
@@ -488,7 +485,7 @@ class UDPScenario:
     def _process_command_queue(self):
         while not self.command_queue.empty():
             message = self.command_queue.get()
-            self.parse_and_execute_command(message)
+            self._parse_and_execute_command(message)
 
     def _broadcast_data(self):
         if not self.broadcast_stop_event.is_set():
@@ -533,7 +530,7 @@ class UDPScenario:
         if self.print_positions and (
             current_time - self.last_position_print_time >= 1.0
         ):
-            print("-----------------------------------------------------------------")
+            print("--------------------------------------------------------------")
             for name, dof_index, is_angular in self.axis_dofs:
                 self._robot_controller.print_joint_position_by_index(
                     dof_index, is_angular
@@ -549,7 +546,7 @@ class UDPScenario:
             self._robot_controller.camera_capture.capture_image("OverviewCamera")
             self.last_overview_capture_time = current_time
 
-    def print_box_position(self, box_path):
+    def _print_box_position(self, box_path):
         stage = omni.usd.get_context().get_stage()
         box_prim = stage.GetPrimAtPath(box_path)
         if not box_prim.IsValid():
@@ -563,14 +560,14 @@ class UDPScenario:
                 return
         print(f"No translation op found for box at {box_path}")
 
-    def stop_broadcasting(self):
+    def _stop_broadcasting(self):
         self.broadcast_stop_event.set()
         if self.broadcast_thread:
             self.broadcast_thread.join()
             self.broadcast_thread = None
         print("[UDPScenario] Broadcast thread stopped.")
 
-    def setup(self):
+    def _setup(self):
         """Set up the world, refresh robot controller handles, create scene objects, and start UDP server."""
         self._world = World()
         self._world.reset()
@@ -584,7 +581,7 @@ class UDPScenario:
             else:
                 self.axis_dofs.append((name, dof_index, is_angular))
 
-        self.create_pick_stack(
+        self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 0.072),
             number_of_boxes=19,
@@ -592,7 +589,7 @@ class UDPScenario:
             reverse=True,
             isBottles=False,
         )
-        self.create_pick_stack(
+        self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, -0.9, 0.072),
             number_of_boxes=20,
@@ -600,7 +597,7 @@ class UDPScenario:
             reverse=True,
             isBottles=False,
         )
-        self.create_pick_stack(
+        self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 0.072),
             number_of_boxes=15,
@@ -608,7 +605,7 @@ class UDPScenario:
             reverse=True,
             isBottles=True,
         )
-        self.create_pick_stack(
+        self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.0, 1.872),
             number_of_boxes=30,
@@ -616,7 +613,7 @@ class UDPScenario:
             reverse=True,
             isBottles=False,
         )
-        self.create_pick_stack(
+        self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, -0.9, 1.872),
             number_of_boxes=16,
@@ -624,7 +621,7 @@ class UDPScenario:
             reverse=True,
             isBottles=True,
         )
-        self.create_pick_stack(
+        self._create_pick_stack(
             ENVIRONMENT_PATH,
             pallet_position=(-1.4, 0.9, 1.872),
             number_of_boxes=16,
@@ -633,23 +630,23 @@ class UDPScenario:
             isBottles=True,
         )
 
-        self.load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
-        self.start_udp_server()
+        self._load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
+        self._start_udp_server()
 
-    def unload(self):
+    def _unload(self):
         """Tear down the current simulation: stop UDP, reset world, and remove scene objects."""
         self._did_run = False
 
         self.udp.stop()
 
-        self.stop_broadcasting()
+        self._stop_broadcasting()
 
         if self._world is not None:
             self._world.reset()
 
-        self.remove_scenario_specific_prims()
+        self._remove_scenario_specific_prims()
 
-    def remove_scenario_specific_prims(self):
+    def _remove_scenario_specific_prims(self):
         """Remove objects created by this scenario from the stage."""
         stage = omni.usd.get_context().get_stage()
 
@@ -664,12 +661,12 @@ class UDPScenario:
         """Reload the entire scene to mirror the headless runner startup process."""
         print("Reloading scene with UDP scenario...")
 
-        self.unload()
+        self._unload()
 
         create_new_stage()
         setup_scene(enable_cameras=self.allow_udp_capture)
 
-        self.setup()
+        self._setup()
         print("Scene reloaded and UDP scenario started.")
 
 
@@ -678,17 +675,17 @@ if __name__ == "__main__":
     scenario = UDPScenario(
         robot_controller, print_positions=True, print_performance_stats=True
     )
-    scenario.setup()
+    scenario._setup()
 
     try:
         while True:
-            scenario.update()
+            scenario._update()
             scenario._world.step(render=False)
             scenario._world.step(render=True)
 
             time.sleep(0.1)
 
     except KeyboardInterrupt:
-        scenario.stop_broadcasting()
+        scenario._stop_broadcasting()
         scenario.udp.stop()
         print("Exiting UDP scenario.")

@@ -164,8 +164,8 @@ class UIBuilder:
                     "Run Scenario",
                     "RUN",
                     "STOP",
-                    on_a_click_fn=self.start_scenario,
-                    on_b_click_fn=self.stop_scenario,
+                    on_a_click_fn=self._start_scenario,
+                    on_b_click_fn=self._stop_scenario,
                     physics_callback_fn=self._update_scenario,
                 )
                 self._scenario_state_btn.enabled = False
@@ -353,7 +353,7 @@ class UIBuilder:
         if self._scenario and self._scenario.update(step):
             self._scenario_state_btn.enabled = False
 
-    def start_scenario(self):
+    def _start_scenario(self):
         """Starts the selected scenario."""
         if self._scenario is None:
             print("No scenario selected! Click 'Select Scenario' first.")
@@ -362,7 +362,7 @@ class UIBuilder:
         print(f"Running scenario: {self._current_scenario_name}")
         self._timeline.play()
 
-    def stop_scenario(self):
+    def _stop_scenario(self):
         """
         This function is attached to the Run Scenario StateButton.
         This function was passed in as the on_b_click_fn argument.
