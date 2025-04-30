@@ -9,6 +9,7 @@ import cv2
 import json
 import struct
 import omni.usd
+import omni.replicator.core as rep
 import open3d as o3d
 from pxr import Gf
 import cv2
@@ -34,6 +35,7 @@ class CameraCapture:
         self.capture_counters = {}
         self.stereo_pairs = {}  # Stores registered stereo pairs
         self.last_capture_time = {}
+        self.annotators = {}  # camera_id -> rgb_annotator
 
         self.scenario_start = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         print("Camera Capture System Initialized at", self.scenario_start)
@@ -55,28 +57,61 @@ class CameraCapture:
 
         return camera_dir
 
-    def capture_image_array(self, camera_id):
+    def _capture_image_array(self, camera_id):
+        """
+        Captures the current RGB image array from a registered camera.
+
+        Parameters:
+        camera_id (str): Identifier for the camera.
+
+        Returns:
+        np.ndarray or None: A uint8 NumPy array representing the RGB image 
+        if successful, or None if an error occurs (e.g., camera not registered,
+        no frame available, or invalid frame data).
+        """
         if camera_id not in self.camera_registry:
             print(f"[ERROR] Camera {camera_id} not registered.")
             return None
 
-        frame = self.camera_registry[camera_id].get_current_frame()
-        if not frame or "rgba" not in frame:
-            print(f"[ERROR] No 'rgba' frame for {camera_id}")
+        render_product = self.camera_registry[camera_id]
+        render_product.hydra_texture.set_updates_enabled(True)
+        print(f"[INFO] Capturing image from {camera_id}...")
+        
+       # Get or create cached RGB annotator 
+        if camera_id not in self.annotators:
+           rgb_anno = rep.AnnotatorRegistry.get_annotator("rgb")
+           rgb_anno.attach(render_product)
+           self.annotators[camera_id] = rgb_anno
+           print(f"[INFO] RGB annotator attached and cached for {camera_id}")
+        else:
+          rgb_anno = self.annotators[camera_id]
+          print(f"[INFO] Using cached RGB annotator for {camera_id}")
+
+        try:
+            # Get the current data from the render product
+            rgba_data = rgb_anno.get_data()
+
+            print(f"RGBA data shape for {camera_id}: {rgba_data}")
+            
+
+            if rgba_data is None or rgba_data.size == 0:
+                print(f"[ERROR] Empty RGBA data from {camera_id}")
+                return None
+
+            # Convert to RGB if needed
+            rgb_array = rgba_data[:, :, :3] if rgba_data.shape[2] == 4 else rgba_data
+            print(rgb_array)
+
+            if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
+                print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
+                return None
+
+            return rgb_array.astype(np.uint8)
+
+        except Exception as e:
+            print(f"[ERROR] Failed to get image from {camera_id}: {e}")
             return None
-
-        rgba = frame["rgba"]
-        if rgba is None or rgba.size == 0:
-            print(f"[ERROR] Empty RGBA data from {camera_id}")
-            return None
-
-        rgb_array = rgba[:, :, :3]
-        if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
-            print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
-            return None
-
-        return rgb_array.astype(np.uint8)
-
+        
     def _generate_capture_metadata(self, camera_id, rgb_array):
         utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
         local_now = datetime.now().astimezone()
@@ -98,6 +133,14 @@ class CameraCapture:
         return filename_base, metadata
 
     def _save_image(self, camera_id, rgb_array):
+        """
+        Save the captured image to disk and return the file path.
+        Parameters:
+        camera_id (str): Identifier for the camera.
+        rgb_array (np.ndarray): The RGB image array to save.
+        Returns: 
+        str: The path to the saved image file.
+        """           
         try:
             image = Image.fromarray(rgb_array, mode="RGB")
             filename_base, metadata = self._generate_capture_metadata(
@@ -127,13 +170,30 @@ class CameraCapture:
             return None
 
     def capture_image(self, camera_id):
-        rgb_array = self.capture_image_array(camera_id)
+        """
+        Capture an image from the specified camera and save it to disk.
+        Parameters:
+        camera_id (str): Identifier for the camera.
+        Returns:        
+        str: The path to the saved image file, or None if capture failed.
+        """
+        rgb_array = self._capture_image_array(camera_id)
         if rgb_array is None:
             return None
         return self._save_image(camera_id, rgb_array)
 
     def capture_and_stream(self, camera_id, udp_controller, host, port):
-        rgb_array = self.capture_image_array(camera_id)
+        """
+        Capture an image from the specified camera, save it to disk, and stream it over UDP.
+        Parameters:
+        camera_id (str): Identifier for the camera.
+        udp_controller (object): UDP controller for sending the image.
+        host (str): Host address for UDP streaming.
+        port (int): Port number for UDP streaming.
+        Returns:
+        str: The path to the saved image file, or None if capture failed.
+        """
+        rgb_array = self._capture_image_array(camera_id)
         if rgb_array is None:
             print(f"[ERROR] Could not capture image from {camera_id}")
             return None
@@ -159,6 +219,14 @@ class CameraCapture:
         return save_path
 
     def capture_timed(self, camera_id, interval_seconds=1.0):
+        """
+        Capture an image from the specified camera at regular intervals.
+        Parameters:
+        camera_id (str): Identifier for the camera.
+        interval_seconds (float): Time interval between captures in seconds.
+        Returns:
+        str: The path to the saved image file, or None if capture failed.
+        """
         current_time = time.time()
         if camera_id not in self.last_capture_time:
             self.last_capture_time[camera_id] = 0
@@ -170,12 +238,24 @@ class CameraCapture:
         return None
 
     def capture_all_cameras(self):
+        """
+        Capture images from all registered cameras and save them to disk.
+        Returns:
+        dict: A dictionary mapping camera IDs to the paths of saved images.
+        """
         results = {}
         for camera_id in self.camera_registry:
             results[camera_id] = self.capture_image(camera_id)
         return results
 
     def capture_all_timed(self, interval_seconds=2.0):
+        """
+        Capture images from all registered cameras at regular intervals.
+        Parameters:     
+        interval_seconds (float): Time interval between captures in seconds.
+        Returns:    
+        dict: A dictionary mapping camera IDs to the paths of saved images.
+        """
         results = {}
         for camera_id in self.camera_registry:
             result = self.capture_timed(camera_id, interval_seconds)
@@ -184,6 +264,9 @@ class CameraCapture:
         return results
 
     def get_registered_cameras(self):
+        """
+        Returns a list of registered camera IDs.
+        """
         print(
             f"Registered Cameras in camera Capture: {list(self.camera_registry.keys())}"
         )

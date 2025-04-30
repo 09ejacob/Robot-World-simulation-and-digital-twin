@@ -71,7 +71,7 @@ def create_camera(resolutions=None):
     
     # Register cameras with optional resolution changes
     register_existing_camera(BASE_CAMERA_PATH, 
-                            resolutions.get(BASE_CAMERA_PATH),add_3d_features=True)
+                            resolutions.get(BASE_CAMERA_PATH))
     register_existing_camera(BOX_CAMERA_1, 
                             resolutions.get(BOX_CAMERA_1),add_3d_features=True)
     register_existing_camera(BOX_CAMERA_2, 
