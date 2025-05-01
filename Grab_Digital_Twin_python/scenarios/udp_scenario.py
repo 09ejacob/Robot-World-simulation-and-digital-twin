@@ -543,7 +543,7 @@ class UDPScenario:
 
         return False
 
-    def _update(self, step: float = 0.1):
+    def update(self, step: float = 0.1):
         """Process the queued commands, broadcast joint and force data, and log performance and print positions, capture overview camera if enabled."""
         start_time = time.time()
         self._process_command_queue()
@@ -646,7 +646,7 @@ class UDPScenario:
             self.broadcast_thread = None
         print("[UDPScenario] Broadcast thread stopped.")
 
-    def _setup(self):
+    def setup(self):
         """Set up the world, refresh robot controller handles, create scene objects, and start UDP server."""
         self._world = World()
         self._world.reset()
@@ -745,7 +745,7 @@ class UDPScenario:
         create_new_stage()
         setup_scene(enable_cameras=self.allow_udp_capture)
 
-        self._setup()
+        self.setup()
         print("Scene reloaded and UDP scenario started.")
 
 
@@ -754,11 +754,11 @@ if __name__ == "__main__":
     scenario = UDPScenario(
         robot_controller, print_positions=True, print_performance_stats=True
     )
-    scenario._setup()
+    scenario.setup()
 
     try:
         while True:
-            scenario._update()
+            scenario.update()
             scenario._world.step(render=False)
             scenario._world.step(render=True)
 
