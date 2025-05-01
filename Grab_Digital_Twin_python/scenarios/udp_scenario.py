@@ -294,7 +294,14 @@ class UDPScenario:
         return np.random.rand(3)
 
     def _create_boxes(
-        self, path, num_boxes, position=(1, 1, 1), stack_id=1, reverse=False
+        self,
+        path,
+        num_boxes,
+        position=(1, 1, 1),
+        stack_id=1,
+        reverse=False,
+        box_size: tuple = (0.3, 0.4, 0.2),
+        mass=1,
     ):
         """
         Create a stack of simple DynamicCuboid boxes.
@@ -306,37 +313,45 @@ class UDPScenario:
             stack_id (int): identifier which is used in each box's prim name.
             reverse (bool): if this is True, flip the x-ordering of the stack.
         """
+        dx, dy, dz = box_size
+
+        pallet_length = 1.2
+        pallet_width = 0.8
+        pallet_height = 0.144
+
+        base_x, base_y, pallet_center_z = position
+
+        num_cols = max(1, int(pallet_length // dx))
+        num_rows = max(1, int(pallet_width // dy))
+        layer_capacity = num_cols * num_rows
+
+        start_x = base_x - (pallet_length / 2) + (dx / 2)
+        start_y = base_y - (pallet_width / 2) + (dy / 2)
+
+        base_z = pallet_center_z + (pallet_height / 2) + (dz / 2)
+
         boxes = []
-
-        base_x, base_y, base_z = position
-        start_x = base_x - 0.45
-        x_inc = 0.3
-        row_y = {0: base_y - 0.2, 1: base_y + 0.2}
-        base_z = base_z + 0.072 + 0.1
-        z_inc = 0.2
-        max_col = 3
-
         for i in range(num_boxes):
-            layer = i // 8
-            index_in_layer = i % 8
+            layer = i // layer_capacity
+            index_in_layer = i % layer_capacity
+            col = index_in_layer // num_rows
+            row = index_in_layer % num_rows
 
-            column = index_in_layer // 2
-            row = index_in_layer % 2
-
-            x = start_x + (column * x_inc if reverse else (max_col - column) * x_inc)
-            y = row_y[row]
-            z = base_z + layer * z_inc
+            if reverse:
+                x = start_x + col * dx
+            else:
+                x = start_x + (num_cols - 1 - col) * dx
+            y = start_y + row * dy
+            z = base_z + layer * dz
 
             prim_path = f"{path}/box_{stack_id}_{i + 1}"
-
             box = DynamicCuboid(
                 prim_path=prim_path,
                 position=np.array((x, y, z)),
-                scale=np.array((0.3, 0.4, 0.2)),
+                scale=np.array((dx, dy, dz)),
                 color=self._random_color(),
-                mass=14.0,
+                mass=mass,
             )
-
             boxes.append(box)
             self.boxes_paths.append(prim_path)
 
@@ -349,6 +364,7 @@ class UDPScenario:
         position=(2.0, 0.0, 0.072),
         stack_id=1,
         reverse=False,
+        mass=1,
     ):
         """
         Create a stack of simple with BottlePack.usd objects.
@@ -424,7 +440,7 @@ class UDPScenario:
             UsdPhysics.CollisionAPI.Apply(prim)
             mass_api = UsdPhysics.MassAPI.Apply(prim)
             mass_attr = mass_api.GetMassAttr() or mass_api.CreateMassAttr()
-            mass_attr.Set(9.0)
+            mass_attr.Set(mass)
 
             self.boxes_paths.append(prim_path)
 
@@ -436,6 +452,8 @@ class UDPScenario:
         stack_id=1,
         reverse=False,
         isBottles=False,
+        box_size=(1, 1, 1),
+        mass=1,
     ):
         """
         Create a full pick stack. Use Euro_Pallet.usd as the pallet and fill the stack with boxes or bottles.
@@ -484,6 +502,7 @@ class UDPScenario:
                 pallet_position,
                 stack_id,
                 reverse,
+                mass,
             )
         else:
             self._create_boxes(
@@ -492,6 +511,8 @@ class UDPScenario:
                 pallet_position,
                 stack_id,
                 reverse,
+                box_size,
+                mass,
             )
 
     def _load_shelf_usd(self, position=(0, 0, 0), scale=(1, 1, 1)):
@@ -667,6 +688,8 @@ class UDPScenario:
             stack_id=1,
             reverse=True,
             isBottles=False,
+            box_size=(0.3, 0.4, 0.2),
+            mass=14.0,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -675,6 +698,8 @@ class UDPScenario:
             stack_id=2,
             reverse=True,
             isBottles=False,
+            box_size=(0.3, 0.4, 0.2),
+            mass=14.0,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -683,6 +708,7 @@ class UDPScenario:
             stack_id=3,
             reverse=True,
             isBottles=True,
+            mass=9.0,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -691,6 +717,8 @@ class UDPScenario:
             stack_id=4,
             reverse=True,
             isBottles=False,
+            box_size=(0.3, 0.4, 0.2),
+            mass=14.0,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -699,6 +727,7 @@ class UDPScenario:
             stack_id=5,
             reverse=True,
             isBottles=True,
+            mass=9.0,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -707,12 +736,13 @@ class UDPScenario:
             stack_id=6,
             reverse=True,
             isBottles=True,
+            mass=9.0,
         )
 
         self._load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
         self._start_udp_server()
 
-    def _unload(self):
+    def unload(self):
         """Tear down the current simulation: stop UDP, reset world, and remove scene objects."""
         self._did_run = False
 
@@ -740,7 +770,7 @@ class UDPScenario:
         """Reload the entire scene to mirror the headless runner startup process."""
         print("Reloading scene with UDP scenario...")
 
-        self._unload()
+        self.unload()
 
         create_new_stage()
         setup_scene(enable_cameras=self.allow_udp_capture)
