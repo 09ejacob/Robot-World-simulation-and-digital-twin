@@ -70,6 +70,7 @@ class Extension(omni.ext.IExt):
         self._timeline = omni.timeline.get_timeline_interface()
 
     def on_shutdown(self):
+        """Called when the extension shuts down. Stops scenarios, removes menu items, and cleans up the UI."""
         scenario = self.ui_builder._scenario
 
         if scenario is not None and hasattr(scenario, "udp"):
@@ -90,6 +91,7 @@ class Extension(omni.ext.IExt):
         gc.collect()
 
     def _on_window(self, visible):
+        """Toggle subscriptions and UI: show = subscribe & build, hide = unsubscribe & clean up."""
         if self._window.visible:
             # Subscribe to Stage and Timeline Events
             self._usd_context = omni.usd.get_context()
@@ -110,6 +112,7 @@ class Extension(omni.ext.IExt):
             self.ui_builder.cleanup()
 
     def _build_ui(self):
+        """Build the UI layout inside the extension window."""
         with self._window.frame:
             with ui.VStack(spacing=5, height=0):
                 self._build_extension_ui()
@@ -134,10 +137,12 @@ class Extension(omni.ext.IExt):
     #################################################################
 
     def _menu_callback(self):
+        """Toolbar button to toggle the extension window's visibility."""
         self._window.visible = not self._window.visible
         self.ui_builder.on_menu_callback()
 
     def _on_timeline_event(self, event):
+        """Start physics steps on play, stop on stop, and pass the event to UIBuilder."""
         if event.type == int(omni.timeline.TimelineEventType.PLAY):
             if not self._physx_subscription:
                 self._physx_subscription = (
@@ -151,9 +156,11 @@ class Extension(omni.ext.IExt):
         self.ui_builder.on_timeline_event(event)
 
     def _on_physics_step(self, step):
+        """On each physics step, forward the update to the UIBuilder."""
         self.ui_builder.on_physics_step(step)
 
     def _on_stage_event(self, event):
+        """On stage open/close, reset subscriptions and pass the event to UIBuilder."""
         if event.type == int(StageEventType.OPENED) or event.type == int(
             StageEventType.CLOSED
         ):
@@ -164,5 +171,5 @@ class Extension(omni.ext.IExt):
         self.ui_builder.on_stage_event(event)
 
     def _build_extension_ui(self):
-        # Call user function for building UI
+        """Call UIBuilder.build_ui() to create the UI controls."""
         self.ui_builder.build_ui()

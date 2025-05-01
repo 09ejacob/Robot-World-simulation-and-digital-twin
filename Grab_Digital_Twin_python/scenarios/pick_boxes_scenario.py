@@ -26,8 +26,9 @@ class PickBoxesScenario:
 
     def setup(self):
         """
-        Called once after 'Load' (or _setup_scenario in UIBuilder) to do any
-        scenario-specific initialization.
+        Prepare the simulation and add scenario-specific prims.
+
+        Creates a pallet and three pick-boxes.
         """
         self._world = World()
         self._world.reset()
@@ -85,6 +86,7 @@ class PickBoxesScenario:
                 stage.RemovePrim(prim_path)
 
     def update(self, step: float):
+        """Update the scenario by one simulation step."""
         try:
             next(self._scenario_generator)
             return False  # Scenario is still running
@@ -93,6 +95,10 @@ class PickBoxesScenario:
             return True
 
     def _run_simulation(self):
+        """
+        Internal generator method that runs the robot through a hard-coded
+        pick and stack sequence where it will move specific axes to achieve this.
+        """
         # Find which DOF index corresponds to prismatic or revolute joint
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH

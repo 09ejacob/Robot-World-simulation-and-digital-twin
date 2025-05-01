@@ -21,6 +21,11 @@ class StackBoxScenario:
         self._did_run = False
 
     def setup(self):
+        """
+        Prepare the simulation and add scenario-specific prims.
+
+        Creates two pick-boxes.
+        """
         self._world = World()
         self._world.reset()
         self._did_run = False
@@ -57,6 +62,7 @@ class StackBoxScenario:
                 print(f"Removed prim at: {prim_path}")
 
     def update(self, step: float):
+        """Update the scenario by one simulation step."""
         try:
             next(self._scenario_generator)
             return False  # Scenario is still running
@@ -64,6 +70,10 @@ class StackBoxScenario:
             return True  # Scenario finished
 
     def _run_simulation(self):
+        """
+        Internal generator method that runs the robot through a hard-coded
+        pick and stack sequence where it will move specific axes to achieve this.
+        """
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH
         )
