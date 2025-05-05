@@ -93,10 +93,10 @@ def create_camera(resolutions=None):
     # Register cameras with optional resolution changes
     register_existing_camera(BASE_CAMERA_PATH, resolutions.get(BASE_CAMERA_PATH))
     register_existing_camera(
-        BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=True
+        BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=False
     )
     register_existing_camera(
-        BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=True
+        BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=False
     )
 
 
@@ -167,7 +167,7 @@ def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
             OVERVIEW_CAMERA: (1280, 820),  # Not sent over UDP
         }
         create_camera(custom_resolutions)
-        setup_stereo_cameras()
+        # setup_stereo_cameras()
 
     create_additional_joints()
     _add_light()
