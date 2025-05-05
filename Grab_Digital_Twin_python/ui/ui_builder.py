@@ -251,6 +251,13 @@ class UIBuilder:
                     clicked_fn=self._capture_from_all_cameras,
                 )
 
+                ui.Separator()
+                ui.Label("Stereo Camera Controls:")
+                ui.Button(
+                    "Test Stereo Cameras",
+                    clicked_fn=self._test_stereo_cameras
+                )
+
         self.frames.append(camera_controls_frame)
         self.frames.append(world_controls_frame)
         self.frames.append(scenario_frame)
@@ -395,6 +402,11 @@ class UIBuilder:
         image_path = self._robot_controller.capture_cameras(camera_id)
         print(f"Captured image from {camera_id}: {image_path}")
 
+    def _capture_3d_from_camera(self, camera_id):
+        """Capture an image from the specified camera."""
+        image_path = self._camera_capture.capture_pointcloud(camera_id)
+        print(f"Captured image from {camera_id}: {image_path}")
+
     def _capture_from_all_cameras(self):
         """Capture images from all registered cameras."""
         image_paths = self._robot_controller.capture_cameras()
@@ -438,3 +450,8 @@ class UIBuilder:
             self._capture_button.destroy()
             del self._capture_button
             print("Removed capture button")
+
+    def _test_stereo_cameras(self):
+        """Test the stereo camera setup."""
+        self._robot_controller.capture_stereo_pointcloud()
+    

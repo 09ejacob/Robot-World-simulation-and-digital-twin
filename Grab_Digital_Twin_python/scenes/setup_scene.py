@@ -7,6 +7,7 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from isaacsim.core.prims import SingleXFormPrim
 from .camera import register_existing_camera
+from .camera import register_stereo_pair
 
 
 from ..global_variables import (
@@ -78,22 +79,33 @@ def create_additional_joints():
     )
 
 
-def create_camera(resolutions=None):
-    """Register existing cameras for image capture or streaming."""
-
+    
+def create_camera(resolutions=None): 
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
-
+    
     # Register cameras with optional resolution changes
-    register_existing_camera(
-        BASE_CAMERA_PATH, resolution=resolutions.get(BASE_CAMERA_PATH)
+    register_existing_camera(BASE_CAMERA_PATH, 
+                            resolutions.get(BASE_CAMERA_PATH))
+    register_existing_camera(BOX_CAMERA_1, 
+                            resolutions.get(BOX_CAMERA_1),add_3d_features=True)
+    register_existing_camera(BOX_CAMERA_2, 
+                            resolutions.get(BOX_CAMERA_2),add_3d_features=True)
+
+
+
+def setup_stereo_cameras():
+    """Setup stereo camera configuration using existing box cameras."""
+    # Register the stereo pair
+    stereo_pair = register_stereo_pair(
+        left_prim_path=BOX_CAMERA_2,
+        right_prim_path=BOX_CAMERA_1,
+        pair_id="main_stereo" 
     )
-    register_existing_camera(BOX_CAMERA_1, resolution=resolutions.get(BOX_CAMERA_1))
-    register_existing_camera(BOX_CAMERA_2, resolution=resolutions.get(BOX_CAMERA_2))
-    register_existing_camera(
-        OVERVIEW_CAMERA, resolution=resolutions.get(OVERVIEW_CAMERA)
-    )
+    return stereo_pair
+
+    
 
 
 def load_grab_usd(grab_usd):
@@ -154,6 +166,9 @@ def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
             OVERVIEW_CAMERA: (1280, 820),  # Not sent over UDP
         }
         create_camera(custom_resolutions)
+        setup_stereo_cameras()
 
+        
     create_additional_joints()
-    _add_light()
+    _add_light() 
+    
