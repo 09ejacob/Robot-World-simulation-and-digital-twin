@@ -124,32 +124,25 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
         return None
 
     try:
-            # Create render product if resolution is specified
-        if resolution:
-            try:
-                render_product = rep.create.render_product(prim_path, resolution)
-                logger.info(f"Render product created for {prim_path} with resolution {resolution}")
-            except Exception as e:
-                logger.error(f"Failed to create render product: {e}")
+        # Create Camera object from existing prim
+        camera = Camera(prim_path=prim_path)
+        camera.set_frequency(30)
+        camera.initialize()
+        if add_3d_features:
+            camera.add_distance_to_image_plane_to_frame()
+            camera.add_pointcloud_to_frame(include_unlabelled=True)
 
-    
-        # Attach 3D features if requested
-        if add_3d_features and render_product:
-            try:
-                pointcloud_anno = rep.annotators.get("pointcloud")
-                pointcloud_anno.attach(render_product)
-                logger.info(f"Pointcloud annotator attached to {prim_path}")
-                
-                depth_anno = rep.annotators.get("distance_to_image_plane")
-                depth_anno.attach(render_product)
-                logger.info(f"Distance-to-image-plane annotator attached to {prim_path}")
-            except Exception as e:
-                logger.error(f"Failed to attach annotators: {e}")
-     
-        # Register camera with the capture system
-        camera_capture.register_camera(camera_id, render_product)
-        render_product.hydra_texture.set_updates_enabled(False)
-        logger.info(f"Camera {prim_path} registered successfully")
+        print(f"Camera initialized at {prim_path}")
+
+        if resolution is not None:
+            camera.set_resolution(resolution)
+        print(f"Camera resolution updated to {resolution}")
+
+        # Register with camera capture system
+        camera_capture.register_camera(camera_id, camera)
+
+        print(f"Successfully registered camera: {camera_id}")
+        return camera
         
 
     except Exception as e:
@@ -206,7 +199,7 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     camera_capture.stereo_pairs[pair_id] = stereo_pair
     
 
-    print(f"✅ Successfully registered stereo pair '{pair_id}' with baseline , stereo pair: {stereo_pair}")
+    print(f"✅ Successfully registered stereo pair '{pair_id}' , stereo pair: {stereo_pair}")
     return stereo_pair
 
 

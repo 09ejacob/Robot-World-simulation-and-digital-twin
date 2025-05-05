@@ -8,8 +8,6 @@ import numpy as np
 import cv2
 import json
 import struct
-import omni.usd
-import omni.replicator.core as rep
 import open3d as o3d
 from pxr import Gf
 import cv2
@@ -23,6 +21,7 @@ class CameraCapture:
     """
     _instance = None
 
+
     def __new__(cls):
          if cls._instance is None:
              cls._instance = super(CameraCapture, cls).__new__(cls)
@@ -35,7 +34,6 @@ class CameraCapture:
         self.capture_counters = {}
         self.stereo_pairs = {}  # Stores registered stereo pairs
         self.last_capture_time = {}
-        self.annotators = {}  # camera_id -> rgb_annotator
 
         self.scenario_start = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         print("Camera Capture System Initialized at", self.scenario_start)
@@ -73,44 +71,22 @@ class CameraCapture:
             print(f"[ERROR] Camera {camera_id} not registered.")
             return None
 
-        render_product = self.camera_registry[camera_id]
-        render_product.hydra_texture.set_updates_enabled(True)
-        print(f"[INFO] Capturing image from {camera_id}...")
-        
-       # Get or create cached RGB annotator 
-        if camera_id not in self.annotators:
-           rgb_anno = rep.AnnotatorRegistry.get_annotator("rgb")
-           rgb_anno.attach(render_product)
-           self.annotators[camera_id] = rgb_anno
-           print(f"[INFO] RGB annotator attached and cached for {camera_id}")
-        else:
-          rgb_anno = self.annotators[camera_id]
-          print(f"[INFO] Using cached RGB annotator for {camera_id}")
-
-        try:
-            # Get the current data from the render product
-            rgba_data = rgb_anno.get_data()
-
-            print(f"RGBA data shape for {camera_id}: {rgba_data}")
-            
-
-            if rgba_data is None or rgba_data.size == 0:
-                print(f"[ERROR] Empty RGBA data from {camera_id}")
-                return None
-
-            # Convert to RGB if needed
-            rgb_array = rgba_data[:, :, :3] if rgba_data.shape[2] == 4 else rgba_data
-            print(rgb_array)
-
-            if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
-                print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
-                return None
-
-            return rgb_array.astype(np.uint8)
-
-        except Exception as e:
-            print(f"[ERROR] Failed to get image from {camera_id}: {e}")
+        frame = self.camera_registry[camera_id].get_current_frame()
+        if not frame or "rgba" not in frame:
+            print(f"[ERROR] No 'rgba' frame for {camera_id}")
             return None
+
+        rgba = frame["rgba"]
+        if rgba is None or rgba.size == 0:
+            print(f"[ERROR] Empty RGBA data from {camera_id}")
+            return None
+
+        rgb_array = rgba[:, :, :3]
+        if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
+            print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
+            return None
+
+        return rgb_array.astype(np.uint8)
         
     def _generate_capture_metadata(self, camera_id, rgb_array):
         utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -344,84 +320,53 @@ class CameraCapture:
     
         point_normals = frame["pointcloud"]["pointNormals"]  # Normal vectors
 
-        # After extracting components
-        if point_colors is not None:
-            print(f"Color data shape: {np.array(point_colors).shape}")
-         # If it's a 2D array, it might be an image
+        return point_colors, point_normals, pointcloud_data
+
     
-        if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            counter = self.capture_counters[camera_id]
-            filename = os.path.join(
-            self.base_save_dir,
-            camera_id,
-            "pointclouds",
-            f"{camera_id}_pointcloud_{timestamp}_{counter:04d}.npz"
-           )
-            self.capture_counters[camera_id] = counter + 1
-
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-    # Save data
-        try:
-            np.savez_compressed(
-            filename,
-            points=pointcloud_data,
-            colors=point_colors,
-            normals=point_normals if point_normals.size > 0 else None
-        )
-            print(f"✅ Saved to {filename}")
-            return filename
-        except Exception as e:
-               print(f"❌ Save failed: {e}")
-        return None
-
-
-    def capture_stereo_pointcloud_pair(self, pair_id, pair_name=None):
+    def save_stereo_pointcloud_pair(self, pair_id, pair_name=None):
         """
-        Capture synchronized stereo pair and save to timestamped directory.
+        Capture both left/right, then save them together
 
-        Args:
-            pair_id (str): Registered stereo pair ID
-            pair_name (str): Optional custom directory name
-
-        Returns:
-            dict: Paths to saved NPZ files and directory
+        Returns dict with file paths or None on failure.
         """
-        print(f"\n🔄 Capturing stereo pair {pair_id}...")
-
+        print(f"\n🔄 Capturing stereo pair {pair_id}…")
         if pair_id not in self.stereo_pairs:
-            print(f"❌ Pair {pair_id} not registered")
+            print(f"❌ Pair {pair_id} not registered.")
             return None
 
-        # Directory setup
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        pair_name = pair_name or f"{pair_id}_{timestamp}"
-        stereo_dir = os.path.join(self.base_save_dir, "stereo_pairs", pair_name)
-        os.makedirs(stereo_dir, exist_ok=True)
+        left_id, right_id = (
+            self.stereo_pairs[pair_id]["left"],
+            self.stereo_pairs[pair_id]["right"]
+        )
 
-        # Camera IDs
-        left_id = self.stereo_pairs[pair_id]["left"]
-        right_id = self.stereo_pairs[pair_id]["right"]
+        # Grab raw data
+        left_data  = self.capture_pointcloud(left_id)
+        right_data = self.capture_pointcloud(right_id)
+        if left_data is None or right_data is None:
+            print("⚠️ One or both captures failed; aborting save.")
+            return None
 
-        # Capture both cameras
-        results = {
-            "left_npz": self.capture_pointcloud(
-                left_id,
-                filename=os.path.join(stereo_dir, f"{left_id}.npz")
-            ),
-            "right_npz": self.capture_pointcloud(
-                right_id,
-                filename=os.path.join(stereo_dir, f"{right_id}.npz")
-            ),
-            "pair_dir": stereo_dir
-        }
+        # Timestamped folder
+        ts        = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        dir_name  = pair_name or f"{pair_id}_{ts}"
+        out_dir   = os.path.join(self.base_save_dir, "stereo_pairs", dir_name)
+        os.makedirs(out_dir, exist_ok=True)
 
-        if all(results.values()):
-            print(f"✅ Stereo pair saved to {stereo_dir}")
-        else:
-            print("⚠️ Partial capture - check individual cameras")
+        # Save each
+        left_pts, left_cols, left_norms   = left_data
+        right_pts, right_cols, right_norms = right_data
 
-        return results
+        left_xyzrgb  = np.hstack([left_pts,  left_cols])
+        right_xyzrgb = np.hstack([right_pts, right_cols])
 
-  
+        fn_left  = os.path.join(out_dir, f"{left_id}.npy")
+        fn_right = os.path.join(out_dir, f"{right_id}.npy")
+
+        try:
+            np.save(fn_left, left_xyzrgb)
+            np.save(fn_right, right_xyzrgb)
+            print(f"✅ Saved stereo pair to {out_dir}")
+            return {"left_npy": fn_left, "right_npy": fn_right, "pair_dir": out_dir}
+        except Exception as e:
+            print(f"❌ Error saving stereo pair: {e}")
+            return None

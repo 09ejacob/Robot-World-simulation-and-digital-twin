@@ -355,7 +355,7 @@ class RobotController:
             str: Path to the saved point cloud file, or None if capture failed
         """
         # Capture the point cloud
-        result = self.camera_capture.capture_stereo_pointcloud_pair(stereo_pair)
+        result = self.camera_capture.save_stereo_pointcloud_pair(stereo_pair)
         return result
 
 
