@@ -78,9 +78,14 @@ def create_additional_joints():
         None,
     )
 
-
     
 def create_camera(resolutions=None): 
+    """
+    Create cameras in the scene and register them with the camera capture system.
+    Args:       
+        resolutions (dict): Dictionary of camera prim paths and their respective resolutions.
+    """
+
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
