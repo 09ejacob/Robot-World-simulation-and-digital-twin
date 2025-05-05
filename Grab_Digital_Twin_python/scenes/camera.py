@@ -126,7 +126,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     try:
         # Create Camera object from existing prim
         camera = Camera(prim_path=prim_path)
-        camera.set_frequency(30)
+        camera.set_frequency(15)
         camera.initialize()
         if add_3d_features:
             camera.add_distance_to_image_plane_to_frame()
@@ -140,6 +140,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
 
         # Register with camera capture system
         camera_capture.register_camera(camera_id, camera)
+        camera.pause()
 
         print(f"Successfully registered camera: {camera_id}")
         return camera
