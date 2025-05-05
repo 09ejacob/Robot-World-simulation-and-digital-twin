@@ -7,7 +7,6 @@ import numpy as np
 import cv2
 import json
 import struct
-import cv2
 
 
 class CameraCapture:

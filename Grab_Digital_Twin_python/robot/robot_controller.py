@@ -6,10 +6,8 @@ import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control
 from pxr import UsdGeom
 from pxr import Gf
-from omni.isaac.core.articulations import ArticulationView
 from isaacsim.sensors.physics import ContactSensor
 from omni.physx import get_physx_simulation_interface
-from omni.physx.bindings._physx import IPhysxSimulation
 from omni.physx.scripts.physicsUtils import PhysicsSchemaTools
 import omni.kit.commands
 

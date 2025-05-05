@@ -1,14 +1,8 @@
 import numpy as np
 import isaacsim.core.utils.numpy.rotations as rot_utils
 import omni.usd
-from pxr import Sdf
 from isaacsim.sensors.camera import Camera
-import omni.replicator.core as rep
-from pxr import UsdGeom
-from pxr import UsdPhysics, PhysxSchema
-from pxr import UsdRender
-import logging as logger
-from omni.replicator.core.scripts.utils import viewport_manager
+from pxr import UsdGeom, UsdPhysics, PhysxSchema
 from ..camera_capture import CameraCapture
 from ..global_variables import CAMERA_PATH
 
