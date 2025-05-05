@@ -392,9 +392,7 @@ class RobotController:
 
         return results
 
-    
-    
-    def capture_stereo_pointcloud(self,stereo_pair="main_stereo"):
+    def capture_stereo_pointcloud(self, stereo_pair="main_stereo"):
         """
         Capture a stereo point cloud from the camera pair
 
@@ -407,7 +405,6 @@ class RobotController:
         # Capture the point cloud
         result = self.camera_capture.save_stereo_pointcloud_pair(stereo_pair)
         return result
-
 
     def generate_video(self, fps):
         """Convert previously captured frames into a video at a given framerate."""

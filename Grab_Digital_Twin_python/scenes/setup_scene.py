@@ -78,39 +78,35 @@ def create_additional_joints():
         None,
     )
 
-    
-def create_camera(resolutions=None): 
+
+def create_camera(resolutions=None):
     """
     Create cameras in the scene and register them with the camera capture system.
-    Args:       
+    Args:
         resolutions (dict): Dictionary of camera prim paths and their respective resolutions.
     """
 
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
-    
-    # Register cameras with optional resolution changes
-    register_existing_camera(BASE_CAMERA_PATH, 
-                            resolutions.get(BASE_CAMERA_PATH))
-    register_existing_camera(BOX_CAMERA_1, 
-                            resolutions.get(BOX_CAMERA_1),add_3d_features=True)
-    register_existing_camera(BOX_CAMERA_2, 
-                            resolutions.get(BOX_CAMERA_2),add_3d_features=True)
 
+    # Register cameras with optional resolution changes
+    register_existing_camera(BASE_CAMERA_PATH, resolutions.get(BASE_CAMERA_PATH))
+    register_existing_camera(
+        BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=True
+    )
+    register_existing_camera(
+        BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=True
+    )
 
 
 def setup_stereo_cameras():
     """Setup stereo camera configuration using existing box cameras."""
     # Register the stereo pair
     stereo_pair = register_stereo_pair(
-        left_prim_path=BOX_CAMERA_2,
-        right_prim_path=BOX_CAMERA_1,
-        pair_id="main_stereo" 
+        left_prim_path=BOX_CAMERA_2, right_prim_path=BOX_CAMERA_1, pair_id="main_stereo"
     )
     return stereo_pair
-
-    
 
 
 def load_grab_usd(grab_usd):
@@ -173,7 +169,5 @@ def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
         create_camera(custom_resolutions)
         setup_stereo_cameras()
 
-        
     create_additional_joints()
-    _add_light() 
-    
+    _add_light()

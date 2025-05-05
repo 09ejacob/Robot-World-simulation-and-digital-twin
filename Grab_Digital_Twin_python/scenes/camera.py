@@ -26,9 +26,9 @@ def setup_camera(
     horizontal_aperture=20,
 ):
     """
-    Setup a camera in the scene with the specified parameters.  
+    Setup a camera in the scene with the specified parameters.
     This function initializes the camera and registers it with the camera capture system.
-    It also applies physics properties to the camera and sets its render product.   
+    It also applies physics properties to the camera and sets its render product.
     Args:
         prim_path (str): Full USD prim path of the camera
         position (np.array): Camera position in world coordinates
@@ -106,7 +106,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
         Camera object or None if camera cannot be created
 
     """
-   
+
     camera_id = prim_path.split("/")[-1]
 
     # Check if camera is already registered
@@ -144,12 +144,10 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
 
         print(f"Successfully registered camera: {camera_id}")
         return camera
-        
 
     except Exception as e:
         print(f"Error registering camera at {prim_path}: {e}")
         return None
-    
 
 
 def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
@@ -168,27 +166,30 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     # Extract camera IDs from prim paths
     left_camera_id = left_prim_path.split("/")[-1]
     right_camera_id = right_prim_path.split("/")[-1]
-    
+
     # Generate pair_id if not provided
     if pair_id is None:
         pair_id = f"{left_camera_id}_{right_camera_id}"
-    
-    
+
     # Check if both cameras are registered
     if left_camera_id not in camera_capture.camera_registry:
-        print(f"Left camera '{left_camera_id}' not registered. Attempting to register...")
-        left_camera = register_existing_camera(left_prim_path,add_3d_features=True)
+        print(
+            f"Left camera '{left_camera_id}' not registered. Attempting to register..."
+        )
+        left_camera = register_existing_camera(left_prim_path, add_3d_features=True)
         if left_camera is None:
             print(f"Failed to register left camera '{left_camera_id}'")
             return None
-    
+
     if right_camera_id not in camera_capture.camera_registry:
-        print(f"Right camera '{right_camera_id}' not registered. Attempting to register...")
-        right_camera = register_existing_camera(right_prim_path,add_3d_features=True)
+        print(
+            f"Right camera '{right_camera_id}' not registered. Attempting to register..."
+        )
+        right_camera = register_existing_camera(right_prim_path, add_3d_features=True)
         if right_camera is None:
             print(f"Failed to register right camera '{right_camera_id}'")
             return None
-    
+
     # Register the stereo pair
     stereo_pair = {
         "left": left_camera_id,
@@ -198,53 +199,58 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
     }
 
     camera_capture.stereo_pairs[pair_id] = stereo_pair
-    
 
-    print(f"✅ Successfully registered stereo pair '{pair_id}' , stereo pair: {stereo_pair}")
+    print(
+        f"✅ Successfully registered stereo pair '{pair_id}' , stereo pair: {stereo_pair}"
+    )
     return stereo_pair
 
 
 def get_camera_baseline(left_prim_path, right_prim_path):
     """
     Calculate the baseline distance between two camera prims in the scene
-    
+
     Args:
         left_prim_path (str): USD path to the left camera
         right_prim_path (str): USD path to the right camera
-        
+
     Returns:
         float: Baseline distance in scene units
     """
     stage = omni.usd.get_context().get_stage()
-    
+
     # Get camera prims
     left_prim = stage.GetPrimAtPath(left_prim_path)
     right_prim = stage.GetPrimAtPath(right_prim_path)
-    
+
     if not left_prim.IsValid() or not right_prim.IsValid():
         print("Error: One or both camera prims are invalid.")
         return None
-    
+
     # Get world transforms for both cameras
     left_xform = UsdGeom.Xformable(left_prim)
     right_xform = UsdGeom.Xformable(right_prim)
-    
+
     # Get world positions
     left_matrix = left_xform.ComputeLocalToWorldTransform(0)
     right_matrix = right_xform.ComputeLocalToWorldTransform(0)
-    
+
     # Extract translation components (positions)
     left_position = left_matrix.ExtractTranslation()
     right_position = right_matrix.ExtractTranslation()
-    
+
     # Calculate Euclidean distance between cameras
     # Note: In Isaac Sim, the position values are halved compared to the actual scene units
     import math
-    baseline = math.sqrt(
-        (right_position[0] - left_position[0])**2 +
-        (right_position[1] - left_position[1])**2 +
-        (right_position[2] - left_position[2])**2
-    ) * 2  # Adjust for halved units
-    
+
+    baseline = (
+        math.sqrt(
+            (right_position[0] - left_position[0]) ** 2
+            + (right_position[1] - left_position[1]) ** 2
+            + (right_position[2] - left_position[2]) ** 2
+        )
+        * 2
+    )  # Adjust for halved units
+
     print(f"Detected baseline between cameras: {baseline:.4f} scene units")
     return baseline

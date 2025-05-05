@@ -253,10 +253,7 @@ class UIBuilder:
 
                 ui.Separator()
                 ui.Label("Stereo Camera Controls:")
-                ui.Button(
-                    "Capture pointclouds",
-                    clicked_fn=self._capture_pointclouds
-                )
+                ui.Button("Capture pointclouds", clicked_fn=self._capture_pointclouds)
 
         self.frames.append(camera_controls_frame)
         self.frames.append(world_controls_frame)
@@ -454,4 +451,3 @@ class UIBuilder:
     def _capture_pointclouds(self):
         """Test the stereo camera setup."""
         self._robot_controller.capture_stereo_pointcloud()
-    
