@@ -254,8 +254,8 @@ class UIBuilder:
                 ui.Separator()
                 ui.Label("Stereo Camera Controls:")
                 ui.Button(
-                    "Test Stereo Cameras",
-                    clicked_fn=self._test_stereo_cameras
+                    "Capture pointclouds",
+                    clicked_fn=self._capture_pointclouds
                 )
 
         self.frames.append(camera_controls_frame)
@@ -451,7 +451,7 @@ class UIBuilder:
             del self._capture_button
             print("Removed capture button")
 
-    def _test_stereo_cameras(self):
+    def _capture_pointclouds(self):
         """Test the stereo camera setup."""
         self._robot_controller.capture_stereo_pointcloud()
     

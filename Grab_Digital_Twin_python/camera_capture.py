@@ -329,7 +329,7 @@ class CameraCapture:
 
         Returns dict with file paths or None on failure.
         """
-        print(f"\n🔄 Capturing stereo pair {pair_id}…")
+        print(f"\n🔄 Capturing pointclouds from stereo pair {pair_id}…")
         if pair_id not in self.stereo_pairs:
             print(f"❌ Pair {pair_id} not registered.")
             return None
