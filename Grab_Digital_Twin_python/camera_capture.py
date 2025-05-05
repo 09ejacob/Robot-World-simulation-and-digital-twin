@@ -3,15 +3,11 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from PIL import Image
-from pxr import UsdGeom  # Import missing module
 import numpy as np
 import cv2
 import json
 import struct
-import open3d as o3d
-from pxr import Gf
 import cv2
-
 
 
 class CameraCapture:
@@ -19,14 +15,14 @@ class CameraCapture:
     A class to manage camera captures in Isaac Sim.
     Handles image capturing, storage, and scheduling for multiple cameras.
     """
+
     _instance = None
 
-
     def __new__(cls):
-         if cls._instance is None:
-             cls._instance = super(CameraCapture, cls).__new__(cls)
-             cls._instance.initialize()
-         return cls._instance
+        if cls._instance is None:
+            cls._instance = super(CameraCapture, cls).__new__(cls)
+            cls._instance.initialize()
+        return cls._instance
 
     def initialize(self):
         self.base_save_dir = "camera_captures"
@@ -63,7 +59,7 @@ class CameraCapture:
         camera_id (str): Identifier for the camera.
 
         Returns:
-        np.ndarray or None: A uint8 NumPy array representing the RGB image 
+        np.ndarray or None: A uint8 NumPy array representing the RGB image
         if successful, or None if an error occurs (e.g., camera not registered,
         no frame available, or invalid frame data).
         """
@@ -87,7 +83,7 @@ class CameraCapture:
             return None
 
         return rgb_array.astype(np.uint8)
-        
+
     def _generate_capture_metadata(self, camera_id, rgb_array):
         utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
         local_now = datetime.now().astimezone()
@@ -114,9 +110,9 @@ class CameraCapture:
         Parameters:
         camera_id (str): Identifier for the camera.
         rgb_array (np.ndarray): The RGB image array to save.
-        Returns: 
+        Returns:
         str: The path to the saved image file.
-        """           
+        """
         try:
             image = Image.fromarray(rgb_array, mode="RGB")
             filename_base, metadata = self._generate_capture_metadata(
@@ -150,7 +146,7 @@ class CameraCapture:
         Capture an image from the specified camera and save it to disk.
         Parameters:
         camera_id (str): Identifier for the camera.
-        Returns:        
+        Returns:
         str: The path to the saved image file, or None if capture failed.
         """
         rgb_array = self._capture_image_array(camera_id)
@@ -227,9 +223,9 @@ class CameraCapture:
     def capture_all_timed(self, interval_seconds=2.0):
         """
         Capture images from all registered cameras at regular intervals.
-        Parameters:     
+        Parameters:
         interval_seconds (float): Time interval between captures in seconds.
-        Returns:    
+        Returns:
         dict: A dictionary mapping camera IDs to the paths of saved images.
         """
         results = {}
@@ -294,7 +290,7 @@ class CameraCapture:
             f"✅ Camera {camera_id} found in registry.",
             list(self.camera_registry.keys()),
         )
-        
+
         camera = self.camera_registry[camera_id]
 
         # Get the latest frame
@@ -314,15 +310,14 @@ class CameraCapture:
         print("Frame data:", frame.keys())
         pc = frame["pointcloud"]
         pointcloud_data = np.array(pc["data"])  # Shape: (N, 3)
-        point_colors =  np.array(pc["pointRgb"]).reshape(-1, 4)[:, :3]
+        point_colors = np.array(pc["pointRgb"]).reshape(-1, 4)[:, :3]
         print("🔍 First 5 colors (raw):", point_colors[:5])
         print("The length of point colors:", len(point_colors))
-    
+
         point_normals = frame["pointcloud"]["pointNormals"]  # Normal vectors
 
         return point_colors, point_normals, pointcloud_data
 
-    
     def save_stereo_pointcloud_pair(self, pair_id, pair_name=None):
         """
         Capture both left/right, then save them together
@@ -336,30 +331,30 @@ class CameraCapture:
 
         left_id, right_id = (
             self.stereo_pairs[pair_id]["left"],
-            self.stereo_pairs[pair_id]["right"]
+            self.stereo_pairs[pair_id]["right"],
         )
 
         # Grab raw data
-        left_data  = self.capture_pointcloud(left_id)
+        left_data = self.capture_pointcloud(left_id)
         right_data = self.capture_pointcloud(right_id)
         if left_data is None or right_data is None:
             print("⚠️ One or both captures failed; aborting save.")
             return None
 
         # Timestamped folder
-        ts        = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        dir_name  = pair_name or f"{pair_id}_{ts}"
-        out_dir   = os.path.join(self.base_save_dir, "stereo_pairs", dir_name)
+        ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        dir_name = pair_name or f"{pair_id}_{ts}"
+        out_dir = os.path.join(self.base_save_dir, "stereo_pairs", dir_name)
         os.makedirs(out_dir, exist_ok=True)
 
         # Save each
-        left_pts, left_cols, left_norms   = left_data
+        left_pts, left_cols, left_norms = left_data
         right_pts, right_cols, right_norms = right_data
 
-        left_xyzrgb  = np.hstack([left_pts,  left_cols])
+        left_xyzrgb = np.hstack([left_pts, left_cols])
         right_xyzrgb = np.hstack([right_pts, right_cols])
 
-        fn_left  = os.path.join(out_dir, f"{left_id}.npy")
+        fn_left = os.path.join(out_dir, f"{left_id}.npy")
         fn_right = os.path.join(out_dir, f"{right_id}.npy")
 
         try:
