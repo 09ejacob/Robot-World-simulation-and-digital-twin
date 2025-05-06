@@ -1,3 +1,4 @@
+import carb
 import time
 import os
 import queue
@@ -97,7 +98,7 @@ class UDPScenario:
         self.executed_command_count += 1
         parts = [p for p in message.rstrip(":").strip().split(":") if p]
         if not parts:
-            print("[ERROR] Empty command.")
+            carb.log_error("Empty command.")
             return
 
         command = parts[0].lower()
@@ -110,7 +111,7 @@ class UDPScenario:
             self._handle_axis_command(parts)
 
         else:
-            print("[ERROR] Command not recognized:", message)
+            carb.log_error(f"Command not recognized: {message}")
 
     def _get_command_handlers(self):
         """Return a dictionary that maps command strings to handlers."""
@@ -144,47 +145,47 @@ class UDPScenario:
                         if interval > 0:
                             self.overview_capture_interval = interval
                             print(
-                                f"[INFO] Set overview camera interval to {interval:.3f} seconds"
+                                f"[MAIN] Set overview camera interval to {interval:.3f} seconds"
                             )
                         else:
-                            print(
-                                f"[WARN] Interval must be > 0 to activate overview camera. Got: {interval}"
+                            carb.log_warn(
+                                f"Interval must be > 0 to activate overview camera. Got: {interval}"
                             )
                             return
                     except ValueError:
-                        print(f"[WARN] Invalid overview camera interval: {parts[1]}")
+                        carb.log_warn(f"Invalid overview camera interval: {parts[1]}")
                         return
 
             self.overview_camera_active = start
             state = "started" if start else "stopped"
-            print(f"Overview-camera capturing {state}.")
+            print(f"[DEBUG] Overview-camera capturing {state}.")
 
             if not start:
                 self._robot_controller.generate_video(
                     3 / self.overview_capture_interval
                 )
         else:
-            print("[INFO] Overview camera is disabled.")
+            print("[MAIN] Overview camera is disabled.")
 
     def _handle_tp_robot(self, parts):
         """Parse and execute a "tp_robot:x:y:z" -command"""
         if len(parts) != 4:
-            print("[ERROR] Invalid tp_robot format. Use: tp_robot:x:y:z")
+            carb.log_error("Invalid tp_robot format. Use: tp_robot:x:y:z")
             return
 
         try:
             pos = list(map(float, parts[1:4]))
             self._robot_controller.teleport_robot(pos)
             if self.print_positions:
-                print(f"Teleported robot to position: {pos}")
+                print(f"[DEBUG] Teleported robot to position: {pos}")
 
         except ValueError:
-            print("[ERROR] tp_robot values must be floats.")
+            carb.log_error("tp_robot values must be floats.")
 
     def _handle_axis_command(self, parts):
         """Parse and execute a "axisX:value" -command."""
         if len(parts) != 2:
-            print("[ERROR] axis command format must be: axisX:value")
+            carb.log_error("axis command format must be: axisX:value")
             return
 
         try:
@@ -192,7 +193,7 @@ class UDPScenario:
             value = float(parts[1])
 
         except ValueError:
-            print("[ERROR] Invalid axis id or value")
+            carb.log_error("Invalid axis id or value")
             return
 
         axis_map = {
@@ -215,7 +216,7 @@ class UDPScenario:
             handler(value)
 
         else:
-            print(f"[ERROR] Axis {axis_id} not supported.")
+            carb.log_error(f"Axis {axis_id} not supported.")
 
     def _handle_capture_command(self, parts):
         """
@@ -231,12 +232,12 @@ class UDPScenario:
         print(f"[DEBUG] Received capture command with parts: {parts}")
 
         if not self.allow_udp_capture:
-            print("[INFO] Camera capture is disabled.")
+            carb.log_warn("Camera capture is disabled.")
             return
 
         if len(parts) < 2:
-            print(
-                "[ERROR] No cameras specified. Use format: capture:cam1:cam2[:...][:stream=true|false]"
+            carb.log_error(
+                "No cameras specified. Use format: capture:cam1:cam2[:...][:stream=true|false]"
             )
             return
 
@@ -249,8 +250,8 @@ class UDPScenario:
             elif stream_arg == "stream=false":
                 stream = False
             else:
-                print(
-                    f"[ERROR] Invalid stream value: {parts[-1]}. Use stream=true or stream=false."
+                carb.log_error(
+                    f"Invalid stream value: {parts[-1]}. Use stream=true or stream=false."
                 )
                 return
             cameras = parts[1:-1]  # exclude the stream parameter
@@ -258,10 +259,10 @@ class UDPScenario:
             cameras = parts[1:]
 
         if not cameras or not all(cameras):
-            print(f"[ERROR] Invalid or missing camera names in command: {parts}")
+            carb.log_error(f"Invalid or missing camera names in command: {parts}")
             return
 
-        print(f"[INFO] Capturing from cameras: {cameras} | stream={stream}")
+        print(f"[MAIN] Capturing from cameras: {cameras} | stream={stream}")
 
         self._robot_controller.capture_cameras(
             cameras=cameras,
@@ -391,7 +392,7 @@ class UDPScenario:
             )
         )
         if not os.path.exists(usd_path):
-            print(f"[ERROR] Box USD asset not found at {usd_path}")
+            carb.log_error(f"Box USD asset not found at {usd_path}")
             return
 
         bx, by, bz = position
@@ -424,7 +425,7 @@ class UDPScenario:
             add_reference_to_stage(usd_path=usd_path, prim_path=prim_path)
             prim = stage.GetPrimAtPath(prim_path)
             if not prim.IsValid():
-                print(f"[WARN] failed to reference box at {prim_path}")
+                carb.log_warn(f"Failed to reference box at {prim_path}")
                 continue
 
             xform = UsdGeom.Xformable(prim)
@@ -487,7 +488,7 @@ class UDPScenario:
 
             self.pallets_paths.append(pallet_prim_path)
         else:
-            print(f"[ERROR] Failed to reference pallet at {pallet_prim_path}")
+            carb.log_error(f"Failed to reference pallet at {pallet_prim_path}")
 
         if isBottles:
             self._create_bottles(
@@ -530,9 +531,9 @@ class UDPScenario:
                 Gf.Vec3d(*scale)
             )
 
-            print(f"Shelf loaded at position: {position}")
+            print(f"[MAIN] Shelf loaded at position: {position}")
         else:
-            print(f"Failed to load shelf at prim path: {SHELF_PATH}")
+            carb.log_error(f"Failed to load shelf at prim path: {SHELF_PATH}")
 
     def _start_udp_server(self, host=LISTEN_HOST, port=LISTEN_PORT):
         """
@@ -543,7 +544,7 @@ class UDPScenario:
             port (str): UDP port to listen on.
         """
         if self._port_in_use(port):
-            print(f"Port {port} is already in use. Skipping server start.")
+            print(f"[MAIN] Port {port} is already in use. Skipping server start.")
             return
 
         self.udp.host = host
@@ -592,7 +593,7 @@ class UDPScenario:
                 force_n = reading.get("force", 0)
                 data.append(f"force_N:{force_n:.2f}")
             except Exception as e:
-                print(f"[WARN] Could not read force sensor: {e}")
+                carb.log_warn(f"Could not read force sensor: {e}")
 
             if data:
                 self.udp.send(
@@ -601,7 +602,7 @@ class UDPScenario:
                     self.broadcast_target_port,
                 )
             else:
-                print("[WARN] No joint data to broadcast.")
+                carb.log_warn("No joint data to broadcast.")
 
     def _log_performance_stats(self, current_time):
         """If this is enabled, print out how many UDP commands processed every second."""
@@ -609,7 +610,7 @@ class UDPScenario:
             current_time - self.last_time_check >= 1.0
         ):
             print(
-                f"[STATS] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
+                f"[DEBUG] UDP Received: {self.udp_message_count} msg/sec | Executed: {self.executed_command_count} cmd/sec"
             )
 
             self.udp_message_count = 0
@@ -621,7 +622,9 @@ class UDPScenario:
         if self.print_positions and (
             current_time - self.last_position_print_time >= 1.0
         ):
-            print("--------------------------------------------------------------")
+            print(
+                "[DEBUG] --------------------------------------------------------------"
+            )
             for name, dof_index, is_angular in self.axis_dofs:
                 self._robot_controller.print_joint_position_by_index(
                     dof_index, is_angular
@@ -643,7 +646,7 @@ class UDPScenario:
         stage = omni.usd.get_context().get_stage()
         box_prim = stage.GetPrimAtPath(box_path)
         if not box_prim.IsValid():
-            print(f"Box prim not found at {box_path}")
+            carb.log_warn(f"Box prim not found at {box_path}")
             return
         xformable = UsdGeom.Xformable(box_prim)
         for op in xformable.GetOrderedXformOps():
@@ -659,7 +662,7 @@ class UDPScenario:
         if self.broadcast_thread:
             self.broadcast_thread.join()
             self.broadcast_thread = None
-        print("[UDPScenario] Broadcast thread stopped.")
+        print("[MAIN] Broadcast thread stopped.")
 
     def setup(self):
         """Set up the world, refresh robot controller handles, create scene objects, and start UDP server."""
@@ -671,7 +674,7 @@ class UDPScenario:
         for name, path, is_angular in self.axis_config:
             dof_index = self._robot_controller.get_dof_index_for_joint(path)
             if dof_index == -1:
-                print(f"[ERROR] Could not resolve DOF index for {name} ({path})")
+                carb.log_error(f"Could not resolve DOF index for {name} ({path})")
             else:
                 self.axis_dofs.append((name, dof_index, is_angular))
 
@@ -762,7 +765,7 @@ class UDPScenario:
 
     def _reload_scene(self):
         """Reload the entire scene to mirror the headless runner startup process."""
-        print("Reloading scene with UDP scenario...")
+        print("[MAIN] Reloading scene with UDP scenario...")
 
         self.unload()
 
@@ -770,7 +773,7 @@ class UDPScenario:
         setup_scene(enable_cameras=self.allow_udp_capture)
 
         self.setup()
-        print("Scene reloaded and UDP scenario started.")
+        print("[MAIN] Scene reloaded and UDP scenario started.")
 
 
 if __name__ == "__main__":
@@ -791,4 +794,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         scenario._stop_broadcasting()
         scenario.udp.stop()
-        print("Exiting UDP scenario.")
+        print("[MAIN] Exiting UDP scenario.")
