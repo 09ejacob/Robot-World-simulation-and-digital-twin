@@ -148,16 +148,16 @@ def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
     stage = get_current_stage()
 
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
-        print(f"[setup_scene] Defining physics scene at: {PHYSICS_SCENE_PATH}")
+        print(f"[MAIN] Defining physics scene at: {PHYSICS_SCENE_PATH}")
         UsdPhysics.Scene.Define(stage, PHYSICS_SCENE_PATH)
 
     physics_scene_prim = stage.GetPrimAtPath(PHYSICS_SCENE_PATH)
 
     if not physics_scene_prim.HasAPI(PhysxSchema.PhysxSceneAPI):
         PhysxSchema.PhysxSceneAPI.Apply(physics_scene_prim)
-        print("[setup_scene] Applied PhysxSceneAPI to PhysicsScene prim")
+        print("[MAIN] Applied PhysxSceneAPI to PhysicsScene prim")
     else:
-        print("[setup_scene] PhysxSceneAPI already present")
+        print("[DEBUG] PhysxSceneAPI already present")
 
     create_ground_plane(GROUND_PLANE_PATH)
 

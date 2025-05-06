@@ -1,3 +1,4 @@
+import carb
 import numpy as np
 import isaacsim.core.utils.numpy.rotations as rot_utils
 import omni.usd
@@ -37,16 +38,17 @@ def setup_camera(
     # Avoid re-initializing if already created
     if prim_path in initialized_cameras:
         print(
-            f"Camera at {prim_path} already initialized. Returning existing instance."
+            f"[DEBUG] Camera at {prim_path} already initialized. Returning existing instance."
         )
+
         return initialized_cameras[prim_path]
 
     stage = omni.usd.get_context().get_stage()
     camera_Xform_prim = stage.GetPrimAtPath(CAMERA_PATH)
     if not camera_Xform_prim:
-        print(f"Camera Xform not found at {CAMERA_PATH}")
+        carb.log_error(f"Camera Xform not found at {CAMERA_PATH}")
         return None
-    print(f"Initializing camera at {prim_path}")
+    print(f"[MAIN] Initializing camera at {prim_path}")
 
     quat_xyzw = rot_utils.euler_angles_to_quats(
         euler_angles, extrinsic=True, degrees=True
@@ -62,8 +64,8 @@ def setup_camera(
 
     camera.initialize()
 
-    print(camera.get_frequency())
-    print("the render path is", camera.get_render_product_path())
+    print(f"[DEBUG] Camera frequency: {camera.get_frequency()}")
+    print(f"[DEBUG] Render path: {camera.get_render_product_path()}")
 
     camera.set_world_pose(position, quat_xyzw, camera_axes="usd")
 
@@ -83,7 +85,7 @@ def setup_camera(
     camera_id = prim_path.split("/")[-1]
     camera_capture.register_camera(camera_id, camera)
 
-    print("✅ Registered cameras:", camera_capture.get_registered_cameras())
+    print(f"[MAIN] Registered cameras: {camera_capture.get_registered_cameras()}")
 
     initialized_cameras[prim_path] = camera
     return camera
@@ -105,7 +107,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
 
     # Check if camera is already registered
     if camera_id in camera_capture.camera_registry:
-        print(f"✅ Camera '{camera_id}' is already registered.")
+        print(f"[DEBUG] Camera '{camera_id}' is already registered.")
         return camera_capture.camera_registry[camera_id]  # Return existing camera
 
     # Get the current stage
@@ -114,7 +116,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     # Check if the prim exists
     prim = stage.GetPrimAtPath(prim_path)
     if not prim or not prim.IsValid():
-        print(f"No valid prim found at path: {prim_path}")
+        carb.log_error(f"No valid prim found at path: {prim_path}")
         return None
 
     try:
@@ -126,21 +128,21 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
             camera.add_distance_to_image_plane_to_frame()
             camera.add_pointcloud_to_frame(include_unlabelled=True)
 
-        print(f"Camera initialized at {prim_path}")
+        print(f"[DEBUG] Camera initialized at {prim_path}")
 
         if resolution is not None:
             camera.set_resolution(resolution)
-        print(f"Camera resolution updated to {resolution}")
+        print(f"[DEBUG] Camera resolution updated to {resolution}")
 
         # Register with camera capture system
         camera_capture.register_camera(camera_id, camera)
         camera.pause()
 
-        print(f"Successfully registered camera: {camera_id}")
+        print(f"[MAIN] Successfully registered camera: {camera_id}")
         return camera
 
     except Exception as e:
-        print(f"Error registering camera at {prim_path}: {e}")
+        carb.log_error(f"Error registering camera at {prim_path}: {e}")
         return None
 
 
@@ -167,21 +169,21 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
 
     # Check if both cameras are registered
     if left_camera_id not in camera_capture.camera_registry:
-        print(
+        carb.log_warn(
             f"Left camera '{left_camera_id}' not registered. Attempting to register..."
         )
         left_camera = register_existing_camera(left_prim_path, add_3d_features=True)
         if left_camera is None:
-            print(f"Failed to register left camera '{left_camera_id}'")
+            carb.log_error(f"Failed to register left camera '{left_camera_id}'")
             return None
 
     if right_camera_id not in camera_capture.camera_registry:
-        print(
+        carb.log_warn(
             f"Right camera '{right_camera_id}' not registered. Attempting to register..."
         )
         right_camera = register_existing_camera(right_prim_path, add_3d_features=True)
         if right_camera is None:
-            print(f"Failed to register right camera '{right_camera_id}'")
+            carb.log_error(f"Failed to register right camera '{right_camera_id}'")
             return None
 
     # Register the stereo pair
@@ -194,9 +196,7 @@ def register_stereo_pair(left_prim_path, right_prim_path, pair_id=None):
 
     camera_capture.stereo_pairs[pair_id] = stereo_pair
 
-    print(
-        f"✅ Successfully registered stereo pair '{pair_id}' , stereo pair: {stereo_pair}"
-    )
+    print(f"[MAIN] Successfully registered stereo pair '{pair_id}': {stereo_pair}")
     return stereo_pair
 
 
@@ -218,7 +218,7 @@ def get_camera_baseline(left_prim_path, right_prim_path):
     right_prim = stage.GetPrimAtPath(right_prim_path)
 
     if not left_prim.IsValid() or not right_prim.IsValid():
-        print("Error: One or both camera prims are invalid.")
+        carb.log_error("One or both camera prims are invalid.")
         return None
 
     # Get world transforms for both cameras
@@ -246,5 +246,5 @@ def get_camera_baseline(left_prim_path, right_prim_path):
         * 2
     )  # Adjust for halved units
 
-    print(f"Detected baseline between cameras: {baseline:.4f} scene units")
+    print(f"[DEBUG] Detected baseline between cameras: {baseline:.4f} scene units")
     return baseline
