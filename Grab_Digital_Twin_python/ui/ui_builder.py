@@ -7,6 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+import carb
 import omni.timeline
 import omni.ui as ui
 from isaacsim.core.utils.stage import create_new_stage
@@ -275,11 +276,11 @@ class UIBuilder:
         idx = self._scenario_dropdown.model.get_item_value_model().as_int
 
         if idx <= 0 or idx >= len(self._scenario_options):
-            print("Please select a real scenario from the dropdown")
+            carb.log_warn("Please select a valid scenario from the dropdown.")
             return
 
         selected_scenario = self._scenario_options[idx]
-        print(f"Switching to scenario: {selected_scenario}")
+        print(f"[MAIN] Switching to scenario: {selected_scenario}")
         self._current_scenario_name = selected_scenario
 
         if self._scenario is not None:
@@ -314,7 +315,7 @@ class UIBuilder:
         )
 
         omni.timeline.get_timeline_interface().set_auto_update(False)
-        print(f"Scene setup complete with grab asset: {usd_file}")
+        print(f"[MAIN] Scene setup complete with grab asset: {usd_file}")
 
     def _setup_scenario(self):
         """
@@ -361,10 +362,10 @@ class UIBuilder:
     def _start_scenario(self):
         """Starts the selected scenario."""
         if self._scenario is None:
-            print("No scenario selected! Click 'Select Scenario' first.")
+            carb.log_warn("No scenario selected. Click 'Select Scenario' first.")
             return
 
-        print(f"Running scenario: {self._current_scenario_name}")
+        print(f"[MAIN] Running scenario: {self._current_scenario_name}")
         self._timeline.play()
 
     def _stop_scenario(self):
@@ -397,32 +398,32 @@ class UIBuilder:
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
         image_path = self._robot_controller.capture_cameras(camera_id)
-        print(f"Captured image from {camera_id}: {image_path}")
+        print(f"[MAIN] Captured image from {camera_id}: {image_path}")
 
     def _capture_3d_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
         image_path = self._camera_capture.capture_pointcloud(camera_id)
-        print(f"Captured image from {camera_id}: {image_path}")
+        print(f"[MAIN] Captured 3D image from {camera_id}: {image_path}")
 
     def _capture_from_all_cameras(self):
         """Capture images from all registered cameras."""
         image_paths = self._robot_controller.capture_cameras()
-        print(f"Captured images: {image_paths}")
+        print(f"[MAIN] Captured images from all cameras: {image_paths}")
 
     def _capture_all_images(self):
         """Capture images from all registered cameras."""
         image_paths = self._robot_controller.capture_cameras()
         if image_paths:
-            print("Captured images from all cameras:", image_paths)
+            print(f"[MAIN] Captured images from all cameras: {image_paths}")
         else:
-            print("Failed to capture images from all cameras.")
+            carb.log_warn("No images were captured from any camera.")
 
     def _refresh_camera_list(self):
         """Update camera dropdown with the latest registered cameras and add capture button."""
         try:
             # Get the current list of registered cameras
             cameras = self._camera_capture.get_registered_cameras()
-            print(f"Refresh found cameras: {cameras}")
+            print(f"[DEBUG] Refresh found cameras: {cameras}")
 
             self._capture_button_container.clear()
 
@@ -430,7 +431,7 @@ class UIBuilder:
                 self._add_capture_button(camera_id)
 
         except Exception as e:
-            print(f"Error refreshing camera list: {e}")
+            carb.log_error(f"Error refreshing camera list: {e}")
 
     def _add_capture_button(self, camera_id):
         """Adds a capture button for the specified camera."""
@@ -439,14 +440,14 @@ class UIBuilder:
                 f"Capture from {camera_id}",
                 clicked_fn=lambda: self._capture_from_camera(camera_id),
             )
-            print(f"Added button for camera: {camera_id}")
+            print(f"[DEBUG] Added capture button for camera: {camera_id}")
 
     def _remove_capture_button(self):
         """Removes the capture button if it exists."""
         if hasattr(self, "_capture_button"):
             self._capture_button.destroy()
             del self._capture_button
-            print("Removed capture button")
+            print("[DEBUG] Removed capture button")
 
     def _capture_pointclouds(self):
         """Test the stereo camera setup."""
