@@ -98,6 +98,9 @@ def create_camera(resolutions=None):
     register_existing_camera(
         BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=False
     )
+    register_existing_camera(
+        OVERVIEW_CAMERA, resolutions.get(OVERVIEW_CAMERA), add_3d_features=False
+    )
 
 
 def setup_stereo_cameras():
