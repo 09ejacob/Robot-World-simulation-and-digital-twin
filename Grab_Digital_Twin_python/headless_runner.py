@@ -1,5 +1,6 @@
 import time
 import argparse
+import carb
 
 
 # Argument parsing happens before importing `SimulationApp` to allow `--help` to work.
@@ -75,14 +76,14 @@ def _main():
     rendering_dt = 1.0 / args.rendering_fps
 
     print(
-        f"Starting UDP scenario in headless mode "
+        f"[MAIN] Starting UDP scenario in headless mode "
         f"(physics_fps={args.physics_fps}, rendering_fps={args.rendering_fps}, "
         f"physics_dt={physics_dt:.5f}, rendering_dt={rendering_dt:.5f})"
     )
-    print("Creating stage...")
+    print("[MAIN] Creating stage...")
     create_new_stage()
 
-    print("Setting up Scene...")
+    print("[MAIN] Setting up Scene...")
     setup_scene(
         enable_cameras=not args.disable_cameras, grab_usd=args.grab_usd
     )  # Need a flag for setting up scene with specifyed usd model.
@@ -96,7 +97,7 @@ def _main():
     stage = get_current_stage()
 
     if not stage.GetPrimAtPath(PHYSICS_SCENE_PATH).IsValid():
-        print("[MAIN] Physics scene not found in stage")
+        carb.log_error("Physics scene not found in stage")
         return
 
     _wait_for_condition(lambda: False, timeout=1.0, update_fn=simulation_app.update)
@@ -104,7 +105,7 @@ def _main():
     physx_iface = _physx.acquire_physx_interface()
     print(f"[DEBUG] PhysX interface acquired: {physx_iface is not None}")
 
-    print("Creating World...")
+    print("[MAIN] Creating World...")
     world = World(physics_dt=physics_dt, rendering_dt=rendering_dt)
     world.reset()
 
@@ -118,7 +119,7 @@ def _main():
 
     print("[DEBUG] Stage children:")
     for child in stage.GetPseudoRoot().GetChildren():
-        print(f" - {child.GetPath()}")
+        print(f"[DEBUG]  - {child.GetPath()}")
 
     _wait_for_condition(
         lambda: stage.GetPrimAtPath(ROBOT_PATH).IsValid(),
@@ -126,7 +127,7 @@ def _main():
         update_fn=simulation_app.update,
     )
     if not stage.GetPrimAtPath(ROBOT_PATH).IsValid():
-        print("[MAIN] /Robot never appeared — aborting.")
+        carb.log_error("/Robot never appeared — aborting.")
         return
     else:
         print("[MAIN] /Robot loaded.")
@@ -140,7 +141,7 @@ def _main():
     robot_controller.refresh_handles()
 
     if not robot_controller.articulation:
-        print("[MAIN] Articulation handle is still invalid. Something is wrong.")
+        carb.log_error("Articulation handle is still invalid. Something is wrong.")
         return
 
     scenario = UDPScenario(
@@ -166,7 +167,7 @@ def _main():
                 scenario._world.step(render=True)
 
     except KeyboardInterrupt:
-        print("Exiting headless UDP scenario.")
+        print("[MAIN] Exiting simulation.")
 
     simulation_app.close()
 
