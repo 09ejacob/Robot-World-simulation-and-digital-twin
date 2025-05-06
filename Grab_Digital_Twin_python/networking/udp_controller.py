@@ -1,3 +1,4 @@
+import carb
 import socket
 import threading
 import uuid
@@ -51,12 +52,12 @@ class UDPController:
                 self._send_sock.sendto(packet, (target_host, target_port))
 
         except Exception as e:
-            print(f"[UDP Controller] Send error: {e}")
+            carb.log_error(f"[MAIN] Send error: {e}")
 
     def start(self):
         """Start a background thread that listens for incoming UDP messages."""
         if self._thread is not None and self._thread.is_alive():
-            print("[UDP Controller] Already running.")
+            print("[MAIN] Already running.")
             return
 
         self._stop_event.clear()
@@ -67,7 +68,7 @@ class UDPController:
             try:
                 udp_sock.bind((self.host, self.port))
             except Exception as e:
-                print(f"[UDP Controller] Bind exception: {e}")
+                carb.log_error(f"[UDP Controller] Bind exception: {e}")
                 return
 
             print(f"[UDP Controller] Listening on {self.host}:{self.port}")
@@ -76,13 +77,12 @@ class UDPController:
                 try:
                     data, addr = udp_sock.recvfrom(1024)
                     message = data.decode("utf-8").strip()
-                    # print(f"[UDP Controller] Received from {addr}: {message}")
                     if self.callback:
                         self.callback(message)
                 except socket.timeout:
                     continue
                 except Exception as e:
-                    print(f"[UDP Controller] Exception: {e}")
+                    carb.log_error(f"[UDP Controller] Exception: {e}")
             udp_sock.close()
 
         self._thread = threading.Thread(target=_udp_server, daemon=True)
