@@ -147,9 +147,6 @@ class RobotController:
 
         # Set the target position
         drive_api.GetTargetPositionAttr().Set(target_position)
-        # print(
-        #     f"Target position set to {target_position} degrees for joint at {joint_prim_path}."
-        # )
 
     def set_prismatic_joint_position(self, joint_prim_path, position):
         """
@@ -302,7 +299,7 @@ class RobotController:
         stage = omni.usd.get_context().get_stage()
         robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
         if not robot_prim.IsValid():
-            carb.log_warn("Robot prim not found at /World/Robot")
+            carb.log_error("Robot prim not found at /World/Robot")
             return
 
         xformable = UsdGeom.Xformable(robot_prim)

@@ -257,11 +257,10 @@ class CameraCapture:
         )
 
         print(f"[MAIN] Running FFMPEG command: {command}")
-        print(command)
 
         subprocess.call(command, shell=True)
 
-        print(f"Video conversion complete. Video saved at: {output_file}")
+        print(f"[MAIN] Video conversion complete. Video saved at: {output_file}")
 
         for filename in os.listdir(folder_path):
             if filename.lower().endswith(".jpg"):

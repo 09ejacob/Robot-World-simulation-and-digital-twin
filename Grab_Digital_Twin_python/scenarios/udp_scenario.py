@@ -652,9 +652,9 @@ class UDPScenario:
         for op in xformable.GetOrderedXformOps():
             if "translate" in op.GetOpName():
                 pos = op.Get()
-                print(f"Box position for {box_path}: {pos}")
+                print(f"[DEBUG] Box position for {box_path}: {pos}")
                 return
-        print(f"No translation op found for box at {box_path}")
+        print(f"[MAIN] No translation op found for box at {box_path}")
 
     def _stop_broadcasting(self):
         """Stop broadcasting."""

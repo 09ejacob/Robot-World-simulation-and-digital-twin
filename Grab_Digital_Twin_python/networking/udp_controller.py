@@ -52,7 +52,7 @@ class UDPController:
                 self._send_sock.sendto(packet, (target_host, target_port))
 
         except Exception as e:
-            carb.log_error(f"[MAIN] Send error: {e}")
+            carb.log_error(f"[UDP Controller] Send error: {e}")
 
     def start(self):
         """Start a background thread that listens for incoming UDP messages."""
