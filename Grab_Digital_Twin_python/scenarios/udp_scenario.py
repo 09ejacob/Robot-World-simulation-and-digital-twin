@@ -436,12 +436,6 @@ class UDPScenario:
             pv = gprim.CreateDisplayColorPrimvar(UsdGeomTokens.constant, 3)
             pv.Set([color])
 
-            UsdPhysics.RigidBodyAPI.Apply(prim)
-            UsdPhysics.CollisionAPI.Apply(prim)
-            mass_api = UsdPhysics.MassAPI.Apply(prim)
-            mass_attr = mass_api.GetMassAttr() or mass_api.CreateMassAttr()
-            mass_attr.Set(mass)
-
             self.boxes_paths.append(prim_path)
 
     def _create_pick_stack(
