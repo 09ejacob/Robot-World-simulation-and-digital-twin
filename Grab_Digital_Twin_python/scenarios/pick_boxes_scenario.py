@@ -1,3 +1,4 @@
+import carb
 import numpy as np
 import omni.usd
 from omni.isaac.core import World
@@ -73,6 +74,8 @@ class PickBoxesScenario:
 
         self._scenario_generator = self._run_simulation()
 
+        print("[MAIN] PickBoxesScenario initialized with pallet and boxes.")
+
     def unload(self):
         """Resets the simulation and unloads the scenario-specific prims from the stage."""
         self._did_run = False
@@ -84,6 +87,8 @@ class PickBoxesScenario:
             prim = stage.GetPrimAtPath(prim_path)
             if prim.IsValid():
                 stage.RemovePrim(prim_path)
+            else:
+                carb.log_warn(f"Prim not found during unload: {prim_path}")
 
     def update(self, step: float):
         """Update the scenario by one simulation step."""
@@ -113,7 +118,9 @@ class PickBoxesScenario:
             AXIS4_JOINT_PATH
         )
 
-        print(f"axis2_dof_index: {axis2_dof_index}, axis1_dof_index: {axis1_dof_index}")
+        print(
+            f"[DEBUG] axis2_dof_index: {axis2_dof_index}, axis1_dof_index: {axis1_dof_index}"
+        )
 
         # Start
         for _ in range(60):
@@ -406,5 +413,5 @@ class PickBoxesScenario:
             self._world.step(render=True)
             yield
 
-        print("Simulation complete. Stopping simulation.")
+        print("[MAIN] Simulation complete. Stopping simulation.")
         self._world.stop()

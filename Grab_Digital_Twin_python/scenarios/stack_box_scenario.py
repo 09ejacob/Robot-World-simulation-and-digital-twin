@@ -59,7 +59,7 @@ class StackBoxScenario:
             prim = stage.GetPrimAtPath(prim_path)
             if prim.IsValid():
                 stage.RemovePrim(prim_path)
-                print(f"Removed prim at: {prim_path}")
+                print(f"[MAIN] Removed prim at: {prim_path}")
 
     def update(self, step: float):
         """Update the scenario by one simulation step."""
@@ -242,5 +242,6 @@ class StackBoxScenario:
             self._world.step(render=True)
             yield
 
-        print("Stacking scenario complete.")
+        print("[MAIN] Stacking scenario complete.")
+
         self._world.stop()

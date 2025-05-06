@@ -1,3 +1,4 @@
+import carb
 import numpy as np
 from pxr import UsdPhysics
 from omni.isaac.core.utils.stage import get_current_stage
@@ -56,7 +57,7 @@ class RobotController:
                     max_threshold=1e6,
                 )
             except Exception as e:
-                print(f"[WARN] couldn’t create ContactSensor yet: {e}")
+                carb.log_warn(f"Couldn't create ContactSensor yet: {e}")
                 return False
         return True
 
@@ -119,7 +120,7 @@ class RobotController:
                 BOTTLEGRIPPER_IDLE,
             )
         else:
-            print("Bottlegripper is not active")
+            carb.log_warn("Bottlegripper is not active")
 
     def set_angular_drive_target(self, joint_prim_path, target_position):
         """
@@ -133,13 +134,15 @@ class RobotController:
         joint_prim = stage.GetPrimAtPath(joint_prim_path)
 
         if not joint_prim.IsValid():
-            print(f"Joint prim at path {joint_prim_path} is not valid.")
+            carb.log_error(f"Joint prim at path {joint_prim_path} is not valid.")
             return
 
         # Ensure the joint has the PhysicsAngularDrive API applied
         drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "angular")
         if not drive_api:
-            print(f"Angular drive API not found on joint at {joint_prim_path}.")
+            carb.log_error(
+                f"Angular drive API not found on joint at {joint_prim_path}."
+            )
             return
 
         # Set the target position
@@ -159,20 +162,20 @@ class RobotController:
         stage = get_current_stage()
         joint_prim = stage.GetPrimAtPath(joint_prim_path)
         if not joint_prim.IsValid():
-            print(f"Joint prim at path {joint_prim_path} is not valid.")
+            carb.log_warn(f"Joint prim at path {joint_prim_path} is not valid.")
             return
 
         lower_limit_attr = joint_prim.GetAttribute("physics:lowerLimit")
         upper_limit_attr = joint_prim.GetAttribute("physics:upperLimit")
         if not lower_limit_attr or not upper_limit_attr:
-            print(
+            carb.log_warn(
                 f"Prismatic joint at {joint_prim_path} does not have limit attributes."
             )
             return
 
         drive_api = UsdPhysics.DriveAPI.Get(joint_prim, "linear")
         if not drive_api:
-            print(
+            carb.log_warn(
                 f"No linear drive is applied to the prismatic joint at {joint_prim_path}."
             )
             return
@@ -237,14 +240,14 @@ class RobotController:
     def print_joint_position_by_index(self, dof_index, is_angular=False):
         """Print the current joint position."""
         if not self.articulation:
-            print("Articulation handle is invalid.")
+            carb.log_warn("Articulation handle is invalid.")
             return
 
         dof_states = self.dc_interface.get_articulation_dof_states(
             self.articulation, _dynamic_control.STATE_POS
         )
         if dof_index < 0 or dof_index >= len(dof_states["pos"]):
-            print(f"Invalid DOF index: {dof_index}")
+            carb.log_warn(f"Invalid DOF index: {dof_index}")
             return
 
         current_pos = dof_states["pos"][dof_index]
@@ -299,7 +302,7 @@ class RobotController:
         stage = omni.usd.get_context().get_stage()
         robot_prim = stage.GetPrimAtPath(ROBOT_PATH)
         if not robot_prim.IsValid():
-            print("Robot prim not found at /World/Robot")
+            carb.log_warn("Robot prim not found at /World/Robot")
             return
 
         xformable = UsdGeom.Xformable(robot_prim)
