@@ -15,7 +15,6 @@ PICK_BOX_2 = f"{WORLD_PATH}/Environment/pickBox2"
 PICK_BOX_3 = f"{WORLD_PATH}/Environment/pickBox3"
 SHELF_PATH = f"{ENVIRONMENT_PATH}/Shelf"
 
-
 # Robot paths
 ROBOT_PATH = f"{WORLD_PATH}/Robot"
 TOWER_PATH = f"{ROBOT_PATH}/Tower"
@@ -66,6 +65,14 @@ GRIPPER_ACTION_GRAPH_PATH = f"{GRIPPER_PATH}/SurfaceGripperActionGraph"
 GRIPPER_OPEN_PATH = f"{GRIPPER_ACTION_GRAPH_PATH}/open"
 GRIPPER_CLOSE_PATH = f"{GRIPPER_ACTION_GRAPH_PATH}/close"
 GRIPPER_OFFSET_PATH = f"{GRIPPER_ACTION_GRAPH_PATH}/SurfaceGripperOffset"
+
+# Camera resolutions
+CAMERA_RESOLUTIONS = {
+    BASE_CAMERA_PATH: (1280, 720),
+    BOX_CAMERA_1: (1280, 720),
+    BOX_CAMERA_2: (1280, 720),
+    OVERVIEW_CAMERA: (1280, 720),
+}
 
 # UDP Communication Settings
 BROADCAST_RATE = 0.05  # 20 Hz
