@@ -1,5 +1,9 @@
 import socket
 import threading
+import uuid
+import struct
+
+MAX_UDP_SIZE = 60000
 
 
 class UDPController:
@@ -28,13 +32,23 @@ class UDPController:
             else:
                 raise TypeError(f"Unsupported message type: {type(message)}")
 
-            if len(data) > 65500:
-                print(
-                    f"[UDP Controller] Message too long ({len(data)} bytes). Max is 65500."
-                )
+            if len(data) <= MAX_UDP_SIZE:
+                self._send_sock.sendto(data, (target_host, target_port))
                 return
 
-            self._send_sock.sendto(data, (target_host, target_port))
+            # Fragmenting
+            msg_id = uuid.uuid4().bytes[:8]  # 8-byte unique ID
+            total_chunks = (len(data) + MAX_UDP_SIZE - 1) // MAX_UDP_SIZE
+
+            for i in range(total_chunks):
+                start = i * MAX_UDP_SIZE
+                end = min(start + MAX_UDP_SIZE, len(data))
+                chunk = data[start:end]
+
+                # Fragment header: [msg_id][total_chunks][chunk_index]
+                header = msg_id + struct.pack("!HH", total_chunks, i)
+                packet = header + chunk
+                self._send_sock.sendto(packet, (target_host, target_port))
 
         except Exception as e:
             print(f"[UDP Controller] Send error: {e}")
