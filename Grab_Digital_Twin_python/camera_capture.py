@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 import json
 import struct
+import carb
 
 
 class CameraCapture:
@@ -31,7 +32,7 @@ class CameraCapture:
         self.last_capture_time = {}
 
         self.scenario_start = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-        print("Camera Capture System Initialized at", self.scenario_start)
+        print(f"[MAIN] Camera Capture System Initialized at {self.scenario_start}")
 
     def register_camera(self, camera_id, camera):
         """
@@ -46,7 +47,7 @@ class CameraCapture:
         camera_dir = os.path.join(self.base_save_dir, camera_id, self.scenario_start)
         if not os.path.exists(camera_dir):
             os.makedirs(camera_dir)
-            print(f"Created directory for camera {camera_id}: {camera_dir}")
+            print(f"[DEBUG] Created directory for camera {camera_id}: {camera_dir}")
 
         return camera_dir
 
@@ -63,22 +64,22 @@ class CameraCapture:
         no frame available, or invalid frame data).
         """
         if camera_id not in self.camera_registry:
-            print(f"[ERROR] Camera {camera_id} not registered.")
+            carb.log_error(f"Camera {camera_id} not registered.")
             return None
 
         frame = self.camera_registry[camera_id].get_current_frame()
         if not frame or "rgba" not in frame:
-            print(f"[ERROR] No 'rgba' frame for {camera_id}")
+            carb.log_error(f"No 'rgba' frame for {camera_id}")
             return None
 
         rgba = frame["rgba"]
         if rgba is None or rgba.size == 0:
-            print(f"[ERROR] Empty RGBA data from {camera_id}")
+            carb.log_error(f"Empty RGBA data from {camera_id}")
             return None
 
         rgb_array = rgba[:, :, :3]
         if rgb_array.ndim != 3 or rgb_array.shape[2] != 3:
-            print(f"[ERROR] Unexpected image shape {rgb_array.shape} from {camera_id}")
+            carb.log_error(f"Unexpected image shape {rgb_array.shape} from {camera_id}")
             return None
 
         return rgb_array.astype(np.uint8)
@@ -137,7 +138,7 @@ class CameraCapture:
             return image_path
 
         except Exception as e:
-            print(f"[ERROR] Failed to save image for {camera_id}: {e}")
+            carb.log_error(f"Failed to save image for {camera_id}: {e}")
             return None
 
     def capture_image(self, camera_id):
@@ -166,7 +167,7 @@ class CameraCapture:
         """
         rgb_array = self._capture_image_array(camera_id)
         if rgb_array is None:
-            print(f"[ERROR] Could not capture image from {camera_id}")
+            carb.log_error(f"Could not capture image from {camera_id}")
             return None
 
         save_path = self._save_image(camera_id, rgb_array)
@@ -174,7 +175,7 @@ class CameraCapture:
         try:
             success, jpeg_data = cv2.imencode(".jpg", rgb_array)
             if not success:
-                print(f"[ERROR] Failed to compress image from {camera_id}")
+                carb.log_error(f"Failed to compress image from {camera_id}")
                 return save_path
 
             _, metadata = self._generate_capture_metadata(camera_id, rgb_array)
@@ -185,7 +186,7 @@ class CameraCapture:
             udp_controller.send(packet, host, port)
 
         except Exception as e:
-            print(f"[ERROR] Streaming image failed for {camera_id}: {e}")
+            carb.log_error(f"Streaming image failed for {camera_id}: {e}")
 
         return save_path
 
@@ -238,9 +239,8 @@ class CameraCapture:
         """
         Returns a list of registered camera IDs.
         """
-        print(
-            f"Registered Cameras in camera Capture: {list(self.camera_registry.keys())}"
-        )
+        print(f"[DEBUG] Registered Cameras: {list(self.camera_registry.keys())}")
+
         return list(self.camera_registry.keys())
 
     def convert_video_from_images(self, fps):
@@ -256,7 +256,7 @@ class CameraCapture:
             f"-c:v libx264 -pix_fmt yuv420p {output_file}"
         )
 
-        print("Running FFMPEG command:")
+        print(f"[MAIN] Running FFMPEG command: {command}")
         print(command)
 
         subprocess.call(command, shell=True)
@@ -279,21 +279,16 @@ class CameraCapture:
         Returns:
             str: Path to the saved PLY file, or None if capture failed
         """
-        print(f"\n📸 Attempting to capture pointcloud from {camera_id}...")
+        print(f"[DEBUG] Attempting to capture pointcloud from {camera_id}")
 
         # Check if the camera exists
         if camera_id not in self.camera_registry:
-            print(f"❌ Error: Camera with ID {camera_id} not registered.")
+            carb.log_error(f"Camera with ID {camera_id} not registered.")
             return None
-        print(
-            f"✅ Camera {camera_id} found in registry.",
-            list(self.camera_registry.keys()),
-        )
 
         camera = self.camera_registry[camera_id]
 
         # Get the latest frame
-        print(f"🔄 Fetching latest frame with pointcloud from {camera_id}...")
         frame = camera.get_current_frame()
 
         # Check if frame has pointcloud data
@@ -302,16 +297,13 @@ class CameraCapture:
             or "pointcloud" not in frame
             or "data" not in frame["pointcloud"]
         ):
-            print(f"❌ Error: No valid pointcloud data from camera {camera_id}")
+            carb.log_error(f"No valid pointcloud data from camera {camera_id}")
             return None
 
         # Extract pointcloud components
-        print("Frame data:", frame.keys())
         pc = frame["pointcloud"]
         pointcloud_data = np.array(pc["data"])  # Shape: (N, 3)
         point_colors = np.array(pc["pointRgb"]).reshape(-1, 4)[:, :3]
-        print("🔍 First 5 colors (raw):", point_colors[:5])
-        print("The length of point colors:", len(point_colors))
 
         point_normals = frame["pointcloud"]["pointNormals"]  # Normal vectors
 
@@ -323,9 +315,9 @@ class CameraCapture:
 
         Returns dict with file paths or None on failure.
         """
-        print(f"\n🔄 Capturing pointclouds from stereo pair {pair_id}…")
+        print(f"[MAIN] Capturing pointclouds from stereo pair {pair_id}")
         if pair_id not in self.stereo_pairs:
-            print(f"❌ Pair {pair_id} not registered.")
+            carb.log_error(f"Stereo pair {pair_id} not registered.")
             return None
 
         left_id, right_id = (
@@ -337,7 +329,7 @@ class CameraCapture:
         left_data = self.capture_pointcloud(left_id)
         right_data = self.capture_pointcloud(right_id)
         if left_data is None or right_data is None:
-            print("⚠️ One or both captures failed; aborting save.")
+            carb.log_warn("One or both captures failed; aborting save.")
             return None
 
         # Timestamped folder
@@ -359,8 +351,8 @@ class CameraCapture:
         try:
             np.save(fn_left, left_xyzrgb)
             np.save(fn_right, right_xyzrgb)
-            print(f"✅ Saved stereo pair to {out_dir}")
+            print(f"[MAIN] Saved stereo pair to {out_dir}")
             return {"left_npy": fn_left, "right_npy": fn_right, "pair_dir": out_dir}
         except Exception as e:
-            print(f"❌ Error saving stereo pair: {e}")
+            carb.log_error(f"Error saving stereo pair: {e}")
             return None

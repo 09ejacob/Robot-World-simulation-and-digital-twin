@@ -30,7 +30,7 @@ class Extension(omni.ext.IExt):
         self.ext_id = ext_id
         self._usd_context = omni.usd.get_context()
 
-        print("GUI mode detected — setting up UI.")
+        print("[MAIN] GUI mode detected — setting up UI.")
         # GUI Setup
         self._window = ScrollingWindow(
             title=EXTENSION_TITLE,
@@ -72,7 +72,7 @@ class Extension(omni.ext.IExt):
         scenario = self.ui_builder._scenario
 
         if scenario is not None and hasattr(scenario, "udp"):
-            print("Stopping UDP")
+            print("[MAIN] Stopping UDP")
             scenario.udp.stop()
 
         self._models = {}
