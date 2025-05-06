@@ -1,7 +1,7 @@
 import numpy as np
 import omni.usd
 from omni.isaac.core import World
-from omni.isaac.core.objects import DynamicCuboid
+from isaacsim.core.api.objects.cuboid import DynamicCuboid
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,

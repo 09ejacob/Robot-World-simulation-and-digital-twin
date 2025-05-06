@@ -1,7 +1,7 @@
 import carb
 import numpy as np
 from pxr import UsdPhysics
-from omni.isaac.core.utils.stage import get_current_stage
+from isaacsim.core.utils.stage import get_current_stage
 import omni.graph as og2
 import omni.usd
 from omni.isaac.dynamic_control import _dynamic_control

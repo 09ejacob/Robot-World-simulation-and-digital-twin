@@ -6,12 +6,12 @@ import threading
 import psutil
 import numpy as np
 from os.path import dirname, abspath, join
-from pxr import UsdGeom, Gf, UsdPhysics
+from pxr import UsdGeom, Gf
 import omni.usd
 from omni.isaac.core import World
 from isaacsim.core.utils.stage import add_reference_to_stage, create_new_stage
 from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
-from omni.isaac.core.objects import DynamicCuboid
+from isaacsim.core.api.objects.cuboid import DynamicCuboid
 from pxr.UsdGeom import Tokens as UsdGeomTokens
 
 from ..global_variables import (

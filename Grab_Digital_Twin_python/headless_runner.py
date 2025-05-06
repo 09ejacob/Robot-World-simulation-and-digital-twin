@@ -52,7 +52,7 @@ import omni.timeline
 import omni.physx as _physx
 
 from omni.isaac.core import World
-from omni.isaac.core.utils.stage import create_new_stage, get_current_stage
+from isaacsim.core.utils.stage import create_new_stage, get_current_stage
 
 from Grab_Digital_Twin_python.scenes.setup_scene import setup_scene
 from Grab_Digital_Twin_python.robot.robot_controller import RobotController
