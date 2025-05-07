@@ -5,7 +5,7 @@ import omni.usd
 from isaacsim.sensors.camera import Camera
 from pxr import UsdGeom, UsdPhysics, PhysxSchema
 from ..camera_capture import CameraCapture
-from ..global_variables import CAMERA_PATH
+from ..global_variables import CAMERA_PATH, CAMERA_FREQUENCIES
 
 initialized_cameras = {}
 camera_capture = CameraCapture()  # Global CameraCapture instance
@@ -59,7 +59,7 @@ def setup_camera(
         resolution=resolution,
         position=position,
         orientation=quat_xyzw,
-        frequency=30,
+        frequency=CAMERA_FREQUENCIES,
     )
 
     camera.initialize()
@@ -122,7 +122,7 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     try:
         # Create Camera object from existing prim
         camera = Camera(prim_path=prim_path)
-        camera.set_frequency(15)
+        camera.set_frequency(CAMERA_FREQUENCIES)
         camera.initialize()
         if add_3d_features:
             camera.add_distance_to_image_plane_to_frame()
