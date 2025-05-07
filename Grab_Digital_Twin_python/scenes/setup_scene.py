@@ -80,28 +80,30 @@ def create_additional_joints():
     )
 
 
-def create_camera(resolutions=None):
+def create_camera(resolutions=None, enable_3d_features=False):
     """
     Create cameras in the scene and register them with the camera capture system.
     Args:
         resolutions (dict): Dictionary of camera prim paths and their respective resolutions.
+        enable_3d_features (bool): If True, enable 3D features for the cameras.
     """
 
     # If resolutions is None, initialize with empty dictionary
     if resolutions is None:
         resolutions = {}
 
-    # Register cameras with optional resolution changes
+    # Register cameras with optional resolution changes and 3D features toggle
     register_existing_camera(BASE_CAMERA_PATH, resolutions.get(BASE_CAMERA_PATH))
     register_existing_camera(
-        BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=False
+        BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=enable_3d_features
     )
     register_existing_camera(
-        BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=False
+        BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=enable_3d_features
     )
-    register_existing_camera(
-        OVERVIEW_CAMERA, resolutions.get(OVERVIEW_CAMERA), add_3d_features=False
-    )
+
+    # register_existing_camera(
+    #    OVERVIEW_CAMERA, resolutions.get(OVERVIEW_CAMERA),
+    # )
 
 
 def setup_stereo_cameras():
@@ -164,7 +166,8 @@ def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
     load_grab_usd(grab_usd)
 
     if enable_cameras:
-        create_camera(CAMERA_RESOLUTIONS)
+        create_camera(CAMERA_RESOLUTIONS, enable_3d_features=False)
+        setup_stereo_cameras()
 
     create_additional_joints()
     _add_light()

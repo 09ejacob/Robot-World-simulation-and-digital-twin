@@ -91,6 +91,11 @@ def setup_camera(
     return camera
 
 
+def get_hydra_texture_safe(camera):
+    rp_path = camera.get_render_product_path()
+    return omni.replicator.core.get_hydra_texture(rp_path)
+
+
 def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     """
     Register an existing camera from its prim path with the camera capture system
@@ -122,8 +127,9 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     try:
         # Create Camera object from existing prim
         camera = Camera(prim_path=prim_path)
-        camera.set_frequency(15)
+        camera.set_frequency(1)
         camera.initialize()
+        # Get Hydra texture directly from render product
         if add_3d_features:
             camera.add_distance_to_image_plane_to_frame()
             camera.add_pointcloud_to_frame(include_unlabelled=True)
@@ -136,7 +142,13 @@ def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
 
         # Register with camera capture system
         camera_capture.register_camera(camera_id, camera)
-        camera.pause()
+
+        # Disable render products to avoid unnecessary rendering
+        # if camera._render_product:
+        #     hydra_texture = camera._render_product.hydra_texture
+        #     hydra_texture.set_updates_enabled(False)
+        # else:
+        #     carb.log_error("Render product creation failed")
 
         print(f"[MAIN] Successfully registered camera: {camera_id}")
         return camera

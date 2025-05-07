@@ -8,6 +8,7 @@ import cv2
 import json
 import struct
 import carb
+import omni.kit.app
 
 
 class CameraCapture:
@@ -67,7 +68,10 @@ class CameraCapture:
             carb.log_error(f"Camera {camera_id} not registered.")
             return None
 
-        frame = self.camera_registry[camera_id].get_current_frame()
+        camera = self.camera_registry[camera_id]
+
+        # Set high resolution just before capture
+        frame = camera.get_current_frame()
         if not frame or "rgba" not in frame:
             carb.log_error(f"No 'rgba' frame for {camera_id}")
             return None
@@ -294,6 +298,7 @@ class CameraCapture:
         if (
             frame is None
             or "pointcloud" not in frame
+            or frame["pointcloud"] is None
             or "data" not in frame["pointcloud"]
         ):
             carb.log_error(f"No valid pointcloud data from camera {camera_id}")
@@ -338,8 +343,8 @@ class CameraCapture:
         os.makedirs(out_dir, exist_ok=True)
 
         # Save each
-        left_pts, left_cols, left_norms = left_data
-        right_pts, right_cols, right_norms = right_data
+        left_cols, left_norms, left_pts = left_data
+        right_cols, right_norms, right_pts = right_data
 
         left_xyzrgb = np.hstack([left_pts, left_cols])
         right_xyzrgb = np.hstack([right_pts, right_cols])
