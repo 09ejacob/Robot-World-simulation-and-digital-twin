@@ -329,7 +329,7 @@ class UDPScenario:
         start_x = base_x - (pallet_length / 2) + (dx / 2)
         start_y = base_y - (pallet_width / 2) + (dy / 2)
 
-        base_z = pallet_center_z + (pallet_height / 2) + (dz / 2)
+        base_z = pallet_center_z + (pallet_height) + (dz / 2)
 
         boxes = []
         for i in range(num_boxes):
@@ -405,7 +405,7 @@ class UDPScenario:
             x_positions = x_positions[::-1]
 
         y_positions = [by + 0.3 - j * 0.2 for j in range(4)]
-        z_base = bz + 0.073
+        z_base = bz + 0.073 * 2
         z_inc = 0.320
 
         stage = omni.usd.get_context().get_stage()
@@ -680,60 +680,60 @@ class UDPScenario:
 
         self._create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(-1.4, 0.0, 0.072),
+            pallet_position=(-1.4, 0.0, 0),
             number_of_items=19,
             stack_id=1,
             reverse=True,
             isBottles=False,
             box_size=(0.3, 0.4, 0.2),
-            mass=14.0,
+            mass=14,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(-1.4, -0.9, 0.072),
+            pallet_position=(-1.4, -0.9, 0),
             number_of_items=20,
             stack_id=2,
             reverse=True,
             isBottles=False,
             box_size=(0.3, 0.4, 0.2),
-            mass=14.0,
+            mass=14,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(-1.4, 0.9, 0.072),
+            pallet_position=(-1.4, 0.9, 0),
             number_of_items=15,
             stack_id=3,
             reverse=True,
             isBottles=True,
-            mass=9.0,
+            mass=9,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(-1.4, 0.0, 1.872),
+            pallet_position=(-1.4, 0.0, 1.8),
             number_of_items=30,
             stack_id=4,
             reverse=True,
             isBottles=False,
             box_size=(0.3, 0.4, 0.2),
-            mass=14.0,
+            mass=14,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(-1.4, -0.9, 1.872),
+            pallet_position=(-1.4, -0.9, 1.8),
             number_of_items=16,
             stack_id=5,
             reverse=True,
             isBottles=True,
-            mass=9.0,
+            mass=9,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
-            pallet_position=(-1.4, 0.9, 1.872),
+            pallet_position=(-1.4, 0.9, 1.8),
             number_of_items=16,
             stack_id=6,
             reverse=True,
             isBottles=True,
-            mass=9.0,
+            mass=9,
         )
 
         self._load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
