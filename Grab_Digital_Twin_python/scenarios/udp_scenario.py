@@ -686,7 +686,7 @@ class UDPScenario:
             reverse=True,
             isBottles=False,
             box_size=(0.3, 0.4, 0.2),
-            mass=0.2,
+            mass=14,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -696,7 +696,7 @@ class UDPScenario:
             reverse=True,
             isBottles=False,
             box_size=(0.3, 0.4, 0.2),
-            mass=0.2,
+            mass=14,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -705,7 +705,7 @@ class UDPScenario:
             stack_id=3,
             reverse=True,
             isBottles=True,
-            mass=0.2,
+            mass=9,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -715,7 +715,7 @@ class UDPScenario:
             reverse=True,
             isBottles=False,
             box_size=(0.3, 0.4, 0.2),
-            mass=0.2,
+            mass=14,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -724,7 +724,7 @@ class UDPScenario:
             stack_id=5,
             reverse=True,
             isBottles=True,
-            mass=0.2,
+            mass=9,
         )
         self._create_pick_stack(
             ENVIRONMENT_PATH,
@@ -733,7 +733,7 @@ class UDPScenario:
             stack_id=6,
             reverse=True,
             isBottles=True,
-            mass=0.2,
+            mass=9,
         )
 
         self._load_shelf_usd(position=(-1.3, -1.4, 0), scale=(1, 0.7, 1))
