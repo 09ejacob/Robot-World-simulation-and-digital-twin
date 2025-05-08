@@ -247,13 +247,19 @@ class CameraCapture:
 
         return list(self.camera_registry.keys())
 
-    def convert_video_from_images(self, fps):
-        folder_path = os.path.join(
-            self.base_save_dir, "OverviewCamera", self.scenario_start
-        )
-        output_file = os.path.join(
-            folder_path, f"Overview-Camera-{self.scenario_start}.mp4"
-        )
+    def convert_video_from_images(self, camera_id, fps):
+        folder_path = os.path.join(self.base_save_dir, camera_id, self.scenario_start)
+
+        # Generate next available index
+        existing_videos = [
+            f
+            for f in os.listdir(folder_path)
+            if f.startswith(f"{camera_id}_{self.scenario_start}_video")
+            and f.endswith(".mp4")
+        ]
+        next_index = len(existing_videos) + 1
+        output_filename = f"{camera_id}_{self.scenario_start}_video{next_index}.mp4"
+        output_file = os.path.join(folder_path, output_filename)
 
         command = (
             f"ffmpeg -y -framerate {fps} -pattern_type glob -i '{os.path.join(folder_path, '*.jpg')}' "

@@ -162,7 +162,7 @@ class UDPScenario:
 
             if not start:
                 self._robot_controller.generate_video(
-                    3 / self.overview_capture_interval
+                    3 / self.overview_capture_interval, "OverviewCamera"
                 )
         else:
             print("[MAIN] Overview camera is disabled.")
