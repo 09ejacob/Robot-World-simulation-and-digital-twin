@@ -20,6 +20,7 @@ from ..global_variables import (
     AXIS2_JOINT_PATH,
     AXIS3_JOINT_PATH,
     AXIS4_JOINT_PATH,
+    ROBOT_PATH,
 )
 from ..scenarios.pick_boxes_scenario import PickBoxesScenario
 from ..scenarios.stack_box_scenario import StackBoxScenario
@@ -186,7 +187,7 @@ class UIBuilder:
                     *self._scenario_options,
                 )
 
-                ui.Button(
+                self._load_scenario_button = ui.Button(
                     "Load Scenario",
                     clicked_fn=self._select_scenario,
                 )
@@ -446,12 +447,22 @@ class UIBuilder:
         self._scenario_state_btn.enabled = False
         self._unload_btn.enabled = False
 
-    def _set_robot_camera_controls_enabled(self, enabled: bool):
+    def _is_robot_loaded(self) -> bool:
+        stage = omni.usd.get_context().get_stage()
+        return stage.GetPrimAtPath(ROBOT_PATH).IsValid()
+
+    def _set_robot_camera_controls_enabled(self, sim_running: bool):
+        robot_loaded = self._is_robot_loaded()
+        visible = sim_running and robot_loaded
+
         for widget in self._robot_controls_widgets + self._camera_controls_widgets:
-            widget.enabled = enabled
+            widget.enabled = visible
 
         for btn in self._dynamic_camera_buttons:
-            btn.visible = enabled  # Hides or shows the button
+            btn.visible = visible
+
+        if hasattr(self, "_load_scenario_button"):
+            self._load_scenario_button.enabled = robot_loaded
 
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
