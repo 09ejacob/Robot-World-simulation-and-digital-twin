@@ -80,12 +80,15 @@ def create_additional_joints():
     )
 
 
-def create_camera(resolutions=None, enable_3d_features=False):
+def create_camera(
+    resolutions=None, enable_3d_features=False, enable_overview_camera=False
+):
     """
     Create cameras in the scene and register them with the camera capture system.
     Args:
         resolutions (dict): Dictionary of camera prim paths and their respective resolutions.
         enable_3d_features (bool): If True, enable 3D features for the cameras.
+        enable_overview_camera (bool); If True, enable the overview camera.
     """
 
     # If resolutions is None, initialize with empty dictionary
@@ -94,16 +97,20 @@ def create_camera(resolutions=None, enable_3d_features=False):
 
     # Register cameras with optional resolution changes and 3D features toggle
     register_existing_camera(BASE_CAMERA_PATH, resolutions.get(BASE_CAMERA_PATH))
+
     register_existing_camera(
         BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=enable_3d_features
     )
     register_existing_camera(
         BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=enable_3d_features
     )
+    setup_stereo_cameras()
 
-    # register_existing_camera(
-    #    OVERVIEW_CAMERA, resolutions.get(OVERVIEW_CAMERA),
-    # )
+    if enable_overview_camera:
+        register_existing_camera(
+            OVERVIEW_CAMERA,
+            resolutions.get(OVERVIEW_CAMERA),
+        )
 
 
 def setup_stereo_cameras():
@@ -139,13 +146,20 @@ def _add_light():
     SingleXFormPrim(str(sphereLight.GetPath())).set_world_pose([6.5, 0, 12])
 
 
-def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
+def setup_scene(
+    grab_usd="Grab.usd",
+    enable_cameras=False,
+    enable_3d_features=False,
+    enable_overview_camera=False,
+):
     """
     Setup the stage with physics scene, ground plane, robot model, optional cameras, joints, and lighting.
 
     Args:
-        enable_cameras (bool): if True, register cameras for camera capture.
         grab_usd (str): USD file to reference for the robot.
+        enable_cameras (bool): if True, register cameras for camera capture.
+        enable_3d_features (bool): If True, adds depth and point cloud features to the cameras.
+        enable_overview_camera (bool): If True, enables the overview camera.
     """
     stage = get_current_stage()
 
@@ -166,8 +180,7 @@ def setup_scene(enable_cameras=False, grab_usd="Grab.usd"):
     load_grab_usd(grab_usd)
 
     if enable_cameras:
-        create_camera(CAMERA_RESOLUTIONS, enable_3d_features=False)
-        setup_stereo_cameras()
+        create_camera(CAMERA_RESOLUTIONS, enable_3d_features, enable_overview_camera)
 
     create_additional_joints()
     _add_light()

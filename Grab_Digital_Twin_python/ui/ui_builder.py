@@ -310,8 +310,8 @@ class UIBuilder:
         self._camera_capture.initialize()
         create_new_stage()
         setup_scene(
-            enable_cameras=self._enable_cameras_model.get_value_as_bool(),
             grab_usd=usd_file,
+            enable_cameras=self._enable_cameras_model.get_value_as_bool(),
         )
 
         omni.timeline.get_timeline_interface().set_auto_update(False)

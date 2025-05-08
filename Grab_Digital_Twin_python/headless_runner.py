@@ -37,6 +37,16 @@ def _parse_args():
         choices=["Grab.usd", "Grab-bottlegripper.usd"],
         help="USD file to load for the Grab robot model",
     )
+    parser.add_argument(
+        "--enable_3d_features",
+        action="store_true",
+        help="Enable 3D features (depth, pointcloud) on cameras if cameras are enabled",
+    )
+    parser.add_argument(
+        "--enable_overview_camera",
+        action="store_true",
+        help="Enable the overview camera if cameras are enabled",
+    )
     return parser.parse_args()
 
 
@@ -84,9 +94,18 @@ def _main():
     create_new_stage()
 
     print("[MAIN] Setting up Scene...")
+    if args.disable_cameras and (
+        args.enable_3d_features or args.enable_overview_camera
+    ):
+        carb.log_warn(
+            "[ARGS] Cameras are disabled (--disable_cameras), so '--enable_3d_features' and '--enable_overview_camera' will have no effect."
+        )
     setup_scene(
-        enable_cameras=not args.disable_cameras, grab_usd=args.grab_usd
-    )  # Need a flag for setting up scene with specifyed usd model.
+        grab_usd=args.grab_usd,
+        enable_cameras=not args.disable_cameras,
+        enable_3d_features=args.enable_3d_features,
+        enable_overview_camera=args.enable_overview_camera,
+    )
 
     _wait_for_condition(
         lambda: get_current_stage().GetRootLayer() is not None,
