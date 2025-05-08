@@ -134,10 +134,10 @@ class CameraCapture:
             metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
 
             image.save(image_path)
-            if camera_id != "OverviewCamera":
-                metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
-                with open(metadata_path, "w") as f:
-                    json.dump(metadata, f, indent=4)
+
+            metadata_path = os.path.join(camera_dir, f"{filename_base}.json")
+            with open(metadata_path, "w") as f:
+                json.dump(metadata, f, indent=4)
 
             return image_path
 
@@ -266,10 +266,16 @@ class CameraCapture:
 
         print(f"[MAIN] Video conversion complete. Video saved at: {output_file}")
 
+        # Delete original images and .json metadata
         for filename in os.listdir(folder_path):
             if filename.lower().endswith(".jpg"):
                 file_path = os.path.join(folder_path, filename)
                 os.remove(file_path)
+
+                json_filename = filename.replace(".jpg", ".json")
+                json_path = os.path.join(folder_path, json_filename)
+                if os.path.exists(json_path):
+                    os.remove(json_path)
 
     def capture_pointcloud(self, camera_id):
         """
