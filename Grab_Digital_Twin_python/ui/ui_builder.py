@@ -35,6 +35,11 @@ class UIBuilder:
         # UI elements created using a UIElementWrapper instance
         self.wrapped_ui_elements = []
 
+        # Lists elements so they can be enabled/disabled or shown/hidden based on simulation state
+        self._robot_controls_widgets = []
+        self._camera_controls_widgets = []
+        self._dynamic_camera_buttons = []
+
         self._grab_usd_options = ["Grab.usd", "Grab-bottlegripper.usd"]
 
         # Get access to the timeline to control stop/pause/play programmatically
@@ -66,10 +71,16 @@ class UIBuilder:
 
     def on_timeline_event(self, event):
         """Callback for Timeline events (Play, Pause, Stop)"""
+        if event.type == int(omni.timeline.TimelineEventType.PLAY):
+            self._set_robot_camera_controls_enabled(True)
+        elif event.type in (
+            int(omni.timeline.TimelineEventType.STOP),
+            int(omni.timeline.TimelineEventType.PAUSE),
+        ):
+            self._set_robot_camera_controls_enabled(False)
+
         if event.type == int(omni.timeline.TimelineEventType.STOP):
             self._scenario_state_btn.reset()
-
-            # Only disable if the scenario is actually finished
             if self._scenario and self._scenario._did_run:
                 self._scenario_state_btn.enabled = False
 
@@ -203,62 +214,74 @@ class UIBuilder:
         robot_controls_frame = CollapsableFrame("Robot Controls", collapsed=False)
         with robot_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
-                ui.Button(
+                openGripperButton = ui.Button(
                     "Open Gripper", clicked_fn=self._robot_controller.open_gripper
                 )
-                ui.Button(
+                self._robot_controls_widgets.append(openGripperButton)
+
+                closeGripperButton = ui.Button(
                     "Close Gripper", clicked_fn=self._robot_controller.close_gripper
                 )
-                ui.Button(
+                self._robot_controls_widgets.append(closeGripperButton)
+
+                bottleGripperIdleButton = ui.Button(
                     "Set bottlegripper to idle",
                     clicked_fn=self._robot_controller.set_bottlegripper_to_idle_pos,
                 )
+                self._robot_controls_widgets.append(bottleGripperIdleButton)
 
                 ui.Label("Set Axis1 position (-360, 360):")
                 self._angular_drive_input_axis1 = ui.FloatField()
-                ui.Button(
+                axis1Button = ui.Button(
                     "Set position",
                     clicked_fn=lambda: self._robot_controller.set_angular_drive_target(
                         AXIS1_JOINT_PATH,
                         self._angular_drive_input_axis1.model.get_value_as_float(),
                     ),
                 )
+                self._robot_controls_widgets.append(axis1Button)
 
                 ui.Label("Set Axis2 position (0, 3.0):")
                 self._prismatic_drive_input_axis2 = ui.FloatField()
-                ui.Button(
+                axis2Button = ui.Button(
                     "Set position",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS2_JOINT_PATH,
                         self._prismatic_drive_input_axis2.model.get_value_as_float(),
                     ),
                 )
+                self._robot_controls_widgets.append(axis2Button)
 
                 ui.Label("Set Axis3 position (0, 2.0):")
                 self._prismatic_drive_input_axis3 = ui.FloatField()
-                ui.Button(
+                axis3Button = ui.Button(
                     "Set position",
                     clicked_fn=lambda: self._robot_controller.set_prismatic_joint_position(
                         AXIS3_JOINT_PATH,
                         self._prismatic_drive_input_axis3.model.get_value_as_float(),
                     ),
                 )
+                self._robot_controls_widgets.append(axis3Button)
 
                 ui.Label("Set Axis4 position (-360, 360):")
                 self._angular_drive_input_axis4 = ui.FloatField()
-                ui.Button(
+                axis4Button = ui.Button(
                     "Set position",
                     clicked_fn=lambda: self._robot_controller.set_angular_drive_target(
                         AXIS4_JOINT_PATH,
                         self._angular_drive_input_axis4.model.get_value_as_float(),
                     ),
                 )
+                self._robot_controls_widgets.append(axis4Button)
 
         camera_controls_frame = CollapsableFrame("Camera Controls", collapsed=False)
         with camera_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 # Button to refresh camera list
-                ui.Button("Refresh Camera List", clicked_fn=self._refresh_camera_list)
+                refreshCameraButton = ui.Button(
+                    "Refresh Camera List", clicked_fn=self._refresh_camera_list
+                )
+                self._camera_controls_widgets.append(refreshCameraButton)
 
                 ui.Label("Available Cameras:(After refresh) : ")
 
@@ -266,19 +289,26 @@ class UIBuilder:
 
                 ui.Label("Capture from ALL Cameras:")
 
-                ui.Button(
+                captureAllCamerasButton = ui.Button(
                     "Capture from All Cameras",
                     clicked_fn=self._capture_from_all_cameras,
                 )
+                self._camera_controls_widgets.append(captureAllCamerasButton)
 
                 ui.Separator()
                 ui.Label("Stereo Camera Controls:")
-                ui.Button("Capture pointclouds", clicked_fn=self._capture_pointclouds)
+                capturePointCloudButton = ui.Button(
+                    "Capture pointclouds", clicked_fn=self._capture_pointclouds
+                )
+                self._camera_controls_widgets.append(capturePointCloudButton)
 
         self.frames.append(camera_controls_frame)
         self.frames.append(world_controls_frame)
         self.frames.append(scenario_frame)
         self.frames.append(robot_controls_frame)
+
+        is_running = self._timeline.is_playing()
+        self._set_robot_camera_controls_enabled(is_running)
 
     ######################################################################################
     # Functions Below This Point Support The Provided Example And Can Be Deleted/Replaced
@@ -416,6 +446,13 @@ class UIBuilder:
         self._scenario_state_btn.enabled = False
         self._unload_btn.enabled = False
 
+    def _set_robot_camera_controls_enabled(self, enabled: bool):
+        for widget in self._robot_controls_widgets + self._camera_controls_widgets:
+            widget.enabled = enabled
+
+        for btn in self._dynamic_camera_buttons:
+            btn.visible = enabled  # Hides or shows the button
+
     def _capture_from_camera(self, camera_id):
         """Capture an image from the specified camera."""
         image_path = self._robot_controller.capture_cameras(camera_id)
@@ -447,6 +484,7 @@ class UIBuilder:
             print(f"[DEBUG] Refresh found cameras: {cameras}")
 
             self._capture_button_container.clear()
+            self._dynamic_camera_buttons.clear()
 
             for camera_id in cameras:
                 self._add_capture_button(camera_id)
@@ -457,10 +495,11 @@ class UIBuilder:
     def _add_capture_button(self, camera_id):
         """Adds a capture button for the specified camera."""
         with self._capture_button_container:
-            self._capture_button = ui.Button(
+            btn = ui.Button(
                 f"Capture from {camera_id}",
                 clicked_fn=lambda: self._capture_from_camera(camera_id),
             )
+            self._dynamic_camera_buttons.append(btn)
             print(f"[DEBUG] Added capture button for camera: {camera_id}")
 
     def _remove_capture_button(self):
