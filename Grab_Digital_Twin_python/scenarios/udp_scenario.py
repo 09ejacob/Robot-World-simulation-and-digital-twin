@@ -227,7 +227,7 @@ class UDPScenario:
 
         - The first part is which camera IDs to capture images from.
         - If the last part is "stream=True" or "stream=False", it toggles
-          the UDP streaming on/off.
+          the UDP streaming on/off. Deafult is False.
         """
         print(f"[DEBUG] Received capture command with parts: {parts}")
 
@@ -242,7 +242,7 @@ class UDPScenario:
             return
 
         # Check if the last part is a stream directive
-        stream = True
+        stream = False
         if "stream=" in parts[-1].lower():
             stream_arg = parts[-1].lower()
             if stream_arg == "stream=true":
