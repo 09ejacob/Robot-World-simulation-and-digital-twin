@@ -271,16 +271,14 @@ class CameraCapture:
                 file_path = os.path.join(folder_path, filename)
                 os.remove(file_path)
 
-    def capture_pointcloud(self, camera_id, filename=None):
+    def capture_pointcloud(self, camera_id):
         """
-        Capture a 3D point cloud from the specified camera and save it as a PLY file.
-
-        Args:
-            camera_id (str): ID of the camera to capture from
-            filename (str, optional): Custom filename for the PLY file
-
+        Capture pointcloud data from the specified camera.
+        Parameters:
+        camera_id (str): Identifier for the camera.
         Returns:
-            str: Path to the saved PLY file, or None if capture failed
+        tuple: A tuple containing point colors, normals, and pointcloud data.
+        Returns None if capture fails.
         """
         print(f"[DEBUG] Attempting to capture pointcloud from {camera_id}")
 
