@@ -107,9 +107,28 @@ class UIBuilder:
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 self._enable_cameras_model = ui.SimpleBoolModel(True)
+                self._enable_3d_model = ui.SimpleBoolModel(False)
+
                 with ui.HStack():
                     ui.Label("Enable Cameras")
                     ui.CheckBox(model=self._enable_cameras_model)
+
+                with ui.HStack():
+                    ui.Label("Enable 3D Features")
+                    self._3d_checkbox = ui.CheckBox(model=self._enable_3d_model)
+
+                def _update_3d_checkbox_enabled_state(model=None):
+                    self._3d_checkbox.enabled = (
+                        self._enable_cameras_model.get_value_as_bool()
+                    )
+
+                # Initialize state
+                _update_3d_checkbox_enabled_state()
+
+                # React to changes in the camera checkbox
+                self._enable_cameras_model.add_value_changed_fn(
+                    _update_3d_checkbox_enabled_state
+                )
 
                 ui.Label("Select Grab USD:")
                 self._grab_dropdown = ui.ComboBox(0, *self._grab_usd_options)
@@ -312,6 +331,8 @@ class UIBuilder:
         setup_scene(
             grab_usd=usd_file,
             enable_cameras=self._enable_cameras_model.get_value_as_bool(),
+            enable_3d_features=self._enable_3d_model.get_value_as_bool(),
+            enable_overview_camera=False,
         )
 
         omni.timeline.get_timeline_interface().set_auto_update(False)
