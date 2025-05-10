@@ -26,6 +26,7 @@ from ..global_variables import (
     GRIPPER_PATH,
     ENVIRONMENT_PATH,
     PALLET_STACK_PATH,
+    DEFAULT_STEREO_PAIR_ID,
 )
 
 
@@ -390,7 +391,7 @@ class RobotController:
 
         return results
 
-    def capture_stereo_pointcloud(self, stereo_pair="main_stereo"):
+    def capture_stereo_pointcloud(self, stereo_pair=DEFAULT_STEREO_PAIR_ID):
         """
         Capture a stereo point cloud from the camera pair
 

@@ -26,6 +26,7 @@ from ..global_variables import (
     LISTEN_PORT,
     SEND_HOST,
     SEND_PORT,
+    DEFAULT_STEREO_PAIR_ID,
 )
 from ..networking.udp_controller import UDPController
 
@@ -284,7 +285,7 @@ class UDPScenario:
         Format:
             capture_pointcloud[:pair_name]
 
-        Default pair_name is 'main_stereo' if not provided.
+        If pair_name is not provided, the default pair ID from global_variables.DEFAULT_STEREO_PAIR_ID is used.
         """
         if not self.allow_pointcloud_capture:
             carb.log_warn(
@@ -292,11 +293,11 @@ class UDPScenario:
             )
             return
 
-        pair_name = parts[1] if len(parts) > 1 else "main_stereo"
+        pair_name = parts[1] if len(parts) > 1 else DEFAULT_STEREO_PAIR_ID
         print(f"[MAIN] Attempting stereo pointcloud capture for pair: {pair_name}")
 
         result = self._robot_controller.camera_capture.save_stereo_pointcloud_pair(
-            pair_id="main_stereo",
+            pair_id=DEFAULT_STEREO_PAIR_ID,
             pair_name=pair_name,
         )
 

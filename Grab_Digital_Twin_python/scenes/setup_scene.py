@@ -22,6 +22,7 @@ from ..global_variables import (
     OVERVIEW_CAMERA,
     SPHERE_LIGHT,
     CAMERA_RESOLUTIONS,
+    DEFAULT_STEREO_PAIR_ID,
 )
 
 
@@ -117,7 +118,9 @@ def setup_stereo_cameras():
     """Setup stereo camera configuration using existing box cameras."""
     # Register the stereo pair
     stereo_pair = register_stereo_pair(
-        left_prim_path=BOX_CAMERA_2, right_prim_path=BOX_CAMERA_1, pair_id="main_stereo"
+        left_prim_path=BOX_CAMERA_2,
+        right_prim_path=BOX_CAMERA_1,
+        pair_id=DEFAULT_STEREO_PAIR_ID,
     )
     return stereo_pair
 
