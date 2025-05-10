@@ -15,7 +15,7 @@ class StackBoxScenario:
     A scenario where the robot picks up multiple boxes and stacks them.
     """
 
-    def __init__(self, robot_controller, allow_udp_capture):
+    def __init__(self, robot_controller, allow_udp_capture, allow_pointcloud_capture):
         self._robot_controller = robot_controller
         self._world = None
         self._did_run = False

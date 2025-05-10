@@ -169,6 +169,7 @@ def _main():
         print_positions=args.print_positions,
         print_performance_stats=args.print_performance_stats,
         allow_udp_capture=not args.disable_cameras,
+        allow_pointcloud_capture=args.enable_3d_features,
     )
     scenario.setup()
 

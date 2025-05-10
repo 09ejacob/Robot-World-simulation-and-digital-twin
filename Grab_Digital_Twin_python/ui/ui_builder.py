@@ -341,6 +341,7 @@ class UIBuilder:
         self._scenario = scenario_cls(
             robot_controller=self._robot_controller,
             allow_udp_capture=enable_cameras,
+            allow_pointcloud_capture=self._enable_3d_model.get_value_as_bool(),
         )
         self._setup_scenario()
 

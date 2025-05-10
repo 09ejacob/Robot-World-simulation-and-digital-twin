@@ -38,6 +38,7 @@ class UDPScenario:
         print_positions=False,
         print_performance_stats=False,
         allow_udp_capture=True,
+        allow_pointcloud_capture=False,
     ):
         self._robot_controller = robot_controller
 
@@ -62,6 +63,7 @@ class UDPScenario:
         self.last_position_print_time = time.time()
 
         self.allow_udp_capture = allow_udp_capture
+        self.allow_pointcloud_capture = allow_pointcloud_capture
         self.overview_camera_active = False
         self.last_overview_capture_time = 0
         self.overview_capture_interval = 0.2  # Deafult, can be set with UDP command
@@ -125,6 +127,7 @@ class UDPScenario:
             "start_overview_camera": lambda p: self._toggle_overview_camera(True, p),
             "stop_overview_camera": lambda p: self._toggle_overview_camera(False),
             "add_colliding_item": lambda p: self._robot_controller.add_colliding_item(),
+            "capture_pointcloud": lambda p: self._handle_capture_pointcloud_command(p),
         }
 
     def _toggle_overview_camera(self, start, parts=None):
@@ -162,7 +165,8 @@ class UDPScenario:
 
             if not start:
                 self._robot_controller.generate_video(
-                    3 / self.overview_capture_interval,  # Dividing by 3 to regulate the speed of the generated video.
+                    3
+                    / self.overview_capture_interval,  # Dividing by 3 to regulate the speed of the generated video.
                     "OverviewCamera",
                 )
         else:
@@ -272,6 +276,36 @@ class UDPScenario:
             port=self.broadcast_target_port,
             stream=stream,
         )
+
+    def _handle_capture_pointcloud_command(self, parts):
+        """
+        Handle the 'capture_pointcloud' UDP command.
+
+        Format:
+            capture_pointcloud[:pair_name]
+
+        Default pair_name is 'main_stereo' if not provided.
+        """
+        if not self.allow_pointcloud_capture:
+            carb.log_warn(
+                "Cannot capture pointcloud because 3D features are not enabled."
+            )
+            return
+
+        pair_name = parts[1] if len(parts) > 1 else "main_stereo"
+        print(f"[MAIN] Attempting stereo pointcloud capture for pair: {pair_name}")
+
+        result = self._robot_controller.camera_capture.save_stereo_pointcloud_pair(
+            pair_id="main_stereo",
+            pair_name=pair_name,
+        )
+
+        if result is None:
+            carb.log_error(
+                f"Failed to capture or save stereo pointcloud for {pair_name}"
+            )
+        else:
+            print(f"[MAIN] Stereo pointcloud saved: {result}")
 
     def _create_xform(
         self, path, translate=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)
