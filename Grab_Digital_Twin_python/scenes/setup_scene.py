@@ -6,8 +6,7 @@ from isaacsim.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from isaacsim.core.prims import SingleXFormPrim
-from .camera import register_existing_camera
-from .camera import register_stereo_pair
+from .camera import CameraInit
 
 
 from ..global_variables import (
@@ -24,6 +23,8 @@ from ..global_variables import (
     CAMERA_RESOLUTIONS,
     DEFAULT_STEREO_PAIR_ID,
 )
+
+camera_init = CameraInit()
 
 
 def create_ground_plane(path):
@@ -97,18 +98,20 @@ def create_camera(
         resolutions = {}
 
     # Register cameras with optional resolution changes and 3D features toggle
-    register_existing_camera(BASE_CAMERA_PATH, resolutions.get(BASE_CAMERA_PATH))
+    camera_init.register_existing_camera(
+        BASE_CAMERA_PATH, resolutions.get(BASE_CAMERA_PATH)
+    )
 
-    register_existing_camera(
+    camera_init.register_existing_camera(
         BOX_CAMERA_1, resolutions.get(BOX_CAMERA_1), add_3d_features=enable_3d_features
     )
-    register_existing_camera(
+    camera_init.register_existing_camera(
         BOX_CAMERA_2, resolutions.get(BOX_CAMERA_2), add_3d_features=enable_3d_features
     )
     setup_stereo_cameras()
 
     if enable_overview_camera:
-        register_existing_camera(
+        camera_init.register_existing_camera(
             OVERVIEW_CAMERA,
             resolutions.get(OVERVIEW_CAMERA),
         )
@@ -117,7 +120,7 @@ def create_camera(
 def setup_stereo_cameras():
     """Setup stereo camera configuration using existing box cameras."""
     # Register the stereo pair
-    stereo_pair = register_stereo_pair(
+    stereo_pair = camera_init.register_stereo_pair(
         left_prim_path=BOX_CAMERA_2,
         right_prim_path=BOX_CAMERA_1,
         pair_id=DEFAULT_STEREO_PAIR_ID,
