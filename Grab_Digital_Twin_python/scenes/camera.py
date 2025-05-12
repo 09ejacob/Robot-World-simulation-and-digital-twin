@@ -91,11 +91,6 @@ def setup_camera(
     return camera
 
 
-def get_hydra_texture_safe(camera):
-    rp_path = camera.get_render_product_path()
-    return omni.replicator.core.get_hydra_texture(rp_path)
-
-
 def register_existing_camera(prim_path, resolution=None, add_3d_features=False):
     """
     Register an existing camera from its prim path with the camera capture system
