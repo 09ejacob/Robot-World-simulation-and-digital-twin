@@ -1,7 +1,7 @@
 import numpy as np
 import omni.usd
 from omni.isaac.core import World
-from omni.isaac.core.objects import DynamicCuboid
+from isaacsim.core.api.objects.cuboid import DynamicCuboid
 from ..global_variables import (
     AXIS1_JOINT_PATH,
     AXIS2_JOINT_PATH,
@@ -15,12 +15,17 @@ class StackBoxScenario:
     A scenario where the robot picks up multiple boxes and stacks them.
     """
 
-    def __init__(self, robot_controller):
+    def __init__(self, robot_controller, allow_udp_capture, allow_pointcloud_capture):
         self._robot_controller = robot_controller
         self._world = None
         self._did_run = False
 
     def setup(self):
+        """
+        Prepare the simulation and add scenario-specific prims.
+
+        Creates two pick-boxes.
+        """
         self._world = World()
         self._world.reset()
         self._did_run = False
@@ -54,9 +59,10 @@ class StackBoxScenario:
             prim = stage.GetPrimAtPath(prim_path)
             if prim.IsValid():
                 stage.RemovePrim(prim_path)
-                print(f"Removed prim at: {prim_path}")
+                print(f"[MAIN] Removed prim at: {prim_path}")
 
     def update(self, step: float):
+        """Update the scenario by one simulation step."""
         try:
             next(self._scenario_generator)
             return False  # Scenario is still running
@@ -64,6 +70,10 @@ class StackBoxScenario:
             return True  # Scenario finished
 
     def _run_simulation(self):
+        """
+        Internal generator method that runs the robot through a hard-coded
+        pick and stack sequence where it will move specific axes to achieve this.
+        """
         axis2_dof_index = self._robot_controller.get_dof_index_for_joint(
             AXIS2_JOINT_PATH
         )
@@ -127,20 +137,20 @@ class StackBoxScenario:
             # Raise
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 1.0
+                    AXIS2_JOINT_PATH, 1.0 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=1.0,
+                    target_position=1.0 + 0.144,
                     pos_threshold=0.1,
                 )
             else:
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.8
+                    AXIS2_JOINT_PATH, 0.8 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.8,
+                    target_position=0.8 + 0.144,
                     pos_threshold=0.1,
                 )
 
@@ -172,20 +182,20 @@ class StackBoxScenario:
             # Lower
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.9
+                    AXIS2_JOINT_PATH, 0.9 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.9,
+                    target_position=0.9 + 0.144,
                     pos_threshold=0.01,
                 )
             else:
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.58
+                    AXIS2_JOINT_PATH, 0.58 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.58,
+                    target_position=0.58 + 0.144,
                     pos_threshold=0.01,
                 )
 
@@ -195,20 +205,20 @@ class StackBoxScenario:
             # Raise
             if i == 1:  # For box2, raise more
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 1.1
+                    AXIS2_JOINT_PATH, 1.1 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=1.1,
+                    target_position=1.1 + 0.144,
                     pos_threshold=0.1,
                 )
             else:
                 self._robot_controller.set_prismatic_joint_position(
-                    AXIS2_JOINT_PATH, 0.8
+                    AXIS2_JOINT_PATH, 0.8 + 0.144
                 )
                 yield from self._robot_controller.wait_for_joint_position(
                     axis2_dof_index,
-                    target_position=0.8,
+                    target_position=0.8 + 0.144,
                     pos_threshold=0.1,
                 )
 
@@ -232,5 +242,6 @@ class StackBoxScenario:
             self._world.step(render=True)
             yield
 
-        print("Stacking scenario complete.")
+        print("[MAIN] Stacking scenario complete.")
+
         self._world.stop()
