@@ -296,7 +296,7 @@ class UDPScenario:
         pair_name = parts[1] if len(parts) > 1 else DEFAULT_STEREO_PAIR_ID
         print(f"[MAIN] Attempting stereo pointcloud capture for pair: {pair_name}")
 
-        result = self._robot_controller.camera_capture.save_stereo_pointcloud_pair(
+        result = self._robot_controller.camera_controller.save_stereo_pointcloud_pair(
             pair_id=DEFAULT_STEREO_PAIR_ID,
             pair_name=pair_name,
         )
@@ -674,7 +674,7 @@ class UDPScenario:
             current_time - self.last_overview_capture_time
             >= self.overview_capture_interval
         ):
-            self._robot_controller.camera_capture.capture_image("OverviewCamera")
+            self._robot_controller.camera_controller.capture_image("OverviewCamera")
             self.last_overview_capture_time = current_time
 
     def _print_box_position(self, box_path):

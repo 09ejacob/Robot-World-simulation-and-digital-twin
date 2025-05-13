@@ -1,0 +1,13 @@
+{
+    "camera_id": "baseCamera",
+    "timestamp_utc": "2025-05-05T12:37:59.927874+00:00",
+    "timestamp_local": "2025-05-05T14:37:59.927883+02:00",
+    "frame_id": 4,
+    "image_format": "jpeg",
+    "image_shape": [
+        480,
+        720,
+        3
+    ],
+    "scenario_id": "05-05-2025_14-36-17"
+}

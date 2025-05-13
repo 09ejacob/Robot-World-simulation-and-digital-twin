@@ -26,7 +26,7 @@ from ..scenarios.pick_boxes_scenario import PickBoxesScenario
 from ..scenarios.stack_box_scenario import StackBoxScenario
 from ..scenarios.udp_scenario import UDPScenario
 from ..robot.robot_controller import RobotController
-from ..camera_capture import CameraCapture
+from ..camera_controller import CameraController
 
 
 class UIBuilder:
@@ -47,7 +47,7 @@ class UIBuilder:
         self._timeline = omni.timeline.get_timeline_interface()
 
         self._robot_controller = RobotController()
-        self._camera_capture = CameraCapture()
+        self._camera_controller = CameraController()
         self._scenarios = {
             "UDP": UDPScenario,
             "Pick Boxes": PickBoxesScenario,
@@ -358,7 +358,7 @@ class UIBuilder:
             else self._grab_usd_options[0]
         )
 
-        self._camera_capture.initialize()
+        self._camera_controller.initialize()
         create_new_stage()
         setup_scene(
             grab_usd=usd_file,
@@ -487,7 +487,7 @@ class UIBuilder:
         """Update camera dropdown with the latest registered cameras and add capture button."""
         try:
             # Get the current list of registered cameras
-            cameras = self._camera_capture.get_registered_cameras()
+            cameras = self._camera_controller.get_registered_cameras()
             print(f"[DEBUG] Refresh found cameras: {cameras}")
 
             self._capture_button_container.clear()

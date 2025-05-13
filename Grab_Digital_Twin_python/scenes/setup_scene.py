@@ -6,7 +6,7 @@ from isaacsim.core.utils.stage import get_current_stage
 from isaacsim.core.utils.stage import add_reference_to_stage
 from pxr import UsdPhysics, Sdf, PhysxSchema, UsdLux
 from isaacsim.core.prims import SingleXFormPrim
-from .camera import CameraInit
+from .camera_init import CameraInit
 
 
 from ..global_variables import (

@@ -1,0 +1,13 @@
+{
+    "camera_id": "boxCamera1",
+    "timestamp_utc": "2025-05-05T12:37:26.649286+00:00",
+    "timestamp_local": "2025-05-05T14:37:26.649292+02:00",
+    "frame_id": 2,
+    "image_format": "jpeg",
+    "image_shape": [
+        480,
+        720,
+        3
+    ],
+    "scenario_id": "05-05-2025_14-36-17"
+}

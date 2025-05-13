@@ -4,7 +4,7 @@ import isaacsim.core.utils.numpy.rotations as rot_utils
 import omni.usd
 from isaacsim.sensors.camera import Camera
 from pxr import UsdGeom, UsdPhysics, PhysxSchema
-from ..camera_capture import CameraCapture
+from ..camera_controller import CameraController
 from ..global_variables import CAMERA_PATH, CAMERA_FREQUENCIES
 
 
@@ -12,7 +12,7 @@ class CameraInit:
     def __init__(self):
         """Initialize CameraInit with camera registry and capture system."""
         self.initialized_cameras = {}
-        self.camera_capture = CameraCapture()
+        self.camera_controller = CameraController()
 
     def setup_camera(
         self,
@@ -86,7 +86,7 @@ class CameraInit:
 
         # Explicitly register camera with camera capture system
         camera_id = prim_path.split("/")[-1]
-        self.camera_capture.register_camera(camera_id, camera)
+        self.camera_controller.register_camera(camera_id, camera)
 
         self.initialized_cameras[prim_path] = camera
         return camera
@@ -107,9 +107,9 @@ class CameraInit:
         camera_id = prim_path.split("/")[-1]
 
         # Check if camera is already registered
-        if camera_id in self.camera_capture.camera_registry:
+        if camera_id in self.camera_controller.camera_registry:
             print(f"[DEBUG] Camera '{camera_id}' is already registered.")
-            return self.camera_capture.camera_registry[
+            return self.camera_controller.camera_registry[
                 camera_id
             ]  # Return existing camera
 
@@ -139,7 +139,7 @@ class CameraInit:
             print(f"[DEBUG] Camera resolution updated to {resolution}")
 
             # Register with camera capture system
-            self.camera_capture.register_camera(camera_id, camera)
+            self.camera_controller.register_camera(camera_id, camera)
 
             # Disable render products to avoid unnecessary rendering
             # if camera._render_product:
@@ -177,7 +177,7 @@ class CameraInit:
             pair_id = f"{left_camera_id}_{right_camera_id}"
 
         # Check if both cameras are registered
-        if left_camera_id not in self.camera_capture.camera_registry:
+        if left_camera_id not in self.camera_controller.camera_registry:
             carb.log_warn(
                 f"Left camera '{left_camera_id}' not registered. Attempting to register..."
             )
@@ -188,7 +188,7 @@ class CameraInit:
                 carb.log_error(f"Failed to register left camera '{left_camera_id}'")
                 return None
 
-        if right_camera_id not in self.camera_capture.camera_registry:
+        if right_camera_id not in self.camera_controller.camera_registry:
             carb.log_warn(
                 f"Right camera '{right_camera_id}' not registered. Attempting to register..."
             )
@@ -207,7 +207,7 @@ class CameraInit:
             "right_prim_path": right_prim_path,
         }
 
-        self.camera_capture.stereo_pairs[pair_id] = stereo_pair
+        self.camera_controller.stereo_pairs[pair_id] = stereo_pair
 
         print(f"[MAIN] Successfully registered stereo pair '{pair_id}': {stereo_pair}")
         return stereo_pair

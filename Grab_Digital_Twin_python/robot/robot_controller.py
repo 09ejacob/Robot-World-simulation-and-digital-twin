@@ -12,7 +12,7 @@ from omni.physx import get_physx_simulation_interface
 from omni.physx.scripts.physicsUtils import PhysicsSchemaTools
 import omni.kit.commands
 
-from ..camera_capture import CameraCapture
+from ..camera_controller import CameraController
 
 from ..global_variables import (
     GRIPPER_CLOSE_PATH,
@@ -33,7 +33,7 @@ from ..global_variables import (
 class RobotController:
     def __init__(self):
         self.stage = omni.usd.get_context().get_stage()
-        self.camera_capture = CameraCapture()
+        self.camera_controller = CameraController()
         self.dc_interface = _dynamic_control.acquire_dynamic_control_interface()
         self.articulation = self.dc_interface.get_articulation(ROBOT_PATH)
 
@@ -372,7 +372,7 @@ class RobotController:
             dict: Map of camera ID to saved image path (or None if failed)
         """
         if cameras is None:
-            cameras = self.camera_capture.get_registered_cameras()
+            cameras = self.camera_controller.get_registered_cameras()
         elif isinstance(cameras, str):
             cameras = [cameras]
 
@@ -381,11 +381,11 @@ class RobotController:
         for cam_id in cameras:
             print(f"[DEBUG] Capturing from camera: {cam_id}")
             if stream and udp_controller and host and port:
-                result = self.camera_capture.capture_and_stream(
+                result = self.camera_controller.capture_and_stream(
                     cam_id, udp_controller, host, port
                 )
             else:
-                result = self.camera_capture.capture_image(cam_id)
+                result = self.camera_controller.capture_image(cam_id)
 
             results[cam_id] = result
 
@@ -402,9 +402,9 @@ class RobotController:
             str: Path to the saved point cloud file, or None if capture failed
         """
         # Capture the point cloud
-        result = self.camera_capture.save_stereo_pointcloud_pair(stereo_pair)
+        result = self.camera_controller.save_stereo_pointcloud_pair(stereo_pair)
         return result
 
     def generate_video(self, fps, camera_id):
         """Convert previously captured frames into a video at a given framerate."""
-        self.camera_capture.convert_video_from_images(camera_id, fps)
+        self.camera_controller.convert_video_from_images(camera_id, fps)

@@ -11,7 +11,7 @@ import carb
 import omni.kit.app
 
 
-class CameraCapture:
+class CameraController:
     """
     A class to manage camera captures in Isaac Sim.
     Handles image capturing, storage, and scheduling for multiple cameras.
@@ -21,7 +21,7 @@ class CameraCapture:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(CameraCapture, cls).__new__(cls)
+            cls._instance = super(CameraController, cls).__new__(cls)
             cls._instance.initialize()
         return cls._instance
 
@@ -365,8 +365,8 @@ class CameraCapture:
         try:
             np.save(fn_left, left_xyzrgb)
             np.save(fn_right, right_xyzrgb)
-            print(f"[MAIN] Saved stereo pair to {out_dir}")
+            print(f"[MAIN] Saved ponintclouds to {out_dir}")
             return {"left_npy": fn_left, "right_npy": fn_right, "pair_dir": out_dir}
         except Exception as e:
-            carb.log_error(f"Error saving stereo pair: {e}")
+            carb.log_error(f"Error saving pointclouds: {e}")
             return None
