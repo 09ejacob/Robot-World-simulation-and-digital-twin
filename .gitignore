@@ -29,4 +29,4 @@ dist/
 .thumbs/
 
 # Ignore camera captures
-camera_controllers/
+camera_capture/
