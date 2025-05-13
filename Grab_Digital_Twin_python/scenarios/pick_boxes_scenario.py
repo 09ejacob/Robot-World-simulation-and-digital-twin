@@ -51,7 +51,7 @@ class PickBoxesScenario:
             position=np.array((1.25, -0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.05, 0.1, 0.08)),
-            mass=14.0,
+            mass=0.02,
         )
 
         # Pick Box 2
@@ -60,7 +60,7 @@ class PickBoxesScenario:
             position=np.array((1.25, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.1, 0.08, 0.05)),
-            mass=14.0,
+            mass=0.02,
         )
 
         # Pick Box 3
@@ -69,7 +69,7 @@ class PickBoxesScenario:
             position=np.array((1.55, 0.2, 0.25)),
             scale=np.array((0.3, 0.4, 0.2)),
             color=np.array((0.08, 0.05, 0.1)),
-            mass=14.0,
+            mass=0.02,
         )
 
         self._scenario_generator = self._run_simulation()
