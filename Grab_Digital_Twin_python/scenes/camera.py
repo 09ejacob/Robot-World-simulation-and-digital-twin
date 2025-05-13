@@ -88,10 +88,6 @@ class CameraInit:
         camera_id = prim_path.split("/")[-1]
         self.camera_capture.register_camera(camera_id, camera)
 
-        print(
-            f"[MAIN] Registered cameras: {self.camera_capture.get_registered_cameras()}"
-        )
-
         self.initialized_cameras[prim_path] = camera
         return camera
 
