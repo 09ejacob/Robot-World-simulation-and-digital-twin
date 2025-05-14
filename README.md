@@ -35,7 +35,7 @@ NOTE: ***Make sure that the folder for the extension does not contain any triple
     - Pressing the `Refresh Camera List` fetches the cameras that are loaded into the scene. After doing so, and the cameras are successfully fetched, buttons for capturing the individual cameras should show up under.
         - Pressing the `Capture from` buttons for the individual cameras will make the corresponding camera capture a picture.
     - Pressing the `Capture from All Cameras` button will make all the cameras capture a picture.
-    - Pressing `Capture pointclouds` button will take pointclouds from from both box cameras.
+    - Pressing the `Capture pointclouds` button will take pointclouds from from both box cameras.
 
 ### Running in Headless Mode
 
@@ -49,5 +49,5 @@ This automatically initializes the world and starts the UDP scenario.
 To view all available flags and their descriptions, append the `--help` flag to the run command:
 
 ```bash
-/path/to/isaac_sim/python.sh -m Grab_Digital_Twin_python.headless_runner --help
+GRAB_RUN_HEADLESS=1 /path/to/isaac_sim/python.sh -m Grab_Digital_Twin_python.headless_runner --help
 ```
