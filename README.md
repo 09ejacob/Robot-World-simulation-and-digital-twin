@@ -1,4 +1,4 @@
-# Robot World simulation and digital twin - Bachelor group 9 2025
+# Robot World simulation and digital twin
 
 An extension for [Isaac Sim](https://developer.nvidia.com/isaac/sim) for creating a digital twin of Solwr's [Grab](https://solwr.com/products/grab) robot. This is a Bachelor's thesis done during the [IDATA2900](https://www.ntnu.edu/studies/courses/IDATA2900#tab=omEmnet) course.
 
