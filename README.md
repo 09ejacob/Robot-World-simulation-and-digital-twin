@@ -37,8 +37,6 @@ NOTE: ***Make sure that the folder for the extension does not contain any triple
     - Pressing the `Capture from All Cameras` button will make all the cameras capture a picture.
     - Pressing the `Capture pointclouds` button will take pointclouds from from both box cameras.
 
-For a usage example of sending and receiving UDP data and commands, go to the repository: https://github.com/09ejacob/UDP-Controller-Grab
-
 ### Running in Headless Mode
 
 To run the extension in Headless Mode (without a GUI), use the following command:
@@ -54,5 +52,7 @@ To view all available flags and their descriptions, append the `--help` flag to 
 GRAB_RUN_HEADLESS=1 /path/to/isaac_sim/python.sh -m Grab_Digital_Twin_python.headless_runner --help
 ```
 
+### Example
+An example of sending and receiving UDP data and commands can be found in the following repository: https://github.com/09ejacob/UDP-Controller-Grab
 
 
