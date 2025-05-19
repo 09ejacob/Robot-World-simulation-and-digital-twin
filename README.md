@@ -2,6 +2,12 @@
 
 An extension for [Isaac Sim](https://developer.nvidia.com/isaac/sim) for creating a digital twin of Solwr's [Grab](https://solwr.com/products/grab) robot. This is a Bachelor's thesis done during the [IDATA2900](https://www.ntnu.edu/studies/courses/IDATA2900#tab=omEmnet) course.
 
+<br>
+<p align="center">
+  <img src="data/grab.png" alt="The Grab robot" width="600" />
+</p>
+<br>
+
 ## Importing the Extension
 
 1. In the root folder of Issac Sim: clone this repository in a new folder within the `extsUser` folder.
